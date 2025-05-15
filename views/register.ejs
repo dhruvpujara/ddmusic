@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - DD Music</title>
+    <link rel="stylesheet" href="output.css" >
+</head>
+<body class="min-h-screen bg-black flex items-center justify-center p-4">
+    <div class="bg-gray-900/90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 w-full max-w-md border border-gray-800">
+        <h1 class="text-3xl font-bold text-center text-white mb-8">Create Account</h1>
+        <form action="/register" method="POST">
+            <div class="space-y-6">
+                <div class="relative">
+                    <input type="text" id="username" name="username" placeholder=" " required 
+                        class="block px-4 py-3 w-full text-white bg-gray-800 border border-gray-700 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer">
+                    <label for="username" 
+                        class="absolute text-sm text-white duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] px-2 peer-focus:px-2 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1">
+                        Username
+                    </label>
+                </div>
+                <div class="relative">
+                    <input type="email" id="email" name="email" placeholder=" " required 
+                        class="block px-4 py-3 w-full text-white bg-gray-800 border border-gray-700 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer">
+                    <label for="email" 
+                        class="absolute text-sm text-white duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] px-2 peer-focus:px-2 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1">
+                        Email
+                    </label>
+                </div>
+                <div class="relative">
+                    <input type="password" id="password" name="password" placeholder=" " required 
+                        class="block px-4 py-3 w-full text-white bg-gray-800 border border-gray-700 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent peer">
+                    <label for="password" 
+                        class="absolute text-sm text-white duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] px-2 peer-focus:px-2 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 left-1">
+                        Password
+                    </label>
+                </div>
+                <button type="submit" 
+                    class="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold rounded-lg shadow-lg transition duration-300">
+                    Register
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

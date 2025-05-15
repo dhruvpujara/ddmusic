@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDMusic Mobile</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="output.css" >
+</head>
+<body class="bg-black min-h-screen flex flex-col">
+    <!-- Top Bar -->
+    <header class="fixed top-0 w-full bg-black/90 backdrop-blur-lg z-50 px-4 py-3 border-b border-gray-800">
+        <div class="flex justify-between items-center">
+            <h1 class="text-xl font-bold text-white">DDMusic</h1>
+            <button class="text-gray-400"><i class="fas fa-search"></i></button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 mt-16 mb-32 px-4">
+        <!-- Featured Section -->
+        <section class="py-4">
+            <h2 class="text-white text-lg font-semibold mb-3">Featured Playlists</h2>
+            <div class="flex overflow-x-auto space-x-4 pb-4">
+                <div class="flex-shrink-0 w-32">
+                    <div class="bg-gradient-to-br from-purple-600 to-blue-500 aspect-square rounded-lg mb-2"></div>
+                    <p class="text-white text-sm">Top Hits</p>
+                </div>
+                <div class="flex-shrink-0 w-32">
+                    <div class="bg-gradient-to-br from-pink-600 to-red-500 aspect-square rounded-lg mb-2"></div>
+                    <p class="text-white text-sm">Trending</p>
+                </div>
+                <div class="flex-shrink-0 w-32">
+                    <div class="bg-gradient-to-br from-green-600 to-teal-500 aspect-square rounded-lg mb-2"></div>
+                    <p class="text-white text-sm">Chill Mix</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recently Played -->
+        <section class="py-4">
+            <h2 class="text-white text-lg font-semibold mb-3">Recently Played</h2>
+            <div class="space-y-3">
+                <div class="flex items-center space-x-3 bg-gray-900/50 p-2 rounded-lg">
+                    <div class="w-12 h-12 bg-gray-800 rounded"></div>
+                    <div>
+                        <p class="text-white text-sm font-medium">Song Title</p>
+                        <p class="text-gray-400 text-xs">Artist Name</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Now Playing Bar -->
+    <!-- <div class="fixed bottom-16 left-0 right-0 bg-gray-900/90 backdrop-blur-lg border-t border-gray-800 p-3">
+        <div class="flex items-center justify-between">
+            <a href="/player" class="flex items-center space-x-3 flex-1">
+                <div class="w-10 h-10 bg-gray-800 rounded"></div>
+                <div>
+                    <p class="text-white text-sm">Current Song</p>
+                    <p class="text-gray-400 text-xs">Artist</p>
+                </div>
+            </a>
+            <div class="flex items-center space-x-4">
+                <button class="text-white p-2"><i class="fas fa-play"></i></button>
+                <button class="text-white p-2"><i class="fas fa-forward"></i></button>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 w-full bg-black/90 backdrop-blur-lg border-t border-gray-800">
+        <div class="flex justify-around py-3">
+            <a href="#" class="text-white flex flex-col items-center">
+                <i class="fas fa-home"></i>
+                <span class="text-xs mt-1">Home</span>
+            </a>
+            <a href="/explore" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-compass"></i>
+                <span class="text-xs mt-1">Explore</span>
+            </a>
+            <a href="/library" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-heart"></i>
+                <span class="text-xs mt-1">Library</span>
+            </a>
+            <a href="profile" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-user"></i>
+                <span class="text-xs mt-1">Profile</span>
+            </a>
+        </div>
+    </nav>
+</body>
+</html>

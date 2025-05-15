@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library - DDMusic</title>
+    <link rel="stylesheet" href="output.css" >
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-black min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="fixed top-0 w-full bg-black/90 backdrop-blur-lg z-50 px-4 py-3 border-b border-gray-800">
+        <div class="flex justify-between items-center">
+            <h1 class="text-xl font-bold text-white">Your Library</h1>
+            <button class="text-gray-400"><i class="fas fa-search"></i></button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 mt-16 mb-32 px-4">
+        <% if (!isLoggedIn) { %>
+            <div class="h-[80vh] flex flex-col items-center justify-center">
+                <div class="text-center space-y-4">
+                    <i class="fas fa-lock text-4xl text-gray-500"></i>
+                    <h2 class="text-2xl font-bold text-white">Login Required</h2>
+                    <p class="text-gray-400">Please login to access your library</p>
+                    <a href="/login" class="inline-block bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-3 rounded-lg text-white mt-4">
+                        Login to Continue
+                    </a>
+                </div>
+            </div>
+        <% } else { %>
+            <!-- Liked Songs Section -->
+            <section class="py-4">
+                <a href="/liked-songs" class="block">
+                    <div class="flex items-center space-x-4 bg-gradient-to-r from-purple-600 to-blue-600 p-4 rounded-lg">
+                        <div class="w-16 h-16 bg-black/30 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-heart text-2xl text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-white text-lg font-bold">Liked Songs</h2>
+                            <p class="text-gray-200 text-sm">123 songs</p>
+                        </div>
+                    </div>
+                </a>
+            </section>
+
+            <!-- Your Playlists -->
+            <section class="py-4">
+                <h2 class="text-white text-lg font-semibold mb-3">Your Playlists</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-900/50 p-4 rounded-lg">
+                        <div class="bg-gradient-to-br from-pink-600 to-purple-600 aspect-square rounded-lg mb-3"></div>
+                        <h3 class="text-white font-medium">Workout Mix</h3>
+                        <p class="text-gray-400 text-sm">32 songs</p>
+                    </div>
+                    <div class="bg-gray-900/50 p-4 rounded-lg">
+                        <div class="bg-gradient-to-br from-blue-600 to-green-600 aspect-square rounded-lg mb-3"></div>
+                        <h3 class="text-white font-medium">Chill Vibes</h3>
+                        <p class="text-gray-400 text-sm">45 songs</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Downloaded Content -->
+            <section class="py-4">
+                <h2 class="text-white text-lg font-semibold mb-3">Downloads</h2>
+                <div class="space-y-2">
+                    <div class="flex items-center space-x-3 bg-gray-900/50 p-3 rounded-lg">
+                        <div class="w-12 h-12 bg-gray-800 rounded flex items-center justify-center">
+                            <i class="fas fa-arrow-down text-gray-400"></i>
+                        </div>
+                        <div>
+                            <p class="text-white text-sm font-medium">Downloaded Songs</p>
+                            <p class="text-gray-400 text-xs">15 items</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        <% } %>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 w-full bg-black/90 backdrop-blur-lg border-t border-gray-800">
+        <div class="flex justify-around py-3">
+            <a href="/" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-home"></i>
+                <span class="text-xs mt-1">Home</span>
+            </a>
+            <a href="#" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-compass"></i>
+                <span class="text-xs mt-1">Explore</span>
+            </a>
+            <a href="/library" class="text-white flex flex-col items-center">
+                <i class="fas fa-heart"></i>
+                <span class="text-xs mt-1">Library</span>
+            </a>
+            <a href="/profile" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-user"></i>
+                <span class="text-xs mt-1">Profile</span>
+            </a>
+        </div>
+    </nav>
+</body>
+</html>
