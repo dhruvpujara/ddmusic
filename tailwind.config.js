@@ -34,9 +34,12 @@ module.exports = {
           '0%': { width: '0%' },
           '100%': { width: '100%' }
         },
-      }
+      },
+      fontFamily: {
+        'poppins': ['Poppins', 'sans-serif'],
+      },
     },
   },
-  plugins: [],
+  plugins: []
 }
 

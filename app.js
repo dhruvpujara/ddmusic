@@ -10,13 +10,13 @@ const adminRoutes = require('./routes/adminroutes');
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
-const { default: mongoose } = require('mongoose');
+const mongoose = require('mongoose');
 const app = express();
 const rootdir = __dirname;
 
 
 const port = 3500;
-app.use(express.static(path.join(rootdir , 'public')));
+app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.set('views', path.join(rootdir, 'views'));
 app.use(express.urlencoded({ extended: true }));

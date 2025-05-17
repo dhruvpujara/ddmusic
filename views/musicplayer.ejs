@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Now Playing - DDMusic</title>
-    <link rel="stylesheet" href="output.css" >
+    <link rel="stylesheet" href="/css/output.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-black min-h-screen flex flex-col text-white">
@@ -20,6 +20,24 @@
     <main class="flex-1 mt-16 mb-32 px-4 flex flex-col items-center">
         <!-- Album Art -->
         <div class="w-64 h-64 md:w-80 md:h-80 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600 mt-8 mb-8 shadow-2xl relative overflow-hidden group">
+            <!-- Like Button Form -->
+            <form action="/like" method="POST" class="absolute top-4 left-4 z-10">
+                <!-- Make sure the field name matches what the controller expects -->
+                <input type="hidden" name="objectId" value="<%= songId %>">
+                <button type="submit" 
+                    class="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md 
+                           flex items-center justify-center 
+                           hover:bg-pink-500/20 hover:scale-110
+                           active:scale-95
+                           transform transition-all duration-300 ease-in-out
+                           group shadow-lg hover:shadow-pink-500/25">
+                    <i class="fas fa-heart text-2xl 
+                             text-white/60 group-hover:text-pink-500 
+                             transition-all duration-300
+                             group-hover:scale-110"></i>
+                </button>
+            </form>
+            
             <!-- Animated Music Notes -->
             <div class="absolute inset-0 flex items-center justify-center">
                 <i class="fas fa-music text-6xl text-white/30 animate-pulse"></i>
@@ -44,25 +62,17 @@
             <p class="text-gray-400">Archive.org</p>
         </div>
 
-        <!-- Fallback Audio Player -->
+        <!-- Audio Player -->
         <div class="w-full max-w-md mb-6">
-            <!-- Primary Player -->
             <iframe 
                 src="<%= songLink %>" 
                 width="100%" 
                 height="50" 
                 frameborder="0"
+                webkitallowfullscreen="true"
+                mozallowfullscreen="true"
+                allowfullscreen
             ></iframe>
-            
-            <!-- Fallback Player -->
-            <audio 
-                controls 
-                class="w-full mt-2 hidden" 
-                id="fallbackPlayer"
-                onError="this.classList.remove('hidden')"
-            >
-                <source src="https://archive.org/download/apa-fer-milaange-320-pagai-world.com/apa-fer-milaange-320-pagai-world.com.mp3" type="audio/mpeg">
-            </audio>
         </div>
     </main>
 </body>

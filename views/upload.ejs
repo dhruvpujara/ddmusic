@@ -4,24 +4,290 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload - DDMusic</title>
-    <link rel="stylesheet" href="output.css">
+    <link rel="stylesheet" href="/css/output.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Fallback styles in case Tailwind doesn't load -->
+    <style>
+        body { background: #111; color: white; font-family: 'Poppins', sans-serif; }
+        input { background: #222; border: 1px solid #333; }
+    </style>
 </head>
-<body class="bg-black min-h-screen text-white p-8">
-    <div class="max-w-md mx-auto">
-        <h1 class="text-2xl font-bold mb-6">Upload Song</h1>
-        <form action="/admin/upload" method="POST" class="space-y-4">
-            <div>
-                <label class="block mb-2">Song Name</label>
-                <input type="text" name="name" required class="w-full p-2 rounded bg-gray-800 text-white">
-            </div>
-            <div>
-                <label class="block mb-2">Song Link</label>
-                <input type="text" name="link" required class="w-full p-2 rounded bg-gray-800 text-white">
-            </div>
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                Upload
-            </button>
-        </form>
+<body class="bg-gradient-to-br from-gray-900 via-black to-gray-900 min-h-screen text-white p-4 md:p-8 font-['Poppins']">
+    <div class="max-w-4xl mx-auto mb-12">
+        <div class="bg-black/40 backdrop-blur-lg p-4 md:p-8 rounded-2xl shadow-xl border border-gray-800">
+            <h1 class="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500">Upload Song</h1>
+            
+            <form action="/admin/upload" method="POST" class="space-y-6">
+                <div class="space-y-4">
+                    <div class="group">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Song Name</label>
+                        <input type="text" name="name" required 
+                               class="w-full p-3 rounded-lg bg-gray-800/50 border border-gray-700 
+                                      text-white transition-all duration-300
+                                      focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 focus:outline-none
+                                      hover:border-gray-600">
+                    </div>
+
+                    <div class="group">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Song Link</label>
+                        <input type="text" name="link" required 
+                               class="w-full p-3 rounded-lg bg-gray-800/50 border border-gray-700 
+                                      text-white transition-all duration-300
+                                      focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 focus:outline-none
+                                      hover:border-gray-600">
+                    </div>
+                </div>
+
+                <div class="space-y-8">  <!-- Increased spacing between sections -->
+                    <div class="space-y-4">
+                        <h2 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500">Genre Hashtags</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 p-4 bg-gray-800/30 rounded-xl border border-gray-800">
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="commonHashtags" value="bollywood" class="rounded bg-gray-800">
+                                <span>#bollywood</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="commonHashtags" value="romantic" class="rounded bg-gray-800">
+                                <span>#romantic</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="commonHashtags" value="bhajan" class="rounded bg-gray-800">
+                                <span>#bhajan</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="commonHashtags" value="punjabi" class="rounded bg-gray-800">
+                                <span>#punjabi</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="commonHashtags" value="classical" class="rounded bg-gray-800">
+                                <span>#classical</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="commonHashtags" value="qawwali" class="rounded bg-gray-800">
+                                <span>#qawwali</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="commonHashtags" value="wedding" class="rounded bg-gray-800">
+                                <span>#wedding</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="commonHashtags" value="sufi" class="rounded bg-gray-800">
+                                <span>#sufi</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="commonHashtags" value="oldies" class="rounded bg-gray-800">
+                                <span>#oldies</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="commonHashtags" value="indie" class="rounded bg-gray-800">
+                                <span>#indie</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="commonHashtags" value="fusion" class="rounded bg-gray-800">
+                                <span>#fusion</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="commonHashtags" value="ghazal" class="rounded bg-gray-800">
+                                <span>#ghazal</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="commonHashtags" value="rap" class="rounded bg-gray-800">
+                                <span>#rap</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h2 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500">Mood Hashtags</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 p-4 bg-gray-800/30 rounded-xl border border-gray-800">
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="moodHashtags" value="happy" class="rounded bg-gray-800">
+                                <span>#happy</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="moodHashtags" value="sad" class="rounded bg-gray-800">
+                                <span>#sad</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="moodHashtags" value="party" class="rounded bg-gray-800">
+                                <span>#party</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="moodHashtags" value="romantic" class="rounded bg-gray-800">
+                                <span>#romantic</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="moodHashtags" value="motivation" class="rounded bg-gray-800">
+                                <span>#motivation</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="moodHashtags" value="chill" class="rounded bg-gray-800">
+                                <span>#chill</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="moodHashtags" value="energetic" class="rounded bg-gray-800">
+                                <span>#energetic</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="moodHashtags" value="melancholy" class="rounded bg-gray-800">
+                                <span>#melancholy</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h2 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500">Artist Hashtags</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 p-4 bg-gray-800/30 rounded-xl border border-gray-800">
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="arijitsingh" class="rounded bg-gray-800">
+                                <span>#arijitsingh</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="atifaslam" class="rounded bg-gray-800">
+                                <span>#atifaslam</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="shreyaghoshal" class="rounded bg-gray-800">
+                                <span>#shreyaghoshal</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="nehakakkar" class="rounded bg-gray-800">
+                                <span>#nehakakkar</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="jubinnautiyal" class="rounded bg-gray-800">
+                                <span>#jubinnautiyal</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="dhvanibhanushali" class="rounded bg-gray-800">
+                                <span>#dhvanibhanushali</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="badshah" class="rounded bg-gray-800">
+                                <span>#badshah</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="armaan" class="rounded bg-gray-800">
+                                <span>#armaan</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="darshan" class="rounded bg-gray-800">
+                                <span>#darshan</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="palakm" class="rounded bg-gray-800">
+                                <span>#palakm</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="yoyohoneysing" class="rounded bg-gray-800">
+                                <span>#yoyohoneysing</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="kanikak" class="rounded bg-gray-800">
+                                <span>#kanikak</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="sunidhi" class="rounded bg-gray-800">
+                                <span>#sunidhi</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="mohit" class="rounded bg-gray-800">
+                                <span>#mohit</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="rahat" class="rounded bg-gray-800">
+                                <span>#rahat</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2.5 rounded-lg cursor-pointer transition-colors truncate">
+                                <input type="checkbox" name="artistHashtags" value="sonu" class="rounded bg-gray-800">
+                                <span>#sonu</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Language Hashtags Section -->
+                    <div class="space-y-4">
+                        <h2 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500">Language Hashtags</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 p-4 bg-gray-800/30 rounded-xl border border-gray-800">
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="languageHashtags" value="hindi" class="rounded bg-gray-800">
+                                <span>#hindi</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="languageHashtags" value="punjabi" class="rounded bg-gray-800">
+                                <span>#punjabi</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="languageHashtags" value="bengali" class="rounded bg-gray-800">
+                                <span>#bengali</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="languageHashtags" value="tamil" class="rounded bg-gray-800">
+                                <span>#tamil</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="languageHashtags" value="telugu" class="rounded bg-gray-800">
+                                <span>#telugu</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="languageHashtags" value="marathi" class="rounded bg-gray-800">
+                                <span>#marathi</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Era Hashtags Section -->
+                    <div class="space-y-4">
+                        <h2 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500">Era Hashtags</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 p-4 bg-gray-800/30 rounded-xl border border-gray-800">
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="eraHashtags" value="90s" class="rounded bg-gray-800">
+                                <span>#90s</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="eraHashtags" value="2000s" class="rounded bg-gray-800">
+                                <span>#2000s</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="eraHashtags" value="2010s" class="rounded bg-gray-800">
+                                <span>#2010s</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="eraHashtags" value="2020s" class="rounded bg-gray-800">
+                                <span>#2020s</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="eraHashtags" value="retro" class="rounded bg-gray-800">
+                                <span>#retro</span>
+                            </label>
+                            <label class="flex items-center space-x-2 hover:bg-gray-800 p-2 rounded cursor-pointer">
+                                <input type="checkbox" name="eraHashtags" value="classic" class="rounded bg-gray-800">
+                                <span>#classic</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="group mt-8">
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Custom Hashtags</label>
+                        <input type="text" name="customHashtags" 
+                               placeholder="Add custom hashtags (e.g. #remix #unplugged)" 
+                               class="w-full p-3 rounded-lg bg-gray-800/50 border border-gray-700 
+                                      text-white transition-all duration-300
+                                      focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 focus:outline-none
+                                      hover:border-gray-600">
+                    </div>
+                </div>
+
+                <button type="submit" 
+                        class="w-full py-3 px-6 rounded-lg font-semibold
+                               bg-gradient-to-r from-pink-500 to-violet-500
+                               hover:opacity-90 transition-all duration-300
+                               focus:ring-2 focus:ring-violet-500/20
+                               transform hover:scale-[0.99] active:scale-[0.98]">
+                    Upload Song
+                </button>
+            </form>
+        </div>
     </div>
 </body>
 </html>

@@ -7,5 +7,9 @@ router.get('/player', usercontroller.getmusicplayer);
 router.get('/library', usercontroller.library);
 router.get('/explore', usercontroller.getExplore);
 router.post('/player', usercontroller.postMusicPlayer);
+router.post('/like', usercontroller.songliked);
+router.get('/likedsongs', usercontroller.getlikedsongs);
+router.get('/playbollywood', usercontroller.getplaybollywood);
+router.get('/oldies', usercontroller.getOldies);
 
 module.exports = router;

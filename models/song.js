@@ -9,6 +9,7 @@ const songSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    hashtags: [String],
     createdAt: {
         type: Date,
         default: Date.now

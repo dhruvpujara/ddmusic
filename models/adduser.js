@@ -20,10 +20,7 @@ const userschema = new mongoose.Schema({
         type: Array,
         default: []
     },
-    likedsong: {
-        type: Array,
-        default: []
-    },
+
 });
 
 module.exports = mongoose.model('user', userschema);

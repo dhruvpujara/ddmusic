@@ -1,13 +1,6 @@
-const Song = require('../models/song');
-
-module.exports.getUploadForm = (req, res) => {
-    res.render('upload');
-};
-
-module.exports.postuploadForm = async (req, res) => {
+router.post('/upload', async (req, res) => {
     try {
-
-        // Process hashtags with # prefix
+        // Process all hashtag types
         const commonHashtags = Array.isArray(req.body.commonHashtags) 
             ? req.body.commonHashtags.map(tag => `#${tag}`)
             : (req.body.commonHashtags ? [`#${req.body.commonHashtags}`] : []);
@@ -16,19 +9,10 @@ module.exports.postuploadForm = async (req, res) => {
             ? req.body.artistHashtags.map(tag => `#${tag}`)
             : (req.body.artistHashtags ? [`#${req.body.artistHashtags}`] : []);
 
-        const languageHashtags = Array.isArray(req.body.languageHashtags)
-            ? req.body.languageHashtags.map(tag => `#${tag}`)
-            : (req.body.languageHashtags ? [`#${req.body.languageHashtags}`] : []);
-
-        const eraHashtags = Array.isArray(req.body.eraHashtags)
-            ? req.body.eraHashtags.map(tag => `#${tag}`)
-            : (req.body.eraHashtags ? [`#${req.body.eraHashtags}`] : []);
-
         const moodHashtags = Array.isArray(req.body.moodHashtags)
             ? req.body.moodHashtags.map(tag => `#${tag}`)
             : (req.body.moodHashtags ? [`#${req.body.moodHashtags}`] : []);
 
-        // Process custom hashtags
         const customHashtags = req.body.customHashtags
             ? req.body.customHashtags
                 .split(' ')
@@ -37,14 +21,7 @@ module.exports.postuploadForm = async (req, res) => {
             : [];
 
         // Combine all hashtags
-        const allHashtags = [
-            ...commonHashtags, 
-            ...artistHashtags, 
-            ...languageHashtags,
-            ...eraHashtags,
-            ...moodHashtags,
-            ...customHashtags
-        ];
+        const allHashtags = [...commonHashtags, ...artistHashtags, ...moodHashtags, ...customHashtags];
 
         // Create and save song
         const song = new Song({
@@ -54,11 +31,9 @@ module.exports.postuploadForm = async (req, res) => {
         });
 
         await song.save();
-        console.log('Song saved successfully:', song);
-        res.redirect('/admin/upload');
+        res.redirect('/admin/dashboard');
     } catch (error) {
         console.error('Error in upload:', error);
-        res.status(500).render('upload', { error: 'Failed to upload song' });
+        res.status(500).json({ error: error.message });
     }
-};
-
+});

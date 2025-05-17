@@ -83,16 +83,35 @@ module.exports.postlogout = (req, res) => {
     });
 };
 
-module.exports.getprofile = (req, res) => {    
-    if (req.session.isLoggedIn) {
+module.exports.getprofile = async (req, res) => {
+    try {
+        if (!req.session.isLoggedIn) {
+            return res.render('profile', { 
+                isLoggedIn: false 
+            });
+        }
+
+        const user = await User.findOne({ username: req.session.loggeduser });
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        // Safely check for likedSongs array
+        const likedSongsCount = user.likedSongs ? user.likedSongs.length : 0;
+
         res.render('profile', {
             isLoggedIn: true,
-            username: req.session.loggeduser
+            username: req.session.loggeduser,
+            email: user.email,
+            likedSongsCount: likedSongsCount
         });
-    } else {
+    } catch (err) {
+        console.error('Error in getprofile:', err);
         res.render('profile', {
-            isLoggedIn: false,
-            username: ''
+            isLoggedIn: true,
+            username: req.session.loggeduser,
+            email: '',
+            likedSongsCount: 0
         });
     }
 }
