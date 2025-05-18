@@ -19,7 +19,7 @@ module.exports.getExplore = async (req, res) => {
 module.exports.getplaybollywood = async (req, res) => {
     try {
         const bollywoodSongs = await Song.find({ 
-            hashtags: { $in: ['bollywood', '#bollywood'] } 
+            hashtags: { $in: ['bollywood', '#bollywood','BollywoodRomance','#BollywoodRomance','BollywoodMusic','#BollywoodMusic','BollywoodLoveSong','#BollywoodLoveSong'] } 
         });
         
         res.render('playbollywood', { 
