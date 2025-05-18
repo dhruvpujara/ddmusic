@@ -35,7 +35,7 @@ module.exports.getplaybollywood = async (req, res) => {
 module.exports.getOldies = async (req, res) => {
     try {
         const oldiesSongs = await Song.find({ 
-            hashtags: { $in: ['oldies', '#oldies', 'retro', '#retro'] } 
+            hashtags: { $in: ['oldies', '#oldies', 'retro', '#retro', 'OldBollywood', '#OldBollywood', 'ClassicHindiSong', '#ClassicHindiSong', 'BlackAndWhiteCinema', '#BlackAndWhiteCinema', 'OldIsGold', '#OldIsGold', '1950sHits', '#1950sHits'] } 
         });
         
         res.render('oldies', { 
