@@ -32,6 +32,22 @@ module.exports.getplaybollywood = async (req, res) => {
     }
 };
 
+module.exports.getOldies = async (req, res) => {
+    try {
+        const oldiesSongs = await Song.find({ 
+            hashtags: { $in: ['oldies', '#oldies', 'retro', '#retro'] } 
+        });
+        
+        res.render('oldies', { 
+            songs: oldiesSongs,
+            isLoggedIn: req.session.isLoggedIn || false
+        });
+    } catch (err) {
+        console.error('Error fetching oldies songs:', err);
+        res.redirect('/');
+    }
+};
+
 module.exports.getlikedsongs = async (req, res) => {
     try {
         const currentuser = req.session.loggeduser;
@@ -60,10 +76,24 @@ module.exports.getlikedsongs = async (req, res) => {
 };
 
 
-module.exports.gethome = (req, res) => {
-    res.render('home', {
-        isLoggedIn: req.session.isLoggedIn || false
-    });
+module.exports.gethome = async (req, res) => {
+    try {
+        let recentSong = null;
+        if (req.session.recentlyplayed) {
+            recentSong = await Song.findById(req.session.recentlyplayed);
+        }
+        
+        res.render('home', {
+            isLoggedIn: req.session.isLoggedIn || false,
+            recentSong: recentSong
+        });
+    } catch (err) {
+        console.error('Error fetching recent song:', err);
+        res.render('home', {
+            isLoggedIn: req.session.isLoggedIn || false,
+            recentSong: null
+        });
+    }
 };
 
 
@@ -125,6 +155,27 @@ module.exports.getprofile = async (req, res) => {
     }
 };
 
+module.exports.getrecentlyplayed = async (req, res) => {
+    try {
+        const recent = req.session.recentlyplayed;
+        if (!recent) {
+            return res.redirect('/explore');
+        } 
+        const song = await Song.findById(recent);
+        if (!song) {
+            return res.redirect('/explore');
+        }
+        res.render('musicplayer', {
+            songName: song.name,
+            songLink: song.link,
+            songId: recent, // Pass clean ID
+            hashtags: song.hashtags
+        });
+    } catch (err) {
+        console.error('Error fetching recently played song:', err);
+        res.redirect('/explore');
+    }
+}
 
 
 // post methods
@@ -173,11 +224,17 @@ module.exports.postMusicPlayer = async (req, res) => {
         const songId = req.body.objectId;
         // Remove any ObjectId wrapper text if present
         const cleanSongId = songId.replace(/^ObjectId\("(.*)"\)$/, '$1');
-        console.log(cleanSongId);
         const song = await Song.findById(cleanSongId);
         if (!song) {
             throw new Error('Song not found');
+
         }
+        req.session.recentlyplayed = cleanSongId;
+        req.session.save((err) => {
+                if (err) {
+                    console.error('Error saving session:', err);
+                    return res.redirect('/login');
+                }});
 
         res.render('musicplayer', {
             songName: song.name,
@@ -191,18 +248,4 @@ module.exports.postMusicPlayer = async (req, res) => {
     }
 };
 
-module.exports.getOldies = async (req, res) => {
-    try {
-        const oldiesSongs = await Song.find({ 
-            hashtags: { $in: ['oldies', '#oldies', 'retro', '#retro'] } 
-        });
-        
-        res.render('oldies', { 
-            songs: oldiesSongs,
-            isLoggedIn: req.session.isLoggedIn || false
-        });
-    } catch (err) {
-        console.error('Error fetching oldies songs:', err);
-        res.redirect('/');
-    }
-};
+

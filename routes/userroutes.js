@@ -11,5 +11,6 @@ router.post('/like', usercontroller.songliked);
 router.get('/likedsongs', usercontroller.getlikedsongs);
 router.get('/playbollywood', usercontroller.getplaybollywood);
 router.get('/oldies', usercontroller.getOldies);
+router.get('/recent', usercontroller.getrecentlyplayed);
 
 module.exports = router;
