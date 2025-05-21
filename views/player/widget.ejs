@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDMusic Widget</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="/css/output.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-[#09090b] h-32 w-full max-w-sm overflow-hidden rounded-xl border border-white/5">
+    <div class="h-full px-4 py-2 backdrop-blur-xl bg-black/40 flex items-center gap-4">
+        <!-- Album Art -->
+        <div class="w-20 h-20 rounded-xl bg-gradient-to-br from-violet-900 to-indigo-950 flex-shrink-0 flex items-center justify-center">
+            <i class="fas fa-music text-2xl text-white/20"></i>
+        </div>
+
+        <!-- Info & Controls -->
+        <div class="flex-1 min-w-0">
+            <h2 class="text-white font-bold truncate"><%= songName %></h2>
+            <p class="text-white/60 text-sm truncate">DDMusic Player</p>
+            
+            <!-- Mini Controls -->
+            <div class="flex items-center gap-3 mt-2">
+                <button class="text-white/60 hover:text-white">
+                    <i class="fas fa-backward-step"></i>
+                </button>
+                <button id="playPauseBtn" class="w-8 h-8 rounded-full bg-violet-800/50 flex items-center justify-center hover:bg-violet-700">
+                    <i class="fas fa-play text-sm pl-0.5"></i>
+                </button>
+                <button class="text-white/60 hover:text-white">
+                    <i class="fas fa-forward-step"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const audio = new Audio('<%= songLink %>');
+        
+        // Play/Pause handling
+        playPauseBtn.addEventListener('click', togglePlay);
+        
+        function togglePlay() {
+            if (audio.paused) {
+                audio.play()
+                    .then(() => {
+                        playPauseBtn.innerHTML = '<i class="fas fa-pause text-sm"></i>';
+                        fetch('/api/now-playing', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ songId: '<%= songId %>' })
+                        });
+                    })
+                    .catch(console.error);
+            } else {
+                audio.pause();
+                playPauseBtn.innerHTML = '<i class="fas fa-play text-sm pl-0.5"></i>';
+            }
+        }
+
+        // Handle audio errors
+        audio.addEventListener('error', () => {
+            console.error('Audio loading error');
+            playPauseBtn.classList.add('opacity-50');
+        });
+    </script>
+</body>
+</html>

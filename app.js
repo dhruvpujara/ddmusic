@@ -3,6 +3,7 @@ const authRoutes = require('./routes/authroutes');
 const userRoutes = require('./routes/userroutes');
 const errorController = require('./controller/errorController');
 const adminRoutes = require('./routes/adminroutes');
+const widgetRoutes = require('./routes/widgetRoutes');
 
 
 
@@ -21,7 +22,11 @@ app.set('view engine', 'ejs');
 app.set('views', [
     path.join(rootdir, 'views'),
     path.join(rootdir, 'views/admin'),
-     path.join(rootdir, 'views/homesquares'),
+    path.join(rootdir, 'views/homesquares'),
+    path.join(rootdir, 'views/mainpages'),
+    path.join(rootdir, 'views/player'),
+    path.join(rootdir, 'views/account'),
+
 
 ]);
 app.use(express.urlencoded({ extended: true }));
@@ -36,6 +41,7 @@ app.use(session({
 app.use('/', authRoutes);
 app.use('/', userRoutes);
 app.use('/admin', adminRoutes);
+app.use('/player', widgetRoutes);
 
 app.use((req, res) => {
     errorController.get404(req, res);
