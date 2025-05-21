@@ -18,7 +18,12 @@ const rootdir = __dirname;
 const port = 3500;
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
-app.set('views', path.join(rootdir, 'views'));
+app.set('views', [
+    path.join(rootdir, 'views'),
+    path.join(rootdir, 'views/admin'),
+     path.join(rootdir, 'views/homesquares'),
+
+]);
 app.use(express.urlencoded({ extended: true }));
 
 

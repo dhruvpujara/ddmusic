@@ -1,7 +1,7 @@
 const Song = require('../models/song');
 
 module.exports.getUploadForm = (req, res) => {
-    res.render('upload');
+    res.render('upload'); 
 };
 
 module.exports.postuploadForm = async (req, res) => {
