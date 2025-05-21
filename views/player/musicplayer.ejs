@@ -67,57 +67,41 @@
             </div>
 
             <!-- Audio Controls -->
-            <div class="w-full bg-black/20 backdrop-blur-sm p-6 rounded-2xl border border-white/5">
+            <div class="w-full bg-black/40 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-2xl">
                 <audio id="audioPlayer" class="hidden">
                     <source src="<%= songLink %>" type="audio/mp3">
                 </audio>
 
                 <!-- Progress Bar -->
-                <div class="relative w-full h-1 mb-6">
-                    <div class="absolute inset-0 bg-white/10 rounded-full">
-                        <div class="h-full bg-violet-500 rounded-full transition-all duration-200" id="progress"></div>
+                <div class="relative w-full h-1.5 group mb-2 cursor-pointer" id="progressContainer">
+                    <div class="absolute inset-0 bg-white/5 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-violet-600 to-indigo-600 w-0 transition-all duration-200" id="progress"></div>
                     </div>
                 </div>
 
-                <!-- Controls -->
-                <div class="flex items-center justify-between px-8">
+                <!-- Time Display -->
+                <div class="flex justify-between text-xs text-white/40 mb-6 px-1">
+                    <span id="currentTime">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
+
+                <!-- Simplified Controls -->
+                <div class="flex items-center justify-center gap-8">
                     <a href="/player/previous" 
-                       class="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center
-                              text-white/40 hover:text-violet-400 hover:border-violet-500/50 transition-all">
+                       class="text-white/40 hover:text-white transition-colors">
                         <i class="fas fa-backward-step text-xl"></i>
                     </a>
                     
-                    <button id="playPauseBtn" 
-                            class="w-14 h-14 rounded-full bg-violet-600 flex items-center justify-center 
-                                   hover:bg-violet-500 active:scale-95 transition-all duration-200
-                                   border-2 border-violet-500/50">
+                    <button id="playPauseBtn" class="w-14 h-14 rounded-full bg-gradient-to-br from-violet-800 to-indigo-900 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg shadow-violet-900/25 border border-white/10">
                         <i class="fas fa-play text-xl pl-1"></i>
                     </button>
                     
                     <a href="/player/next"
-                       class="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center
-                              text-white/40 hover:text-violet-400 hover:border-violet-500/50 transition-all">
+                       class="text-white/40 hover:text-white transition-colors">
                         <i class="fas fa-forward-step text-xl"></i>
                     </a>
                 </div>
             </div>
-
-            <style>
-                @keyframes glow {
-                    0%, 100% { opacity: 1 }
-                    50% { opacity: 0.7 }
-                }
-                @keyframes pulse-subtle {
-                    0%, 100% { transform: scale(1) }
-                    50% { transform: scale(1.02) }
-                }
-                .animate-glow {
-                    animation: glow 2s ease-in-out infinite;
-                }
-                .animate-pulse-subtle {
-                    animation: pulse-subtle 2s ease-in-out infinite;
-                }
-            </style>
         </div>
     </main>
 
@@ -144,6 +128,35 @@
     const audio = document.getElementById('audioPlayer');
     const playPauseBtn = document.getElementById('playPauseBtn');
     const progress = document.getElementById('progress');
+    const progressContainer = document.getElementById('progressContainer');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+
+    // Format time function
+    function formatTime(seconds) {
+        const min = Math.floor(seconds / 60);
+        const sec = Math.floor(seconds % 60);
+        return `${min}:${sec.toString().padStart(2, '0')}`;
+    }
+
+    // Update progress and time
+    audio.addEventListener('timeupdate', () => {
+        const percent = (audio.currentTime / audio.duration) * 100;
+        progress.style.width = `${percent}%`;
+        currentTimeEl.textContent = formatTime(audio.currentTime);
+    });
+
+    // Set duration when metadata is loaded
+    audio.addEventListener('loadedmetadata', () => {
+        durationEl.textContent = formatTime(audio.duration);
+    });
+
+    // Click to seek
+    progressContainer.addEventListener('click', (e) => {
+        const rect = progressContainer.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        audio.currentTime = percent * audio.duration;
+    });
 
     // Simplified play/pause functionality
     playPauseBtn.addEventListener('click', () => {
@@ -154,12 +167,6 @@
             audio.pause();
             playPauseBtn.innerHTML = '<i class="fas fa-play text-xl pl-1"></i>';
         }
-    });
-
-    // Update progress bar only
-    audio.addEventListener('timeupdate', () => {
-        const percent = (audio.currentTime / audio.duration) * 100;
-        progress.style.width = `${percent}%`;
     });
 </script>
 </body>
