@@ -5,7 +5,8 @@ const mongoose = require('mongoose'); // Import mongoose
 
 module.exports.getExplore = async (req, res) => {
     try {
-        const allSongs = await Song.find({});
+        let allSongs = await Song.find({});
+        allSongs = allSongs.sort(() => Math.random() - 0.5); // Shuffle the songs array
 
         res.render('explore', { 
             songs: allSongs
@@ -19,7 +20,7 @@ module.exports.getExplore = async (req, res) => {
 module.exports.getplaybollywood = async (req, res) => {
     try {
         const bollywoodSongs = await Song.find({ 
-            hashtags: { $in: ['bollywood', '#bollywood','BollywoodRomance','#BollywoodRomance','BollywoodMusic','#BollywoodMusic','BollywoodLoveSong','#BollywoodLoveSong'] } 
+            hashtags: { $in: ['#BollywoodVibes', '#bollywood','BollywoodRomance','#BollywoodRomance','BollywoodMusic','#BollywoodMusic','BollywoodLoveSong','#BollywoodLoveSong'] } 
         });
         
         res.render('playbollywood', { 
@@ -221,6 +222,42 @@ module.exports.songliked = async (req, res) => {
 }                                                                                       
 
 
+module.exports.postaddtoplaylist = async (req, res) => {
+    try {
+        const currentuser = req.session.loggeduser;
+        if (!currentuser) {
+            res.redirect('/login');
+            return;
+        }
+        const user = await User.findOne({ username: currentuser });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const songId = req.body.objectId.toString().replace(/^ObjectId\("(.*)"\)$/, '$1');
+        
+        const song = await Song.findById(songId);
+        if (!song) {
+            return res.status(404).json({ error: 'Song not found' });
+        }
+
+        // Store only the ID string
+        if (!user.likedSongs.includes(songId)) {
+            user.likedSongs.push(songId);
+            await user.save();
+        }
+        res.render('musicplayer', {
+            songName: song.name,
+            songLink: song.link,
+            songId: songId, // Pass clean ID
+            hashtags: song.hashtags
+        });
+    } catch (err) {
+        console.error('Error in postaddtoplaylist:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
 module.exports.postMusicPlayer = async (req, res) => {
     try {
         const songId = req.body.objectId;
@@ -246,6 +283,42 @@ module.exports.postMusicPlayer = async (req, res) => {
         });
     } catch (err) {
         console.error('Error in postMusicPlayer:', err);
+        res.redirect('/explore');
+    }
+};
+
+module.exports.getNextSong = async (req, res) => {
+    try {
+        const allSongs = await Song.find({});
+        const randomIndex = Math.floor(Math.random() * allSongs.length);
+        const nextSong = allSongs[randomIndex];
+
+        res.render('musicplayer', {
+            songName: nextSong.name,
+            songLink: nextSong.link,
+            songId: nextSong._id,
+            hashtags: nextSong.hashtags
+        });
+    } catch (err) {
+        console.error('Error getting next song:', err);
+        res.redirect('/explore');
+    }
+};
+
+module.exports.getPreviousSong = async (req, res) => {
+    try {
+        const allSongs = await Song.find({});
+        const randomIndex = Math.floor(Math.random() * allSongs.length);
+        const prevSong = allSongs[randomIndex];
+
+        res.render('musicplayer', {
+            songName: prevSong.name,
+            songLink: prevSong.link,
+            songId: prevSong._id,
+            hashtags: prevSong.hashtags
+        });
+    } catch (err) {
+        console.error('Error getting previous song:', err);
         res.redirect('/explore');
     }
 };

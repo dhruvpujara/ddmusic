@@ -3,7 +3,6 @@ const authRoutes = require('./routes/authroutes');
 const userRoutes = require('./routes/userroutes');
 const errorController = require('./controller/errorController');
 const adminRoutes = require('./routes/adminroutes');
-const widgetRoutes = require('./routes/widgetRoutes');
 
 
 
@@ -41,7 +40,6 @@ app.use(session({
 app.use('/', authRoutes);
 app.use('/', userRoutes);
 app.use('/admin', adminRoutes);
-app.use('/player', widgetRoutes);
 
 app.use((req, res) => {
     errorController.get404(req, res);

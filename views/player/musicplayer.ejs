@@ -4,22 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Now Playing - DDMusic</title>
-    <!-- Add these new meta tags -->
-    <meta name="theme-color" content="#2e1065">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="/manifest.json">
-    <!-- Existing links -->
     <link rel="stylesheet" href="/css/output.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Add this script at the end of head -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
-                .then(registration => console.log('ServiceWorker registered'))
-                .catch(err => console.log('ServiceWorker registration failed:', err));
-        }
-    </script>
 </head>
 <body class="bg-[#09090b] min-h-screen flex flex-col text-white">
     <!-- Decorative Background -->
@@ -59,18 +45,15 @@
                     
                     <!-- Cover Art Elements -->
                     <div class="absolute inset-0 flex items-center justify-center">
-                        <i class="fas fa-music text-6xl text-white/20"></i>
+                        <i class="fas fa-music text-6xl text-white/20 animate-pulse"></i>
                     </div>
                     
-                    <!-- Animated Waves -->
-                    <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/40 to-transparent">
-                        <div class="absolute bottom-0 left-0 right-0 flex justify-around">
-                            <div class="w-1 h-12 bg-white/20 rounded-full animate-eq"></div>
-                            <div class="w-1 h-8 bg-white/20 rounded-full animate-eq animation-delay-200"></div>
-                            <div class="w-1 h-16 bg-white/20 rounded-full animate-eq animation-delay-400"></div>
-                            <div class="w-1 h-10 bg-white/20 rounded-full animate-eq animation-delay-600"></div>
-                            <div class="w-1 h-14 bg-white/20 rounded-full animate-eq animation-delay-800"></div>
-                        </div>
+                    <!-- Animated Squares -->
+                    <div class="absolute inset-0 overflow-hidden opacity-20">
+                        <div class="absolute -left-4 -top-4 w-20 h-20 bg-violet-500/20 rounded-lg rotate-12 animate-float"></div>
+                        <div class="absolute right-10 top-10 w-16 h-16 bg-indigo-500/20 rounded-lg -rotate-12 animate-float animation-delay-500"></div>
+                        <div class="absolute bottom-10 left-10 w-14 h-14 bg-purple-500/20 rounded-lg rotate-45 animate-float animation-delay-1000"></div>
+                        <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-violet-500/20 rounded-lg -rotate-12 animate-float animation-delay-1500"></div>
                     </div>
                 </div>
             </div>
@@ -84,118 +67,100 @@
             </div>
 
             <!-- Audio Controls -->
-            <div class="w-full bg-black/40 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-2xl">
+            <div class="w-full bg-black/20 backdrop-blur-sm p-6 rounded-2xl border border-white/5">
                 <audio id="audioPlayer" class="hidden">
                     <source src="<%= songLink %>" type="audio/mp3">
                 </audio>
 
                 <!-- Progress Bar -->
-                <div class="relative w-full h-1.5 group mb-6">
-                    <div class="absolute inset-0 bg-white/5 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-violet-600 to-indigo-600 w-0 transition-all duration-200" id="progress"></div>
+                <div class="relative w-full h-1 mb-6">
+                    <div class="absolute inset-0 bg-white/10 rounded-full">
+                        <div class="h-full bg-violet-500 rounded-full transition-all duration-200" id="progress"></div>
                     </div>
-                    <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" style="left: var(--progress-left, 0%)"></div>
                 </div>
 
                 <!-- Controls -->
-                <div class="flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-2 min-w-[4rem]">
-                        <span id="currentTime" class="text-sm font-medium">0:00</span>
-                        <span class="text-white/20">/</span>
-                        <span id="duration" class="text-sm text-white/40">0:00</span>
-                    </div>
-
-                    <div class="flex items-center gap-6">
-                        <button class="text-white/40 hover:text-white transition-colors">
-                            <i class="fas fa-backward-step text-xl"></i>
-                        </button>
-                        <button id="playPauseBtn" class="w-14 h-14 rounded-full bg-gradient-to-br from-violet-800 to-indigo-900 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg shadow-violet-900/25 border border-white/10">
-                            <i class="fas fa-play text-xl pl-1"></i>
-                        </button>
-                        <button class="text-white/40 hover:text-white transition-colors">
-                            <i class="fas fa-forward-step text-xl"></i>
-                        </button>
-                    </div>
-
-                    <div class="flex items-center gap-2 min-w-[4rem]">
-                        <button id="volumeBtn" class="text-white/40 hover:text-white transition-colors">
-                            <i class="fas fa-volume-high"></i>
-                        </button>
-                        <div class="relative w-16">
-                            <div class="absolute inset-y-0 -left-2 -right-2 py-4 opacity-0 group-hover:opacity-100 transition-opacity" id="volumeContainer">
-                                <div class="w-full h-1 bg-white/10 rounded-full cursor-pointer" id="volumeBar">
-                                    <div class="h-full bg-white/25 rounded-full" id="volumeLevel" style="width: 100%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="flex items-center justify-between px-8">
+                    <a href="/player/previous" 
+                       class="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center
+                              text-white/40 hover:text-violet-400 hover:border-violet-500/50 transition-all">
+                        <i class="fas fa-backward-step text-xl"></i>
+                    </a>
+                    
+                    <button id="playPauseBtn" 
+                            class="w-14 h-14 rounded-full bg-violet-600 flex items-center justify-center 
+                                   hover:bg-violet-500 active:scale-95 transition-all duration-200
+                                   border-2 border-violet-500/50">
+                        <i class="fas fa-play text-xl pl-1"></i>
+                    </button>
+                    
+                    <a href="/player/next"
+                       class="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center
+                              text-white/40 hover:text-violet-400 hover:border-violet-500/50 transition-all">
+                        <i class="fas fa-forward-step text-xl"></i>
+                    </a>
                 </div>
             </div>
+
+            <style>
+                @keyframes glow {
+                    0%, 100% { opacity: 1 }
+                    50% { opacity: 0.7 }
+                }
+                @keyframes pulse-subtle {
+                    0%, 100% { transform: scale(1) }
+                    50% { transform: scale(1.02) }
+                }
+                .animate-glow {
+                    animation: glow 2s ease-in-out infinite;
+                }
+                .animate-pulse-subtle {
+                    animation: pulse-subtle 2s ease-in-out infinite;
+                }
+            </style>
         </div>
     </main>
 
-    <script>
-        const audio = document.getElementById('audioPlayer');
-        const playPauseBtn = document.getElementById('playPauseBtn');
-        const progressBar = document.getElementById('progressBar');
-        const progress = document.getElementById('progress');
-        const currentTimeEl = document.getElementById('currentTime');
-        const durationEl = document.getElementById('duration');
-        const volumeBar = document.getElementById('volumeBar');
-        const volumeLevel = document.getElementById('volumeLevel');
-        const volumeBtn = document.getElementById('volumeBtn');
-        const volumeContainer = document.getElementById('volumeContainer');
+    <style>
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(var(--tw-rotate)); }
+    50% { transform: translateY(-10px) rotate(var(--tw-rotate)); }
+}
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+.animation-delay-500 {
+    animation-delay: 500ms;
+}
+.animation-delay-1000 {
+    animation-delay: 1000ms;
+}
+.animation-delay-1500 {
+    animation-delay: 1500ms;
+}
+</style>
 
-        // Play/Pause functionality
-        playPauseBtn.addEventListener('click', () => {
-            if (audio.paused) {
-                audio.play();
-                playPauseBtn.innerHTML = '<i class="fas fa-pause text-xl"></i>';
-            } else {
-                audio.pause();
-                playPauseBtn.innerHTML = '<i class="fas fa-play text-xl pl-1"></i>';
-            }
-        });
+<script>
+    const audio = document.getElementById('audioPlayer');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const progress = document.getElementById('progress');
 
-        // Update progress and time
-        audio.addEventListener('timeupdate', () => {
-            const percent = (audio.currentTime / audio.duration) * 100;
-            progress.style.width = `${percent}%`;
-            currentTimeEl.textContent = formatTime(audio.currentTime);
-        });
-
-        // Click to seek
-        progressBar.addEventListener('click', (e) => {
-            const rect = progressBar.getBoundingClientRect();
-            const percent = (e.clientX - rect.left) / rect.width;
-            audio.currentTime = percent * audio.duration;
-        });
-
-        // Set duration
-        audio.addEventListener('loadedmetadata', () => {
-            durationEl.textContent = formatTime(audio.duration);
-        });
-
-        // Format time helper
-        function formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = Math.floor(seconds % 60);
-            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    // Simplified play/pause functionality
+    playPauseBtn.addEventListener('click', () => {
+        if (audio.paused) {
+            audio.play();
+            playPauseBtn.innerHTML = '<i class="fas fa-pause text-xl"></i>';
+        } else {
+            audio.pause();
+            playPauseBtn.innerHTML = '<i class="fas fa-play text-xl pl-1"></i>';
         }
+    });
 
-        // Add volume control
-        volumeBar.addEventListener('click', (e) => {
-            const rect = volumeBar.getBoundingClientRect();
-            const percent = (e.clientX - rect.left) / rect.width;
-            audio.volume = percent;
-            volumeLevel.style.width = (percent * 100) + '%';
-        });
-
-        // Add volume button toggle
-        volumeBtn.addEventListener('click', () => {
-            volumeContainer.classList.toggle('opacity-0');
-            volumeContainer.classList.toggle('opacity-100');
-        });
-    </script>
+    // Update progress bar only
+    audio.addEventListener('timeupdate', () => {
+        const percent = (audio.currentTime / audio.duration) * 100;
+        progress.style.width = `${percent}%`;
+    });
+</script>
 </body>
 </html>

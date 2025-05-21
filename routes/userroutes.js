@@ -12,5 +12,7 @@ router.get('/likedsongs', usercontroller.getlikedsongs);
 router.get('/playbollywood', usercontroller.getplaybollywood);
 router.get('/oldies', usercontroller.getOldies);
 router.get('/recent', usercontroller.getrecentlyplayed);
+router.get('/player/next', usercontroller.getNextSong);
+router.get('/player/previous', usercontroller.getPreviousSong);
 
 module.exports = router;
