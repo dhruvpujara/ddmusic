@@ -42,60 +42,103 @@
                 </div>
             </div>
         </section>
-
-        <!-- Recently Played -->
-        <section class="py-4">
-            <h2 class="text-white text-lg font-semibold mb-3">Recently Played</h2>
-            <div class="space-y-3">
-                <% if (recentSong) { %>
-                    <form action="/player" method="POST" class="block">
-                        <input type="hidden" name="songLink" value="<%= recentSong.link %>">
-                        <input type="hidden" name="songName" value="<%= recentSong.name %>">
-                        <input type="hidden" name="objectId" value="<%= recentSong._id %>">
-                        <button type="submit" class="w-full">
-                            <div class="flex items-center space-x-3 bg-gray-900/50 p-4 rounded-lg hover:bg-gray-800/50 transition-colors">
-                                <div class="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-400 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-music text-lg text-white/80"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <p class="text-white text-sm font-medium text-left"><%= recentSong.name %></p>
-                                    <p class="text-gray-400 text-xs text-left">Last played</p>
-                                </div>
-                                <i class="fas fa-play text-gray-400 text-sm"></i>
-                            </div>
-                        </button>
-                    </form>
-                <% } else { %>
-                    <div class="flex items-center space-x-3 bg-gray-900/50 p-4 rounded-lg opacity-50">
-                        <div class="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-music text-lg text-white/50"></i>
-                        </div>
-                        <p class="text-gray-400 text-sm">No recent songs</p>
-                    </div>
-                <% } %>
-            </div>
-        </section>
     </main>
 
     <!-- Now Playing Bar -->
-    <!-- <div class="fixed bottom-16 left-0 right-0 bg-gray-900/90 backdrop-blur-lg border-t border-gray-800 p-3">
-        <div class="flex items-center justify-between">
-            <a href="/player" class="flex items-center space-x-3 flex-1">
-                <div class="w-10 h-10 bg-gray-800 rounded"></div>
-                <div>
-                    <p class="text-white text-sm">Current Song</p>
-                    <p class="text-gray-400 text-xs">Artist</p>
+    <div class="fixed bottom-16 left-0 right-0 bg-black/80 backdrop-blur-xl border-t border-white/10 z-40">
+        <!-- Progress Bar -->
+        <div class="relative w-full h-1 bg-black/40">
+            <div class="h-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500 w-0 transition-all" id="progress"></div>
+        </div>
+
+        <!-- Player Controls -->
+        <div class="flex items-center justify-between px-4 py-3">
+            <div class="flex items-center space-x-3 flex-1 min-w-0">
+                <div class="w-10 h-10 bg-gradient-to-br from-violet-600 to-indigo-900 rounded-lg flex items-center justify-center shadow-lg">
+                    <i class="fas fa-music text-white/40"></i>
                 </div>
-            </a>
+                <div class="min-w-0">
+                    <p class="text-white text-sm font-medium truncate">
+                        <%= recentSong ? recentSong.name : 'Select a track' %>
+                    </p>
+                </div>
+            </div>
+
             <div class="flex items-center space-x-4">
-                <button class="text-white p-2"><i class="fas fa-play"></i></button>
-                <button class="text-white p-2"><i class="fas fa-forward"></i></button>
+                <a href="/player/previous" class="w-10 h-10 rounded-full flex items-center justify-center text-white/40 hover:text-violet-400 transition-all">
+                    <i class="fas fa-backward-step text-lg"></i>
+                </a>
+                
+                <button id="playPauseBtn" 
+                        class="w-12 h-12 rounded-full bg-gradient-to-br from-violet-800 to-indigo-900 
+                               flex items-center justify-center 
+                               hover:scale-105 active:scale-95 transition-all duration-200 
+                               shadow-lg shadow-violet-900/25 border border-white/10
+                               <%= !recentSong ? 'opacity-50' : '' %>">
+                    <i class="fas fa-play text-lg pl-1"></i>
+                </button>
+                
+                <a href="/player/next" class="w-10 h-10 rounded-full flex items-center justify-center text-white/40 hover:text-violet-400 transition-all">
+                    <i class="fas fa-forward-step text-lg"></i>
+                </a>
             </div>
         </div>
-    </div> -->
+
+        <!-- Audio Player -->
+        <audio id="audioPlayer" class="hidden" preload="auto">
+            <% if (recentSong && recentSong.link) { %>
+                <source src="<%= recentSong.link %>" type="audio/mp3">
+            <% } %>
+        </audio>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const audio = document.getElementById('audioPlayer');
+                const playPauseBtn = document.getElementById('playPauseBtn');
+                const progress = document.getElementById('progress');
+
+                if (!audio || !playPauseBtn) return;
+
+                // Progress update
+                audio.addEventListener('timeupdate', () => {
+                    if (audio.duration) {
+                        const percent = (audio.currentTime / audio.duration) * 100;
+                        progress.style.width = `${percent}%`;
+                    }
+                });
+
+                // Play/Pause with source check
+                playPauseBtn.addEventListener('click', async () => {
+                    const source = audio.querySelector('source');
+                    if (!source || !source.src) {
+                        console.error('No audio source');
+                        return;
+                    }
+
+                    try {
+                        if (audio.paused) {
+                            await audio.play();
+                            playPauseBtn.innerHTML = '<i class="fas fa-pause text-lg"></i>';
+                        } else {
+                            audio.pause();
+                            playPauseBtn.innerHTML = '<i class="fas fa-play text-lg pl-1"></i>';
+                        }
+                    } catch (err) {
+                        console.error('Playback error:', err);
+                    }
+                });
+
+                // Track ended
+                audio.addEventListener('ended', () => {
+                    playPauseBtn.innerHTML = '<i class="fas fa-play text-lg pl-1"></i>';
+                    progress.style.width = '0%';
+                });
+            });
+        </script>
+    </div>
 
     <!-- Bottom Navigation -->
-   <nav class="fixed bottom-0 w-full bg-black/90 backdrop-blur-lg border-t border-gray-800">
+    <nav class="fixed bottom-0 left-0 right-0 w-full bg-black/90 backdrop-blur-lg border-t border-gray-800 z-50">
         <div class="flex justify-around py-3">
             <a href="/" class="text-white flex flex-col items-center">
                 <i class="fas fa-home"></i>

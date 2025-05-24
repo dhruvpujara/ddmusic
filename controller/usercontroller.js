@@ -20,7 +20,18 @@ module.exports.getExplore = async (req, res) => {
 module.exports.getplaybollywood = async (req, res) => {
     try {
         const bollywoodSongs = await Song.find({ 
-            hashtags: { $in: ['#BollywoodVibes', '#bollywood','BollywoodRomance','#BollywoodRomance','BollywoodMusic','#BollywoodMusic','BollywoodLoveSong','#BollywoodLoveSong'] } 
+            hashtags: { $in: [ 
+                '#BollywoodVibes', 
+                '#bollywood',
+                '#BollywoodMusic',
+                '#BollywoodRomance',
+                '#BollywoodPlaylist',
+                '#MusicalBollywood',
+                '#TSeries',
+                '#RomanticBollywood',
+                '#BollywoodLovers',
+
+             ] } 
         });
         
         res.render('playbollywood', { 
@@ -38,7 +49,19 @@ module.exports.getplaybollywood = async (req, res) => {
 module.exports.getOldies = async (req, res) => {
     try {
         const oldiesSongs = await Song.find({ 
-            hashtags: { $in: ['oldies', '#oldies', 'retro', '#retro', 'OldBollywood', '#OldBollywood', 'ClassicHindiSong', '#ClassicHindiSong', 'BlackAndWhiteCinema', '#BlackAndWhiteCinema', 'OldIsGold', '#OldIsGold', '1950sHits', '#1950sHits'] } 
+            hashtags: { $in: [
+                '#OldIsGold', 
+                '#GoldenEraSongs',
+                '#VintageHindiSongs',
+                '#RetroBollywood',
+                '#BlackAndWhiteCinema',
+                '#LataMangeshkarHits',
+                '#MohammadRafiForever',
+                '#KishoreKumarMagic',
+                '#GoldenOldies',
+                 '#retro', 
+                '#oldies',
+            ] } 
         });
         
         res.render('oldies', { 
@@ -64,10 +87,23 @@ module.exports.getlikedsongs = async (req, res) => {
             return res.redirect('/login');
         }
 
-        // Fetch full song details for each liked song ID
+        // Fetch liked songs and filter out non-existent ones
         const likedSongs = await Song.find({
             '_id': { $in: user.likedSongs }
         });
+
+        // Get IDs of songs that still exist
+        const validSongIds = likedSongs.map(song => song._id.toString());
+        
+        // Check if any songs were removed
+        const invalidSongIds = user.likedSongs.filter(id => !validSongIds.includes(id.toString()));
+        
+        // If there are invalid songs, update user's likedSongs
+        if (invalidSongIds.length > 0) {
+            user.likedSongs = validSongIds;
+            await user.save();
+            console.log(`Removed ${invalidSongIds.length} invalid song IDs from user's liked songs`);
+        }
 
         res.render('likedsongs', {
             likedSongs: likedSongs
@@ -82,16 +118,17 @@ module.exports.getlikedsongs = async (req, res) => {
 module.exports.gethome = async (req, res) => {
     try {
         let recentSong = null;
-        if (req.session.recentlyplayed) {
+        
+        if (req.session && req.session.recentlyplayed) {
             recentSong = await Song.findById(req.session.recentlyplayed);
         }
-        
+
         res.render('home', {
             isLoggedIn: req.session.isLoggedIn || false,
             recentSong: recentSong
         });
     } catch (err) {
-        console.error('Error fetching recent song:', err);
+        console.error('Error in gethome:', err);
         res.render('home', {
             isLoggedIn: req.session.isLoggedIn || false,
             recentSong: null
@@ -261,24 +298,31 @@ module.exports.postaddtoplaylist = async (req, res) => {
 module.exports.postMusicPlayer = async (req, res) => {
     try {
         const songId = req.body.objectId;
-        // Remove any ObjectId wrapper text if present
         const cleanSongId = songId.replace(/^ObjectId\("(.*)"\)$/, '$1');
+        
+        console.log('Attempting to find song with ID:', cleanSongId);
+        
         const song = await Song.findById(cleanSongId);
         if (!song) {
+            console.error('Song not found');
             throw new Error('Song not found');
-
         }
+
+        if (!song.link) {
+            console.error('Song link is missing');
+            throw new Error('Song link is missing');
+        }
+
+        // Verify link is accessible
+        console.log('Song link:', song.link);
+
         req.session.recentlyplayed = cleanSongId;
-        req.session.save((err) => {
-                if (err) {
-                    console.error('Error saving session:', err);
-                    return res.redirect('/login');
-                }});
+        await req.session.save();
 
         res.render('musicplayer', {
             songName: song.name,
             songLink: song.link,
-            songId: cleanSongId, // Pass clean ID
+            songId: cleanSongId,
             hashtags: song.hashtags
         });
     } catch (err) {

@@ -68,8 +68,8 @@
 
             <!-- Audio Controls -->
             <div class="w-full bg-black/40 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-2xl">
-                <audio id="audioPlayer" class="hidden">
-                    <source src="<%= songLink %>" type="audio/mp3">
+                <audio id="audioPlayer" class="hidden" preload="auto">
+                    <source src="<%= songLink %>" type="audio/mp3" onerror="handleAudioError()">
                 </audio>
 
                 <!-- Progress Bar -->
@@ -107,6 +107,73 @@
                         <i class="fas fa-forward-step text-2xl"></i>
                     </a>
                 </div>
+
+                <script>
+                    const audio = document.getElementById('audioPlayer');
+                    const playPauseBtn = document.getElementById('playPauseBtn');
+                    const progress = document.getElementById('progress');
+                    const progressContainer = document.getElementById('progressContainer');
+                    const currentTimeEl = document.getElementById('currentTime');
+                    const durationEl = document.getElementById('duration');
+                    const playerStatus = document.getElementById('playerStatus');
+
+                    // Debug logging
+                    console.log('Audio source:', audio.querySelector('source').src);
+                    
+                    function handleAudioError() {
+                        console.error('Audio failed to load:', audio.querySelector('source').src);
+                        playerStatus.textContent = 'Error loading audio';
+                    }
+
+                    // Initialize audio
+                    audio.addEventListener('loadeddata', () => {
+                        console.log('Audio loaded successfully');
+                        audio.volume = 1.0;
+                    });
+
+                    // Format time function
+                    function formatTime(seconds) {
+                        const min = Math.floor(seconds / 60);
+                        const sec = Math.floor(seconds % 60);
+                        return `${min}:${sec.toString().padStart(2, '0')}`;
+                    }
+
+                    // Update progress and time
+                    audio.addEventListener('timeupdate', () => {
+                        const percent = (audio.currentTime / audio.duration) * 100;
+                        progress.style.width = `${percent}%`;
+                        currentTimeEl.textContent = formatTime(audio.currentTime);
+                    });
+
+                    // Set duration when metadata is loaded
+                    audio.addEventListener('loadedmetadata', () => {
+                        durationEl.textContent = formatTime(audio.duration);
+                    });
+
+                    // Click to seek
+                    progressContainer.addEventListener('click', (e) => {
+                        const rect = progressContainer.getBoundingClientRect();
+                        const percent = (e.clientX - rect.left) / rect.width;
+                        audio.currentTime = percent * audio.duration;
+                    });
+
+                    // Simplified play/pause functionality
+                    playPauseBtn.addEventListener('click', async () => {
+                        try {
+                            if (audio.paused) {
+                                console.log('Attempting to play audio...');
+                                await audio.play();
+                                playPauseBtn.innerHTML = '<i class="fas fa-pause text-xl"></i>';
+                            } else {
+                                audio.pause();
+                                playPauseBtn.innerHTML = '<i class="fas fa-play text-xl pl-1"></i>';
+                            }
+                        } catch (err) {
+                            console.error('Playback error:', err);
+                            handleAudioError();
+                        }
+                    });
+                </script>
             </div>
         </div>
     </main>
@@ -129,51 +196,5 @@
     animation-delay: 1500ms;
 }
 </style>
-
-<script>
-    const audio = document.getElementById('audioPlayer');
-    const playPauseBtn = document.getElementById('playPauseBtn');
-    const progress = document.getElementById('progress');
-    const progressContainer = document.getElementById('progressContainer');
-    const currentTimeEl = document.getElementById('currentTime');
-    const durationEl = document.getElementById('duration');
-
-    // Format time function
-    function formatTime(seconds) {
-        const min = Math.floor(seconds / 60);
-        const sec = Math.floor(seconds % 60);
-        return `${min}:${sec.toString().padStart(2, '0')}`;
-    }
-
-    // Update progress and time
-    audio.addEventListener('timeupdate', () => {
-        const percent = (audio.currentTime / audio.duration) * 100;
-        progress.style.width = `${percent}%`;
-        currentTimeEl.textContent = formatTime(audio.currentTime);
-    });
-
-    // Set duration when metadata is loaded
-    audio.addEventListener('loadedmetadata', () => {
-        durationEl.textContent = formatTime(audio.duration);
-    });
-
-    // Click to seek
-    progressContainer.addEventListener('click', (e) => {
-        const rect = progressContainer.getBoundingClientRect();
-        const percent = (e.clientX - rect.left) / rect.width;
-        audio.currentTime = percent * audio.duration;
-    });
-
-    // Simplified play/pause functionality
-    playPauseBtn.addEventListener('click', () => {
-        if (audio.paused) {
-            audio.play();
-            playPauseBtn.innerHTML = '<i class="fas fa-pause text-xl"></i>';
-        } else {
-            audio.pause();
-            playPauseBtn.innerHTML = '<i class="fas fa-play text-xl pl-1"></i>';
-        }
-    });
-</script>
 </body>
 </html>

@@ -811,6 +811,10 @@ video {
   margin-top: 0.5rem;
 }
 
+.ml-2 {
+  margin-left: 0.5rem;
+}
+
 .block {
   display: block;
 }
@@ -1523,6 +1527,10 @@ video {
 .bg-violet-400 {
   --tw-bg-opacity: 1;
   background-color: rgb(167 139 250 / var(--tw-bg-opacity, 1));
+}
+
+.bg-violet-600\/20 {
+  background-color: rgb(124 58 237 / 0.2);
 }
 
 .bg-gradient-to-br {
