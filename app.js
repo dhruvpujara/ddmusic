@@ -1,3 +1,5 @@
+require('dotenv').config({ path: './config.env' });  // Fix dotenv path
+
 // local variables
 const authRoutes = require('./routes/authroutes');
 const userRoutes = require('./routes/userroutes');
@@ -13,9 +15,9 @@ const session = require('express-session');
 const mongoose = require('mongoose');
 const app = express();
 const rootdir = __dirname;
+const port = process.env.PORT;
 
 
-const port = 3500;
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.set('views', [
@@ -32,7 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 app.use(session({
-    secret: 'dd2942005dd',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
 }));
@@ -46,7 +48,7 @@ app.use((req, res) => {
 });
 
 
-const dburl = "mongodb+srv://ddmusic:2942005dd@ddmusic.uhoifbp.mongodb.net/ddmusic1?retryWrites=true&w=majority&appName=ddmusic";
+const dburl = process.env.MONGODB_URI;
 
 mongoose.connect(dburl).then(() => {
     app.listen(port, () => {

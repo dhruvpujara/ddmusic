@@ -45,17 +45,17 @@
     </main>
 
     <!-- Now Playing Bar -->
-    <div class="fixed bottom-16 left-0 right-0 bg-black/80 backdrop-blur-xl border-t border-white/10 z-40">
+    <div class="fixed bottom-16 left-0 right-0 bg-gradient-to-b from-gray-900/95 to-black/95 backdrop-blur-xl border-t border-white/5 z-40">
         <!-- Progress Bar -->
-        <div class="relative w-full h-1 bg-black/40">
-            <div class="h-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500 w-0 transition-all" id="progress"></div>
+        <div class="relative w-full h-1 bg-black/60">
+            <div class="h-full bg-gradient-to-r from-violet-500 via-fuchsia-400 to-violet-500 animate-gradient w-0 transition-all" id="progress"></div>
         </div>
 
         <!-- Player Controls -->
         <div class="flex items-center justify-between px-4 py-3">
             <div class="flex items-center space-x-3 flex-1 min-w-0">
-                <div class="w-10 h-10 bg-gradient-to-br from-violet-600 to-indigo-900 rounded-lg flex items-center justify-center shadow-lg">
-                    <i class="fas fa-music text-white/40"></i>
+                <div class="w-10 h-10 bg-gradient-to-br from-violet-500 via-fuchsia-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-lg shadow-violet-900/20">
+                    <i class="fas fa-music text-white/60"></i>
                 </div>
                 <div class="min-w-0">
                     <p class="text-white text-sm font-medium truncate">
@@ -65,7 +65,7 @@
             </div>
 
             <div class="flex items-center space-x-4">
-                <a href="/player/previous" class="w-10 h-10 rounded-full flex items-center justify-center text-white/40 hover:text-violet-400 transition-all">
+                <a href="/player/previous" class="w-10 h-10 rounded-full flex items-center justify-center text-white/60 hover:text-violet-400 transition-all">
                     <i class="fas fa-backward-step text-lg"></i>
                 </a>
                 
@@ -75,17 +75,29 @@
                                hover:scale-105 active:scale-95 transition-all duration-200 
                                shadow-lg shadow-violet-900/25 border border-white/10
                                <%= !recentSong ? 'opacity-50' : '' %>">
-                    <i class="fas fa-play text-lg pl-1"></i>
+                    <i class="fas fa-pause text-lg"></i>
                 </button>
                 
-                <a href="/player/next" class="w-10 h-10 rounded-full flex items-center justify-center text-white/40 hover:text-violet-400 transition-all">
+                <a href="/player/next" class="w-10 h-10 rounded-full flex items-center justify-center text-white/60 hover:text-violet-400 transition-all">
                     <i class="fas fa-forward-step text-lg"></i>
                 </a>
             </div>
         </div>
 
+        <style>
+            @keyframes gradient {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
+            .animate-gradient {
+                background-size: 200% auto;
+                animation: gradient 3s ease infinite;
+            }
+        </style>
+
         <!-- Audio Player -->
-        <audio id="audioPlayer" class="hidden" preload="auto">
+        <audio id="audioPlayer" class="hidden" preload="auto" autoplay>
             <% if (recentSong && recentSong.link) { %>
                 <source src="<%= recentSong.link %>" type="audio/mp3">
             <% } %>
@@ -98,6 +110,11 @@
                 const progress = document.getElementById('progress');
 
                 if (!audio || !playPauseBtn) return;
+
+                // Set initial state (already playing due to autoplay)
+                if (audio.src) {
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause text-lg"></i>';
+                }
 
                 // Progress update
                 audio.addEventListener('timeupdate', () => {

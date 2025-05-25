@@ -300,21 +300,10 @@ module.exports.postMusicPlayer = async (req, res) => {
         const songId = req.body.objectId;
         const cleanSongId = songId.replace(/^ObjectId\("(.*)"\)$/, '$1');
         
-        console.log('Attempting to find song with ID:', cleanSongId);
-        
         const song = await Song.findById(cleanSongId);
-        if (!song) {
-            console.error('Song not found');
-            throw new Error('Song not found');
+        if (!song || !song.link) {
+            throw new Error('Song not found or link missing');
         }
-
-        if (!song.link) {
-            console.error('Song link is missing');
-            throw new Error('Song link is missing');
-        }
-
-        // Verify link is accessible
-        console.log('Song link:', song.link);
 
         req.session.recentlyplayed = cleanSongId;
         await req.session.save();
@@ -323,7 +312,8 @@ module.exports.postMusicPlayer = async (req, res) => {
             songName: song.name,
             songLink: song.link,
             songId: cleanSongId,
-            hashtags: song.hashtags
+            hashtags: song.hashtags,
+            autoplay: true // Add autoplay flag
         });
     } catch (err) {
         console.error('Error in postMusicPlayer:', err);
