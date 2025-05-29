@@ -8,11 +8,14 @@ module.exports.getExplore = async (req, res) => {
         let allSongs = await Song.find({});
         allSongs = allSongs.sort(() => Math.random() - 0.5); // Shuffle the songs array
 
+        const artists = [ "ArijitSingh","KK", "Badshah", "HoneySingh", "NehaKakkar", "ShreyaGhoshal", "AtifAslam", "A.R.Rahman", "SunidhiChauhan", "MohitChauhan", "TulsiKumar", "Pritam", "VishalShekhar", "SalimSulaiman", "AmaalMallik" ];
+
         res.render('explore', { 
-            songs: allSongs
+            songs: allSongs,
+            artists: artists
         });
     } catch (err) {
-        console.error('Error fetching songs:', err);
+        console.error('Error fetching data:', err);
         res.redirect('/');
     }
 };

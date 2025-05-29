@@ -1,4 +1,5 @@
 const Song = require('../models/song');
+const Artist = require('../models/artist');
 
 module.exports.getUploadForm = (req, res) => {
     res.render('upload'); 
