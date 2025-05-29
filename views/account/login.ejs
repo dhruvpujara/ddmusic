@@ -18,6 +18,11 @@
 
         <!-- Login Form -->
         <div class="bg-gray-900/50 backdrop-blur-lg rounded-xl p-6">
+            <% if (locals.error) { %>
+                <div class="mb-4 px-3 py-2 bg-red-950/30 rounded-lg">
+                    <p class="text-white text-lg font-semibold"><%= error %></p>
+                </div>
+            <% } %>
             <form class="space-y-4" method="post" action="/login">
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-400 mb-1">Email</label>

@@ -1,5 +1,7 @@
-const User = require('../models/adduser');
+const bcrypt = require('bcrypt');
+const User = require('../models/user');
 const session = require('express-session');
+const emailService = require('../utils/nodemailer');
 
 
 // Add middleware at the top
@@ -11,32 +13,33 @@ const isAuth = (req, res, next) => {
 };
 
 module.exports.getlogin = (req, res) => {
-            res.render('login');
-        
+    res.render('login', { error: null });
 };
 
-module.exports.postlogin = (req, res) => {
+module.exports.postlogin = async (req, res) => {
     const { email, password } = req.body;
-    User.findOne({ email: email, password: password })
-        .then((user) => {
-            if (!user) {
-                console.error('Invalid email or password');
-                return res.redirect('/login');
+    try {
+        const user = await User.findOne({ email: email });
+        if (!user) {
+            return res.render('login', { error: 'Invalid email' });
+        }
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.render('login', { error: 'Invalid password' });
+        }
+        req.session.isLoggedIn = true;
+        req.session.loggeduser = user.username;
+        req.session.save((err) => {
+            if (err) {
+                console.error('Session save error:', err);
+                return res.render('login', { error: 'An error occurred. Please try again.' });
             }
-            req.session.isLoggedIn = true;
-            req.session.loggeduser = user.username;
-            req.session.save((err) => {
-                if (err) {
-                    console.error('Error saving session:', err);
-                    return res.redirect('/login');
-                }
-                res.redirect('/profile');
-            });
-        })
-        .catch((err) => {
-            console.error('Login error:', err);
-            res.redirect('/login');
+            res.redirect('/profile');
         });
+    } catch (err) {
+        console.error('Login error:', err);
+        res.render('login', { error: 'An error occurred. Please try again.' });
+    }
 };
 
 module.exports.postregister = async (req, res) => {
@@ -45,26 +48,71 @@ module.exports.postregister = async (req, res) => {
             console.error('Missing required fields');
             return res.redirect('/register');
         }
-        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+        const existingUser = await User.findOne({ $or: [ { email }] });
         if (existingUser) {
-            console.error('User already exists');
-            return res.redirect('/register');
+            return res.render('register', { error: 'Email already used' });
         }
-        const user = new User({
-            username: username,
-            email: email,
-            password: password,
+
+        const user = new User({ username, email, password });
+        const verificationCode = user.generateVerificationCode();
+
+        const userData = {
+            username,
+            email,
+            password,
+            verificationCode,
             createdAt: new Date()
-             });
+        };
+
+        // Update user with complete data
+        Object.assign(user, userData);
+
+        function generateEmailTemplate(verificationCode) {
+            return `
+                <div style="background-color: #09090b; color: white; font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border-radius: 16px;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h1 style="background: linear-gradient(to right, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px;">DDMusic</h1>
+                    </div>
+                    
+                    <div style="background: linear-gradient(to bottom right, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1)); padding: 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                        <h2 style="color: #e2e8f0; text-align: center; margin-bottom: 20px;">Verify Your Email</h2>
+                        <p style="color: #94a3b8; text-align: center; margin-bottom: 30px;">Your verification code is:</p>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <div style="display: inline-block; background: linear-gradient(to right, #8b5cf6, #ec4899); padding: 15px 30px; border-radius: 8px; font-size: 24px; font-weight: bold; letter-spacing: 3px;">
+                                ${verificationCode}
+                            </div>
+                        </div>
+                        
+                        <p style="color: #94a3b8; text-align: center; font-size: 14px;">This code will expire in 10 minutes</p>
+                    </div>
+                    
+                    <footer style="text-align: center; margin-top: 30px; color: #64748b; font-size: 12px;">
+                        <p>© DDMusic. All rights reserved.</p>
+                    </footer>
+                </div>
+            `;
+        }
+
+
+        const sendVerificationEmail = async (email, verificationCode) => {
+            const message = generateEmailTemplate(verificationCode);
+            try {
+                await emailService.sendEmail(email, 'Verify your email', message);
+            } catch (error) {
+                console.error('Error sending verification email:', error);
+            }
+        };
+
 
         await user.save().then((user) => {
+            sendVerificationEmail(email, verificationCode);
+            res.render('acccreated');
 
-        res.render('acccreated');
- 
         }).catch((err) => {
-    console.error('Registration error:', err);
-    res.redirect('/register');
-});
+            console.error('Registration error:', err);
+            res.redirect('/register');
+        });
 }
 
 module.exports.getregister = (req, res) => {

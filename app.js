@@ -5,6 +5,7 @@ const authRoutes = require('./routes/authroutes');
 const userRoutes = require('./routes/userroutes');
 const errorController = require('./controller/errorController');
 const adminRoutes = require('./routes/adminroutes');
+const sendEmail = require('./utils/nodemailer');
 
 
 
