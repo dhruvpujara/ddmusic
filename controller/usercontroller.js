@@ -81,9 +81,9 @@ module.exports.postMusicPlayerloop =  (req, res) => {
     const { songId, songLink, songName, loop } = req.body;
     res.render('player/musicplayer', {
         songId,
-        songLink,
+        songLink,   
         songName,
-        isLoop: loop === 'true'
+        isLoop: true,
     });
 };
 
@@ -326,7 +326,9 @@ module.exports.postMusicPlayer = async (req, res) => {
             songLink: song.link,
             songId: cleanSongId,
             hashtags: song.hashtags,
-            autoplay: true // Add autoplay flag
+            autoplay: true, // Add autoplay flag
+            isLoop: false
+
         });
     } catch (err) {
         console.error('Error in postMusicPlayer:', err);

@@ -45,20 +45,7 @@
                         </button>
                     </form>
 
-                    <!-- Loop Control -->
-                    <form action="/player/loop" method="POST" class="absolute bottom-4 right-4 z-20">
-                        <input type="hidden" name="songId" value="<%= songId %>">
-                        <input type="hidden" name="songLink" value="<%= songLink %>">
-                        <input type="hidden" name="songName" value="<%= songName %>">
-                        <input type="hidden" name="loop" value="<%= typeof isLoop !== 'undefined' ? !isLoop : true %>">
-                        <button type="submit" 
-                            class="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center
-                                   hover:bg-violet-500/20 transition-all duration-300 group">
-                            <i class="fas fa-repeat text-lg <%= typeof isLoop !== 'undefined' && isLoop ? 'text-violet-400' : 'text-white/60' %> 
-                                  group-hover:text-violet-400"></i>
-                        </button>
-                    </form>
-                    
+
                     <!-- Cover Art Elements -->
                     <div class="absolute inset-0 flex items-center justify-center"> 
                         <i class="fas fa-music text-6xl text-white/20 animate-pulse"></i>
@@ -108,7 +95,7 @@
             <!-- Audio Controls -->
             <div class="w-full bg-black/40 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-2xl">
                 <audio id="audioPlayer" class="hidden" preload="auto" autoplay>
-                    <source src="<%= songLink %>" type="audio/mp3" onerror="handleAudioError()">
+                    <source src="<%= songLink %>" type="audio/mp3" onerror="handleAudioError()" <%= isLoop ? 'loop' : '' %>">
                 </audio>
 
                 <!-- Progress Bar -->
