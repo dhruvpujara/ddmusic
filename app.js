@@ -1,4 +1,11 @@
-require('dotenv').config({ path: './config.env' });  // Fix dotenv path
+require('dotenv').config({ path: './config.env' });
+
+// external modules
+const express = require('express');
+const path = require('path');
+const session = require('express-session');
+const mongoose = require('mongoose');
+const mongoDbstore = require('connect-mongodb-session')(session);
 
 // local variables
 const authRoutes = require('./routes/authroutes');
@@ -9,14 +16,11 @@ const sendEmail = require('./utils/nodemailer');
 
 
 
-// external modules
-const express = require('express');
-const path = require('path');
-const session = require('express-session');
-const mongoose = require('mongoose');
 const app = express();
 const rootdir = __dirname;
 const port = process.env.PORT;
+const dburl = process.env.MONGODB_URI;
+
 
 
 app.use(express.static('public'));
@@ -31,6 +35,13 @@ app.set('views', [
 
 
 ]);
+
+// Session store configuration
+const store = new mongoDbstore({
+    uri: dburl,
+    collection: 'sessions'
+});
+
 app.use(express.urlencoded({ extended: true }));
 
 
@@ -38,6 +49,7 @@ app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
+    store: store
 }));
 
 app.use('/', authRoutes);
@@ -49,7 +61,6 @@ app.use((req, res) => {
 });
 
 
-const dburl = process.env.MONGODB_URI;
 
 mongoose.connect(dburl).then(() => {
     app.listen(port, () => {
