@@ -346,7 +346,9 @@ module.exports.getNextSong = async (req, res) => {
             songName: nextSong.name,
             songLink: nextSong.link,
             songId: nextSong._id,
-            hashtags: nextSong.hashtags
+            hashtags: nextSong.hashtags,
+            isLoop: false 
+
         });
     } catch (err) {
         console.error('Error getting next song:', err);
@@ -364,7 +366,8 @@ module.exports.getPreviousSong = async (req, res) => {
             songName: prevSong.name,
             songLink: prevSong.link,
             songId: prevSong._id,
-            hashtags: prevSong.hashtags
+            hashtags: prevSong.hashtags,
+            isLoop: false 
         });
     } catch (err) {
         console.error('Error getting previous song:', err);
