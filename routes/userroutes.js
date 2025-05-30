@@ -14,5 +14,5 @@ router.get('/oldies', usercontroller.getOldies);
 router.get('/recent', usercontroller.getrecentlyplayed);
 router.get('/player/next', usercontroller.getNextSong);
 router.get('/player/previous', usercontroller.getPreviousSong);
-
+router.post('/playerr', usercontroller.postMusicPlayerloop);
 module.exports = router;

@@ -77,6 +77,16 @@ module.exports.getOldies = async (req, res) => {
     }
 };
 
+module.exports.postMusicPlayerloop =  (req, res) => {
+    const { songId, songLink, songName, loop } = req.body;
+    res.render('player/musicplayer', {
+        songId,
+        songLink,
+        songName,
+        isLoop: loop === 'true'
+    });
+};
+
 module.exports.getlikedsongs = async (req, res) => {
     try {
         const currentuser = req.session.loggeduser;
