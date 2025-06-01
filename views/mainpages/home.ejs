@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDMusic Mobile</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="bg-black min-h-screen flex flex-col">
+    <!-- Top Bar -->
+    <header class="fixed top-0 w-full bg-black/90 backdrop-blur-lg z-50 px-4 py-3 border-b border-gray-800">
+        <div class="flex justify-between items-center">
+            <h1 class="text-xl font-bold text-white">DDMusic</h1>
+            <button class="text-gray-400"><i class="fas fa-search"></i></button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 mt-16 mb-32 px-4">
+        <!-- Featured Section -->
+        <section class="py-4">
+            <h2 class="text-white text-lg font-semibold mb-3">Featured Playlists</h2>
+            <div class="flex overflow-x-auto space-x-4 pb-4">
+                <a href="/playbollywood" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
+                    <div class="bg-gradient-to-br from-rose-400 via-pink-400 to-violet-400 aspect-square rounded-lg mb-2 relative overflow-hidden group">
+                        <i class="fas fa-film absolute text-3xl text-white/30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform"></i>
+                    </div>
+                    <p class="text-white text-sm">Bollywood</p>
+                </a>
+                <a href="/oldies" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
+                    <div class="bg-gradient-to-br from-cyan-400 via-teal-400 to-emerald-400 aspect-square rounded-lg mb-2 relative overflow-hidden group">
+                        <i class="fas fa-record-vinyl absolute text-3xl text-white/30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:rotate-45 transition-transform"></i>
+                    </div>
+                    <p class="text-white text-sm">Retro</p>
+                </a>
+                <div class="flex-shrink-0 w-32">
+                    <div class="bg-gradient-to-br from-indigo-400 via-blue-400 to-sky-400 aspect-square rounded-lg mb-2 relative overflow-hidden group">
+                        <i class="fas fa-moon absolute text-3xl text-white/30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform"></i>
+                    </div>
+                    <p class="text-white text-sm">Chill Mix</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Now Playing Bar -->
+    <div class="fixed bottom-16 left-0 right-0 bg-gradient-to-b from-gray-900/95 to-black/95 backdrop-blur-xl border-t border-white/5 z-40">
+        <!-- Progress Bar -->
+        <div class="relative w-full h-1 bg-black/60">
+            <div class="h-full bg-gradient-to-r from-violet-500 via-fuchsia-400 to-violet-500 animate-gradient w-0 transition-all" id="progress"></div>
+        </div>
+
+        <!-- Player Controls -->
+        <div class="flex items-center justify-between px-4 py-3">
+            <div class="flex items-center space-x-3 flex-1 min-w-0">
+                <div class="w-10 h-10 bg-gradient-to-br from-violet-500 via-fuchsia-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-lg shadow-violet-900/20">
+                    <i class="fas fa-music text-white/60"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-white text-sm font-medium truncate">
+                        <%= recentSong ? recentSong.name : 'Select a track' %>
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <a href="/player/previous" class="w-10 h-10 rounded-full flex items-center justify-center text-white/60 hover:text-violet-400 transition-all">
+                    <i class="fas fa-backward-step text-lg"></i>
+                </a>
+                
+                <button id="playPauseBtn" 
+                        class="w-12 h-12 rounded-full bg-gradient-to-br from-violet-800 to-indigo-900 
+                               flex items-center justify-center 
+                               hover:scale-105 active:scale-95 transition-all duration-200 
+                               shadow-lg shadow-violet-900/25 border border-white/10
+                               <%= !recentSong ? 'opacity-50' : '' %>">
+                    <i class="fas fa-pause text-lg"></i>
+                </button>
+                
+                <a href="/player/next" class="w-10 h-10 rounded-full flex items-center justify-center text-white/60 hover:text-violet-400 transition-all">
+                    <i class="fas fa-forward-step text-lg"></i>
+                </a>
+            </div>
+        </div>
+
+        <style>
+            @keyframes gradient {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
+            .animate-gradient {
+                background-size: 200% auto;
+                animation: gradient 3s ease infinite;
+            }
+        </style>
+
+        <!-- Audio Player -->
+        <audio id="audioPlayer" class="hidden" preload="auto" autoplay>
+            <% if (recentSong && recentSong.link) { %>
+                <source src="<%= recentSong.link %>" type="audio/mp3">
+            <% } %>
+        </audio>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const audio = document.getElementById('audioPlayer');
+                const playPauseBtn = document.getElementById('playPauseBtn');
+                const progress = document.getElementById('progress');
+
+                if (!audio || !playPauseBtn) return;
+
+                // Set initial state (already playing due to autoplay)
+                if (audio.src) {
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause text-lg"></i>';
+                }
+
+                // Progress update
+                audio.addEventListener('timeupdate', () => {
+                    if (audio.duration) {
+                        const percent = (audio.currentTime / audio.duration) * 100;
+                        progress.style.width = `${percent}%`;
+                    }
+                });
+
+                // Play/Pause with source check
+                playPauseBtn.addEventListener('click', async () => {
+                    const source = audio.querySelector('source');
+                    if (!source || !source.src) {
+                        console.error('No audio source');
+                        return;
+                    }
+
+                    try {
+                        if (audio.paused) {
+                            await audio.play();
+                            playPauseBtn.innerHTML = '<i class="fas fa-pause text-lg"></i>';
+                        } else {
+                            audio.pause();
+                            playPauseBtn.innerHTML = '<i class="fas fa-play text-lg pl-1"></i>';
+                        }
+                    } catch (err) {
+                        console.error('Playback error:', err);
+                    }
+                });
+
+                // Track ended
+                audio.addEventListener('ended', () => {
+                    playPauseBtn.innerHTML = '<i class="fas fa-play text-lg pl-1"></i>';
+                    progress.style.width = '0%';
+                });
+            });
+        </script>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 w-full bg-black/90 backdrop-blur-lg border-t border-gray-800 z-50">
+        <div class="flex justify-around py-3">
+            <a href="/" class="text-white flex flex-col items-center">
+                <i class="fas fa-home"></i>
+                <span class="text-xs mt-1">Home</span>
+            </a>
+            <a href="/explore" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-compass"></i>
+                <span class="text-xs mt-1">Explore</span>
+            </a>
+            <a href="/library" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-heart"></i>
+                <span class="text-xs mt-1">Library</span>
+            </a>
+            <a href="/profile" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-user"></i>
+                <span class="text-xs mt-1">Profile</span>
+            </a>
+        </div>
+    </nav>
+</body>
+</html>
