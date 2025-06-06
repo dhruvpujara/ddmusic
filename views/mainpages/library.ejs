@@ -6,6 +6,43 @@
     <title>Library - DDMusic</title>
     <link rel="stylesheet" href="/css/output.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+            50% { box-shadow: 0 0 20px 0 rgba(139, 92, 246, 0.3); }
+        }
+
+        .playlist-card {
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+            animation-delay: calc(var(--delay) * 0.1s);
+        }
+
+        .playlist-card:hover .card-bg {
+            transform: scale(0.98);
+            animation: pulseGlow 2s infinite;
+        }
+
+        .playlist-icon {
+            transition: all 0.3s ease;
+        }
+
+        .playlist-card:hover .playlist-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .theme-purple { background: linear-gradient(135deg, #4c1d95 0%, #5b21b6 100%); }
+        .theme-blue { background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%); }
+        .theme-pink { background: linear-gradient(135deg, #831843 0%, #db2777 100%); }
+        .theme-green { background: linear-gradient(135deg, #065f46 0%, #059669 100%); }
+        .theme-orange { background: linear-gradient(135deg, #7c2d12 0%, #ea580c 100%); }
+        .theme-indigo { background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); }
+    </style>
 </head>
 <body class="bg-black min-h-screen flex flex-col">
     <!-- Header -->
@@ -45,38 +82,83 @@
                 </a>
             </section>
 
-            <!-- Your Playlists -->
+            <!-- Your Playlists Section -->
             <section class="py-4">
-                <h2 class="text-white text-lg font-semibold mb-3">Your Playlists</h2>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-gray-900/50 p-4 rounded-lg">
-                        <div class="bg-gradient-to-br from-pink-600 to-purple-600 aspect-square rounded-lg mb-3"></div>
-                        <h3 class="text-white font-medium">Workout Mix</h3>
-                        <p class="text-gray-400 text-sm">32 songs</p>
-                    </div>
-                    <div class="bg-gray-900/50 p-4 rounded-lg">
-                        <div class="bg-gradient-to-br from-blue-600 to-green-600 aspect-square rounded-lg mb-3"></div>
-                        <h3 class="text-white font-medium">Chill Vibes</h3>
-                        <p class="text-gray-400 text-sm">45 songs</p>
-                    </div>
+                <div class="mb-3">
+                    <h2 class="text-white text-lg font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Your Playlists</h2>
+                </div>
+                <div class="grid grid-cols-2 gap-4" id="playlistsContainer">
+                    <% if (playlists && playlists.length > 0) { %>
+                        <% 
+                        const themes = ['theme-purple', 'theme-blue', 'theme-pink', 'theme-green', 'theme-orange', 'theme-indigo'];
+                        playlists.forEach((playlist, index) => { %>
+                            <div class="playlist-card" style="--delay: <%= index %>" data-playlist-id="<%= playlist._id %>">
+                                <div class="card-bg bg-gray-900/50 p-4 rounded-lg relative backdrop-blur-sm border border-white/5 transition-all duration-300">
+                                    <a href="/playlist/<%= playlist._id %>" class="block">
+                                        <div class="<%= themes[index % themes.length] %> aspect-square rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+                                            <i class="fas fa-music text-2xl text-white/80 playlist-icon"></i>
+                                        </div>
+                                        <div class="flex justify-between items-end group">
+                                            <div>
+                                                <h3 class="text-white font-medium group-hover:text-purple-300 transition-colors"><%= playlist.name %></h3>
+                                                <p class="text-gray-400 text-sm"><%= playlist.songs.length %> songs</p>
+                                            </div>
+                                            <button onclick="confirmDelete('<%= playlist._id %>', '<%= playlist.name %>')" 
+                                                    class="w-8 h-8 bg-white/5 hover:bg-red-500/20 rounded-full flex items-center justify-center transition-all duration-300 hover:rotate-12">
+                                                <i class="fas fa-trash-alt text-white/60 text-sm group-hover:text-red-400"></i>
+                                            </button>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="col-span-2 text-center py-12 text-gray-400 animate-fade-in">
+                            <i class="fas fa-music text-4xl mb-4 text-purple-500/50"></i>
+                            <p class="text-lg">No playlists yet.</p>
+                            <p class="text-sm text-gray-500">Add songs to create playlists!</p>
+                        </div>
+                    <% } %>
                 </div>
             </section>
 
-            <!-- Downloaded Content -->
-            <section class="py-4">
-                <h2 class="text-white text-lg font-semibold mb-3">Downloads</h2>
-                <div class="space-y-2">
-                    <div class="flex items-center space-x-3 bg-gray-900/50 p-3 rounded-lg">
-                        <div class="w-12 h-12 bg-gray-800 rounded flex items-center justify-center">
-                            <i class="fas fa-arrow-down text-gray-400"></i>
-                        </div>
-                        <div>
-                            <p class="text-white text-sm font-medium">Downloaded Songs</p>
-                            <p class="text-gray-400 text-xs">15 items</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            <script>
+                function confirmDelete(playlistId, playlistName) {
+                    if (confirm(`Are you sure you want to delete "${playlistName}"?`)) {
+                        deletePlaylist(playlistId);
+                    }
+                }
+
+                async function deletePlaylist(playlistId) {
+                    try {
+                        const response = await fetch(`/playlist/${playlistId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json'
+                        }
+                    });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            // Remove the playlist element from DOM
+                            const playlistElement = document.querySelector(`[data-playlist-id="${playlistId}"]`);
+                            if (playlistElement) {
+                                playlistElement.remove();
+                            }
+                            // Reload if last playlist was deleted
+                            if (document.querySelectorAll('[data-playlist-id]').length === 0) {
+                                location.reload();
+                            }
+                        } else {
+                            alert(data.message || 'Error deleting playlist');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Error deleting playlist');
+                    }
+                }
+            </script>
         <% } %>
     </main>
 

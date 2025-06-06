@@ -2,6 +2,8 @@ const bcrypt = require('bcrypt');
 const User = require('../models/user');
 const session = require('express-session');
 const emailService = require('../utils/nodemailer');
+const errorMiddleware = require('../errorhandler/errorhandler');
+const  catchAsyncError = require('../middleware/catchAsyncerror')
 
 
 // Add middleware at the top
@@ -45,7 +47,7 @@ module.exports.postlogin = async (req, res) => {
 module.exports.postregister = async (req, res) => {
         const { username, email, password } = req.body;
         if (!username || !email || !password) {
-            console.error('Missing required fields');
+         error.name = insufficientfields;
             return res.redirect('/register');
         }
         const existingUser = await User.findOne({ $or: [ { email }] });
@@ -135,32 +137,23 @@ module.exports.getprofile = async (req, res) => {
     try {
         if (!req.session.isLoggedIn) {
             return res.render('profile', { 
-                isLoggedIn: false 
+                isLoggedIn: false,
+                playlists: {} // Add default empty playlists
             });
         }
 
         const user = await User.findOne({ username: req.session.loggeduser });
-        if (!user) {
-            return res.redirect('/login');
-        }
-
-        // Safely check for likedSongs array
-        const likedSongsCount = user.likedSongs ? user.likedSongs.length : 0;
+        const likedSongsCount = user ? user.likedSongs.length : 0;
 
         res.render('profile', {
             isLoggedIn: true,
             username: req.session.loggeduser,
-            email: user.email,
-            likedSongsCount: likedSongsCount
+            likedSongsCount: likedSongsCount,
+            playlists: user.playlists || {} // Add playlists with fallback
         });
     } catch (err) {
-        console.error('Error in getprofile:', err);
-        res.render('profile', {
-            isLoggedIn: true,
-            username: req.session.loggeduser,
-            email: '',
-            likedSongsCount: 0
-        });
+        console.error('Error fetching profile:', err);
+        res.redirect('/');
     }
 }
 

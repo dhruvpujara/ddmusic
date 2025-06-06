@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const Song = require('../models/song');
+const Playlist = require('../models/playlist');
 const mongoose = require('mongoose'); // Import mongoose
 // get methods
 
@@ -46,6 +47,56 @@ module.exports.getplaybollywood = async (req, res) => {
         res.redirect('/');
     }
 
+};
+
+module.exports.createPlaylist = async (req, res) => {
+    try {
+        const { playlistName, songId } = req.body;
+        if (!playlistName || !songId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Playlist name and song ID are required' 
+            });
+        }
+
+        let playlist = await Playlist.findOne({ 
+            name: playlistName, 
+            owner: req.session.loggeduser 
+        });
+
+        if (!playlist) {
+            // Create new playlist
+            playlist = new Playlist({
+                name: playlistName,
+                owner: req.session.loggeduser,
+                songs: [songId]
+            });
+        } else {
+            // Add song to existing playlist if not already present
+            if (!playlist.songs.includes(songId)) {
+                playlist.songs.push(songId);
+            }
+        }
+
+        await playlist.save();
+        
+        // Fetch updated playlists and render library
+        const user = await User.findOne({ username: req.session.loggeduser });
+        const likedSongsCount = user ? user.likedSongs.length : 0;
+        const playlists = await Playlist.find({ owner: req.session.loggeduser })
+            .populate('songs')
+            .lean();
+
+        return res.render('mainpages/library', {
+            isLoggedIn: true,
+            likedSongsCount: likedSongsCount,
+            playlists: playlists
+        });
+
+    } catch (err) {
+        console.error('Error creating/updating playlist:', err);
+        res.redirect('/library');
+    }
 };
 
 
@@ -154,23 +205,32 @@ module.exports.gethome = async (req, res) => {
 module.exports.library = async (req, res) => {
     try {
         if (!req.session.isLoggedIn) {
-            return res.render('library', {
-                isLoggedIn: false
+            return res.render('mainpages/library', {
+                isLoggedIn: false,
+                likedSongsCount: 0,
+                playlists: []
             });
         }
 
         const user = await User.findOne({ username: req.session.loggeduser });
         const likedSongsCount = user ? user.likedSongs.length : 0;
 
-        res.render('library', {
+        // Fetch playlists for the current user
+        const playlists = await Playlist.find({ owner: req.session.loggeduser })
+            .populate('songs')
+            .lean();
+
+        res.render('mainpages/library', {
             isLoggedIn: true,
-            likedSongsCount: likedSongsCount
+            likedSongsCount: likedSongsCount,
+            playlists: playlists
         });
     } catch (err) {
         console.error('Error fetching library data:', err);
-        res.render('library', {
+        res.render('mainpages/library', {
             isLoggedIn: true,
-            likedSongsCount: 0
+            likedSongsCount: 0,
+            playlists: []
         });
     }
 }
@@ -263,7 +323,8 @@ module.exports.songliked = async (req, res) => {
             songName: song.name,
             songLink: song.link,
             songId: songId, // Pass clean ID
-            hashtags: song.hashtags
+            hashtags: song.hashtags,
+            isLoop: false  // Add this line
         });
     } catch (err) {
         console.error('Error in songliked:', err);
@@ -300,7 +361,8 @@ module.exports.postaddtoplaylist = async (req, res) => {
             songName: song.name,
             songLink: song.link,
             songId: songId, // Pass clean ID
-            hashtags: song.hashtags
+            hashtags: song.hashtags,
+            isLoop: false  // Add this line
         });
     } catch (err) {
         console.error('Error in postaddtoplaylist:', err);
@@ -318,6 +380,9 @@ module.exports.postMusicPlayer = async (req, res) => {
             throw new Error('Song not found or link missing');
         }
 
+        // Fetch user's playlists
+        const playlists = await Playlist.find({ owner: req.session.loggeduser });
+
         req.session.recentlyplayed = cleanSongId;
         await req.session.save();
 
@@ -326,13 +391,51 @@ module.exports.postMusicPlayer = async (req, res) => {
             songLink: song.link,
             songId: cleanSongId,
             hashtags: song.hashtags,
-            autoplay: true, // Add autoplay flag
-            isLoop: false
-
+            autoplay: true,
+            isLoop: false,
+            playlists: playlists
         });
     } catch (err) {
         console.error('Error in postMusicPlayer:', err);
         res.redirect('/explore');
+    }
+};
+
+module.exports.addToPlaylist = async (req, res) => {
+    try {
+        const { songId, playlistId } = req.body;
+        
+        const playlist = await Playlist.findById(playlistId);
+        if (!playlist) {
+            throw new Error('Playlist not found');
+        }
+
+        if (playlist.owner !== req.session.loggeduser) {
+            throw new Error('Unauthorized');
+        }
+
+        if (!playlist.songs.includes(songId)) {
+            playlist.songs.push(songId);
+            await playlist.save();
+        }
+
+        // Fetch all data needed for music player
+        const song = await Song.findById(songId);
+        const playlists = await Playlist.find({ owner: req.session.loggeduser });
+
+        res.render('musicplayer', {
+            songName: song.name,
+            songLink: song.link,
+            songId: songId,
+            hashtags: song.hashtags,
+            autoplay: true,
+            isLoop: false,
+            playlists: playlists,
+            message: `Added to ${playlist.name}`
+        });
+    } catch (err) {
+        console.error('Error adding to playlist:', err);
+        res.redirect('/library');
     }
 };
 
@@ -372,6 +475,74 @@ module.exports.getPreviousSong = async (req, res) => {
     } catch (err) {
         console.error('Error getting previous song:', err);
         res.redirect('/explore');
+    }
+};
+
+module.exports.getPlaylist = async (req, res) => {
+    try {
+        const playlistId = req.params.id;
+        const playlist = await Playlist.findById(playlistId).populate('songs');
+        
+        if (!playlist) {
+            return res.redirect('/library');
+        }
+
+        res.render('playlist', {
+            playlist: playlist,
+            isLoggedIn: req.session.isLoggedIn || false
+        });
+    } catch (err) {
+        console.error('Error fetching playlist:', err);
+        res.redirect('/library');
+    }
+};
+
+module.exports.playPlaylistSong = async (req, res) => {
+    try {
+        const { playlistId, songId } = req.params;
+        const song = await Song.findById(songId);
+        
+        if (!song) {
+            return res.redirect(`/playlist/${playlistId}`);
+        }
+
+        req.session.recentlyplayed = songId;
+        await req.session.save();
+
+        res.render('musicplayer', {
+            songName: song.name,
+            songLink: song.link,
+            songId: song._id,
+            hashtags: song.hashtags,
+            isLoop: false,
+            fromPlaylist: playlistId
+        });
+    } catch (err) {
+        console.error('Error playing playlist song:', err);
+        res.redirect('/library');
+    }
+};
+
+module.exports.deletePlaylist = async (req, res) => {
+    try {
+        const playlistId = req.params.id;
+        const playlist = await Playlist.findById(playlistId);
+
+        if (!playlist) {
+            return res.status(404).json({ message: "Playlist not found" });
+        }
+
+        // Check if user owns the playlist
+        if (playlist.owner !== req.session.loggeduser) {
+            return res.status(403).json({ message: "Not authorized" });
+        }
+
+        await Playlist.findByIdAndDelete(playlistId);
+        
+        return res.status(200).json({ message: "Playlist deleted successfully" });
+    } catch (err) {
+        console.error('Error deleting playlist:', err);
+        return res.status(500).json({ message: "Error deleting playlist" });
     }
 };
 

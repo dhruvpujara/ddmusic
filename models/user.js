@@ -26,7 +26,14 @@ const userSchema = new mongoose.Schema({
     likedSongs: [{
         type: String,
         ref: 'Song'
-    }]
+    }],
+    playlists: {
+        type: Map,
+        of: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Song'
+        }]
+    },
 });
 
 

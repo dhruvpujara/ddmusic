@@ -15,4 +15,12 @@ router.get('/recent', usercontroller.getrecentlyplayed);
 router.get('/player/next', usercontroller.getNextSong);
 router.get('/player/previous', usercontroller.getPreviousSong);
 router.post('/playerr', usercontroller.postMusicPlayerloop);
+router.post('/create-playlist', usercontroller.createPlaylist);
+router.post('/add-to-playlist', usercontroller.addToPlaylist);
+
+// Playlist routes
+router.get('/playlist/:id', usercontroller.getPlaylist);
+router.get('/playlist/:playlistId/play/:songId', usercontroller.playPlaylistSong);
+router.delete('/playlist/:id', usercontroller.deletePlaylist);
+
 module.exports = router;

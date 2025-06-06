@@ -5,7 +5,7 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session');
 const mongoose = require('mongoose');
-const mongoDbstore = require('connect-mongodb-session')(session);
+
 
 // local variables
 const authRoutes = require('./routes/authroutes');
@@ -36,30 +36,18 @@ app.set('views', [
 
 ]);
 
-// Session store configuration
-const store = new mongoDbstore({
-    uri: dburl,
-    collection: 'sessions',
-    expires: 24 * 60 * 60 * 1000, // 24 hours
-    connectionOptions: {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    }
-});
-
-app.use(express.urlencoded({ extended: true }));
-
-
 // Session configuration
 app.use(session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
-    saveUninitialized: true,
-    store: store,
+    saveUninitialized: false,
     cookie: {
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+        secure: process.env.NODE_ENV === 'production'
     }
 }));
+
+app.use(express.urlencoded({ extended: true }));
 
 app.use('/', authRoutes);
 app.use('/', userRoutes);
@@ -93,11 +81,10 @@ app.get('/health', async (req, res) => {
         res.status(500).json({
             status: 'unhealthy',
             timestamp: new Date(),
-            error: error.message
+            database: 'disconnected'
         });
-    }
+    } 
 });
-
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI)
