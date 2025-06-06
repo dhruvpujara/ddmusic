@@ -256,11 +256,13 @@ module.exports.getprofile = async (req, res) => {
 
         const user = await User.findOne({ username: req.session.loggeduser });
         const likedSongsCount = user ? user.likedSongs.length : 0;
+        const playlistCount = await Playlist.countDocuments({ owner: req.session.loggeduser });
 
         res.render('profile', {
             isLoggedIn: true,
             username: req.session.loggeduser,
-            likedSongsCount: likedSongsCount
+            likedSongsCount: likedSongsCount,
+            playlistCount: playlistCount
         });
     } catch (err) {
         console.error('Error fetching profile:', err);

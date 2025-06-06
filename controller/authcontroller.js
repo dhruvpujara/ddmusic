@@ -4,6 +4,7 @@ const session = require('express-session');
 const emailService = require('../utils/nodemailer');
 const errorMiddleware = require('../errorhandler/errorhandler');
 const  catchAsyncError = require('../middleware/catchAsyncerror')
+const Playlist = require('../models/playlist');
 
 
 // Add middleware at the top
@@ -136,24 +137,31 @@ module.exports.postlogout = (req, res) => {
 module.exports.getprofile = async (req, res) => {
     try {
         if (!req.session.isLoggedIn) {
-            return res.render('profile', { 
-                isLoggedIn: false,
-                playlists: {} // Add default empty playlists
+            return res.render('mainpages/profile', { 
+                isLoggedIn: false 
             });
         }
 
-        const user = await User.findOne({ username: req.session.loggeduser });
+        // Fetch user, liked songs count, and playlist count
+        const username = req.session.loggeduser;
+        const user = await User.findOne({ username });
         const likedSongsCount = user ? user.likedSongs.length : 0;
+        const playlistCount = await Playlist.countDocuments({ owner: username });
 
-        res.render('profile', {
+        res.render('mainpages/profile', {
             isLoggedIn: true,
-            username: req.session.loggeduser,
-            likedSongsCount: likedSongsCount,
-            playlists: user.playlists || {} // Add playlists with fallback
+            username,
+            likedSongsCount,
+            playlistCount
         });
     } catch (err) {
         console.error('Error fetching profile:', err);
-        res.redirect('/');
+        res.render('mainpages/profile', { 
+            isLoggedIn: true,
+            username: req.session.loggeduser,
+            likedSongsCount: 0,
+            playlistCount: 0
+        });
     }
 }
 
