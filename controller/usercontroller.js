@@ -441,20 +441,50 @@ module.exports.addToPlaylist = async (req, res) => {
     }
 };
 
-module.exports.getNextSong = async (req, res) => {
+module.exports.getRandomSong = async (req, res) => {
     try {
         const allSongs = await Song.find({});
         const randomIndex = Math.floor(Math.random() * allSongs.length);
-        const nextSong = allSongs[randomIndex];
+        const randomSong = allSongs[randomIndex];
 
         res.render('musicplayer', {
-            songName: nextSong.name,
-            songLink: nextSong.link,
-            songId: nextSong._id,
-            hashtags: nextSong.hashtags,
-            isLoop: false 
-
+            songName: randomSong.name,
+            songLink: randomSong.link,
+            songId: randomSong._id,
+            hashtags: randomSong.hashtags,
+            isLoop: false,
+            autoplay: true
         });
+    } catch (err) {
+        console.error('Error getting random song:', err);
+        res.redirect('/explore');
+    }
+};
+
+// Update getNextSong to include autoplay
+module.exports.getNextSong = async (req, res) => {
+    try {
+        if (req.session.playlistContext) {
+            const { songs, currentIndex } = req.session.playlistContext;
+            const nextIndex = (currentIndex + 1) % songs.length;
+            const nextSong = songs[nextIndex];
+
+            // Update current index in session
+            req.session.playlistContext.currentIndex = nextIndex;
+            await req.session.save();
+
+            return res.render('musicplayer', {
+                songName: nextSong.name,
+                songLink: nextSong.link,
+                songId: nextSong.id,
+                hashtags: nextSong.hashtags,
+                isLoop: false,
+                inPlaylist: true,
+                autoplay: true
+            });
+        }
+        // Fallback to random song
+        return this.getRandomSong(req, res);
     } catch (err) {
         console.error('Error getting next song:', err);
         res.redirect('/explore');
@@ -463,6 +493,26 @@ module.exports.getNextSong = async (req, res) => {
 
 module.exports.getPreviousSong = async (req, res) => {
     try {
+        if (req.session.playlistContext) {
+            const { songs, currentIndex } = req.session.playlistContext;
+            const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
+            const prevSong = songs[prevIndex];
+
+            // Update current index in session
+            req.session.playlistContext.currentIndex = prevIndex;
+            await req.session.save();
+
+            return res.render('musicplayer', {
+                songName: prevSong.name,
+                songLink: prevSong.link,
+                songId: prevSong.id,
+                hashtags: prevSong.hashtags,
+                isLoop: false,
+                inPlaylist: true
+            });
+        }
+
+        // Fallback to random song if not in playlist
         const allSongs = await Song.find({});
         const randomIndex = Math.floor(Math.random() * allSongs.length);
         const prevSong = allSongs[randomIndex];
@@ -502,22 +552,35 @@ module.exports.getPlaylist = async (req, res) => {
 module.exports.playPlaylistSong = async (req, res) => {
     try {
         const { playlistId, songId } = req.params;
-        const song = await Song.findById(songId);
+        const playlist = await Playlist.findById(playlistId).populate('songs');
         
-        if (!song) {
-            return res.redirect(`/playlist/${playlistId}`);
+        if (!playlist) {
+            return res.redirect('/library');
         }
 
-        req.session.recentlyplayed = songId;
+        const currentIndex = playlist.songs.findIndex(song => song._id.toString() === songId);
+        
+        // Store playlist context in session
+        req.session.playlistContext = {
+            playlistId,
+            songs: playlist.songs.map(song => ({
+                id: song._id.toString(),
+                name: song.name,
+                link: song.link,
+                hashtags: song.hashtags
+            })),
+            currentIndex
+        };
         await req.session.save();
 
+        const song = playlist.songs[currentIndex];
         res.render('musicplayer', {
             songName: song.name,
             songLink: song.link,
             songId: song._id,
             hashtags: song.hashtags,
             isLoop: false,
-            fromPlaylist: playlistId
+            inPlaylist: true
         });
     } catch (err) {
         console.error('Error playing playlist song:', err);

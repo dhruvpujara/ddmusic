@@ -265,6 +265,25 @@
                             handleAudioError();
                         }
                     });
+
+                    // Add autoplay functionality
+                    audio.addEventListener('ended', async () => {
+                        const inPlaylist = <%= typeof inPlaylist !== 'undefined' && inPlaylist %>;
+                        
+                        try {
+                            const response = await fetch(inPlaylist ? '/player/next' : '/player/random', {
+                                method: 'GET',
+                            });
+
+                            if (response.ok) {
+                                location.reload();
+                            } else {
+                                console.error('Error fetching next song');
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                        }
+                    });
                 </script>
             </div>
         </div>

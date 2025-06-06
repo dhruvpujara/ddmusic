@@ -17,6 +17,7 @@ router.get('/player/previous', usercontroller.getPreviousSong);
 router.post('/playerr', usercontroller.postMusicPlayerloop);
 router.post('/create-playlist', usercontroller.createPlaylist);
 router.post('/add-to-playlist', usercontroller.addToPlaylist);
+router.get('/player/random', usercontroller.getRandomSong);
 
 // Playlist routes
 router.get('/playlist/:id', usercontroller.getPlaylist);
