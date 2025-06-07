@@ -18,10 +18,12 @@ router.post('/playerr', usercontroller.postMusicPlayerloop);
 router.post('/create-playlist', usercontroller.createPlaylist);
 router.post('/add-to-playlist', usercontroller.addToPlaylist);
 router.get('/player/random', usercontroller.getRandomSong);
+router.get('/api/random-song', usercontroller.getRandomSongData);
 
 // Playlist routes
 router.get('/playlist/:id', usercontroller.getPlaylist);
 router.get('/playlist/:playlistId/play/:songId', usercontroller.playPlaylistSong);
 router.delete('/playlist/:id', usercontroller.deletePlaylist);
+router.delete('/playlist/:playlistId/song/:songId', usercontroller.removeSongFromPlaylist);
 
 module.exports = router;

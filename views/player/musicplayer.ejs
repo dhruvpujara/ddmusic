@@ -284,6 +284,56 @@
                             console.error('Error:', error);
                         }
                     });
+
+                    async function playSong(songId) {
+                        try {
+                            const response = await fetch('/player', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({ objectId: songId })
+                            });
+
+                            const data = await response.json();
+                            
+                            if (data.success) {
+                                // Update audio source
+                                audio.src = data.song.link;
+                                // Update song name
+                                document.querySelector('.song-name').textContent = data.song.name;
+                                // Update hashtags if they exist
+                                if (data.song.hashtags) {
+                                    updateHashtags(data.song.hashtags);
+                                }
+                                // Play the song
+                                await audio.play();
+                                playPauseBtn.innerHTML = '<i class="fas fa-pause text-xl"></i>';
+                                // Update progress
+                                progress.style.width = '0%';
+                            }
+                        } catch (error) {
+                            console.error('Error playing song:', error);
+                        }
+                    }
+
+                    function updateHashtags(hashtags) {
+                        const hashtagContainer = document.querySelector('.hashtags');
+                        if (hashtagContainer && hashtags) {
+                            hashtagContainer.innerHTML = hashtags.map(tag => 
+                                `<span class="text-gray-400">${tag}</span>`
+                            ).join(' ');
+                        }
+                    }
+
+                    // Update existing click handlers to use the new playSong function
+                    document.querySelectorAll('[data-song-id]').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            playSong(button.dataset.songId);
+                        });
+                    });
                 </script>
             </div>
         </div>

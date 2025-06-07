@@ -6,6 +6,15 @@
     <title><%= playlist.name %> - DDMusic</title>
     <link rel="stylesheet" href="/css/output.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .delete-btn:hover {
+            animation: pulse 1s ease-in-out infinite;
+        }
+    </style>
 </head>
 <body class="bg-black min-h-screen">
     <header class="fixed top-0 w-full bg-black/90 backdrop-blur-lg z-50 px-4 py-3 border-b border-gray-800">
@@ -19,16 +28,45 @@
         <div class="space-y-2">
             <% playlist.songs.forEach((song, index) => { %>
                 <div class="bg-gray-900/50 p-4 rounded-lg flex items-center justify-between">
-                    <div>
-                        <h3 class="text-white font-medium"><%= song.name %></h3>
-                    </div>
-                    <a href="/playlist/<%= playlist._id %>/play/<%= song._id %>" 
-                       class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                        <i class="fas fa-play text-white"></i>
+                    <a href="/playlist/<%= playlist._id %>/play/<%= song._id %>" class="flex-1">
+                        <div class="flex items-center">
+                            <h3 class="text-white font-medium"><%= song.name %></h3>
+                        </div>
                     </a>
+                    <div class="flex items-center gap-3">
+                        <button onclick="playSong('<%= song._id %>')" 
+                                class="w-10 h-10 bg-violet-600/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-play text-white"></i>
+                        </button>
+                        <button onclick="removeSong('<%= playlist._id %>', '<%= song._id %>', '<%= song.name %>')"
+                                class="delete-btn w-10 h-10 bg-violet-600/20 rounded-full flex items-center justify-center transition-all duration-300">
+                            <i class="fas fa-trash text-white text-base"></i>
+                        </button>
+                    </div>
                 </div>
             <% }); %>
         </div>
     </main>
+
+    <script>
+        async function removeSong(playlistId, songId, songName) {
+            if (confirm(`Remove "${songName}" from playlist?`)) {
+                try {
+                    const response = await fetch(`/playlist/${playlistId}/song/${songId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Error removing song');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error removing song');
+                }
+            }
+        }
+    </script>
 </body>
 </html>

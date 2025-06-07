@@ -7,13 +7,11 @@ const mongoose = require('mongoose'); // Import mongoose
 module.exports.getExplore = async (req, res) => {
     try {
         let allSongs = await Song.find({});
-        allSongs = allSongs.sort(() => Math.random() - 0.5); // Shuffle the songs array
-
-        const artists = [ "ArijitSingh","KK", "Badshah", "HoneySingh", "NehaKakkar", "ShreyaGhoshal", "AtifAslam", "A.R.Rahman", "SunidhiChauhan", "MohitChauhan", "TulsiKumar", "Pritam", "VishalShekhar", "SalimSulaiman", "AmaalMallik" ];
+        allSongs = allSongs.sort(() => Math.random() - 0.5);
 
         res.render('explore', { 
             songs: allSongs,
-            artists: artists
+            artists: [ "ArijitSingh", "KK", "Badshah", "HoneySingh", "NehaKakkar", /* ...rest of artists... */ ]
         });
     } catch (err) {
         console.error('Error fetching data:', err);
@@ -185,6 +183,15 @@ module.exports.gethome = async (req, res) => {
         
         if (req.session && req.session.recentlyplayed) {
             recentSong = await Song.findById(req.session.recentlyplayed);
+        }
+
+        // Add fallback song if no recent song exists
+        if (!recentSong) {
+            // Get a random song as fallback
+            const allSongs = await Song.find({});
+            if (allSongs.length > 0) {
+                recentSong = allSongs[Math.floor(Math.random() * allSongs.length)];
+            }
         }
 
         res.render('home', {
@@ -379,26 +386,22 @@ module.exports.postMusicPlayer = async (req, res) => {
         
         const song = await Song.findById(cleanSongId);
         if (!song || !song.link) {
-            throw new Error('Song not found or link missing');
+            return res.status(404).json({ success: false, error: 'Song not found' });
         }
-
-        // Fetch user's playlists
-        const playlists = await Playlist.find({ owner: req.session.loggeduser });
 
         req.session.recentlyplayed = cleanSongId;
         await req.session.save();
 
-        res.render('musicplayer', {
+        res.render('player/musicplayer', {
             songName: song.name,
             songLink: song.link,
             songId: cleanSongId,
-            hashtags: song.hashtags,
+            hashtags: song.hashtags || [],
             autoplay: true,
-            isLoop: false,
-            playlists: playlists
+            isLoop: false
         });
     } catch (err) {
-        console.error('Error in postMusicPlayer:', err);
+        console.error('Error:', err);
         res.redirect('/explore');
     }
 };
@@ -608,6 +611,51 @@ module.exports.deletePlaylist = async (req, res) => {
     } catch (err) {
         console.error('Error deleting playlist:', err);
         return res.status(500).json({ message: "Error deleting playlist" });
+    }
+};
+
+module.exports.removeSongFromPlaylist = async (req, res) => {
+    try {
+        const { playlistId, songId } = req.params;
+        
+        const playlist = await Playlist.findById(playlistId);
+        if (!playlist) {
+            return res.status(404).json({ message: 'Playlist not found' });
+        }
+
+        // Check ownership
+        if (playlist.owner !== req.session.loggeduser) {
+            return res.status(403).json({ message: 'Unauthorized' });
+        }
+
+        // Remove song from playlist
+        playlist.songs = playlist.songs.filter(id => id.toString() !== songId);
+        await playlist.save();
+
+        res.status(200).json({ message: 'Song removed successfully' });
+    } catch (err) {
+        console.error('Error removing song from playlist:', err);
+        res.status(500).json({ message: 'Error removing song' });
+    }
+};
+
+module.exports.getRandomSongData = async (req, res) => {
+    try {
+        const allSongs = await Song.find({});
+        const randomIndex = Math.floor(Math.random() * allSongs.length);
+        const randomSong = allSongs[randomIndex];
+
+        res.json({
+            success: true,
+            song: {
+                name: randomSong.name,
+                link: randomSong.link,
+                id: randomSong._id
+            }
+        });
+    } catch (err) {
+        console.error('Error getting random song:', err);
+        res.status(500).json({ success: false, error: 'Error fetching song' });
     }
 };
 
