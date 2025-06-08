@@ -1,65 +1,66 @@
 const Song = require('../models/song');
-const Artist = require('../models/artist');
 
-module.exports.getUploadForm = (req, res) => {
-    res.render('upload'); 
-};
+module.exports = {
+    getUploadForm: (req, res) => {
+        res.render('upload', { song: null, error: null }); 
+    },
 
-module.exports.postuploadForm = async (req, res) => {
-    try {
+    postuploadForm: async (req, res) => {
+        try {
+            // Process custom hashtags
+            const hashtags = req.body.customHashtags
+                ? req.body.customHashtags
+                    .split(' ')
+                    .filter(tag => tag.trim().length > 0)
+                    .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
+                : [];
 
-        // Process hashtags with # prefix
-        const commonHashtags = Array.isArray(req.body.commonHashtags) 
-            ? req.body.commonHashtags.map(tag => `#${tag}`)
-            : (req.body.commonHashtags ? [`#${req.body.commonHashtags}`] : []);
+            // Create and save song
+            const song = new Song({
+                name: req.body.name,
+                link: req.body.link,
+                hashtags: hashtags
+            });
 
-        const artistHashtags = Array.isArray(req.body.artistHashtags)
-            ? req.body.artistHashtags.map(tag => `#${tag}`)
-            : (req.body.artistHashtags ? [`#${req.body.artistHashtags}`] : []);
+            await song.save();
+            console.log('Song saved successfully:', song);
+            res.redirect('/admin/upload');
+        } catch (error) {
+            console.error('Error in upload:', error);
+            res.status(500).render('upload', { error: 'Failed to upload song' });
+        }
+    },
 
-        const languageHashtags = Array.isArray(req.body.languageHashtags)
-            ? req.body.languageHashtags.map(tag => `#${tag}`)
-            : (req.body.languageHashtags ? [`#${req.body.languageHashtags}`] : []);
+    findSong: async (req, res) => {
+        try {
+            const songName = req.query.name;
+            const song = await Song.findOne({ name: { $regex: songName, $options: 'i' } });
+            
+            if (!song) {
+                return res.status(404).json({ error: 'Song not found' });
+            }
+            res.json({ success: true, song });
+        } catch (err) {
+            res.status(500).json({ error: 'Error finding song' });
+        }
+    },
 
-        const eraHashtags = Array.isArray(req.body.eraHashtags)
-            ? req.body.eraHashtags.map(tag => `#${tag}`)
-            : (req.body.eraHashtags ? [`#${req.body.eraHashtags}`] : []);
-
-        const moodHashtags = Array.isArray(req.body.moodHashtags)
-            ? req.body.moodHashtags.map(tag => `#${tag}`)
-            : (req.body.moodHashtags ? [`#${req.body.moodHashtags}`] : []);
-
-        // Process custom hashtags
-        const customHashtags = req.body.customHashtags
-            ? req.body.customHashtags
-                .split(' ')
-                .filter(tag => tag.trim().length > 0)
-                .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
-            : [];
-
-        // Combine all hashtags
-        const allHashtags = [
-            ...commonHashtags, 
-            ...artistHashtags, 
-            ...languageHashtags,
-            ...eraHashtags,
-            ...moodHashtags,
-            ...customHashtags
-        ];
-
-        // Create and save song
-        const song = new Song({
-            name: req.body.name,
-            link: req.body.link,
-            hashtags: allHashtags
-        });
-
-        await song.save();
-        console.log('Song saved successfully:', song);
-        res.redirect('/admin/upload');
-    } catch (error) {
-        console.error('Error in upload:', error);
-        res.status(500).render('upload', { error: 'Failed to upload song' });
+    updateSong: async (req, res) => {
+        try {
+            const { id, name, link, hashtags } = req.body;
+            const updatedSong = await Song.findByIdAndUpdate(
+                id,
+                { 
+                    name, 
+                    link, 
+                    hashtags: hashtags.split(',').map(tag => tag.trim())
+                },
+                { new: true }
+            );
+            res.json({ success: true, song: updatedSong });
+        } catch (err) {
+            res.status(500).json({ error: 'Error updating song' });
+        }
     }
 };
 

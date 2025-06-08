@@ -11,7 +11,6 @@ const mongoose = require('mongoose');
 const authRoutes = require('./routes/authroutes');
 const userRoutes = require('./routes/userroutes');
 const errorController = require('./controller/errorController');
-const adminRoutes = require('./routes/adminroutes');
 const sendEmail = require('./utils/nodemailer');
 
 
@@ -48,10 +47,10 @@ app.use(session({
 }));
 
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json()); // Add this line
 
 app.use('/', authRoutes);
 app.use('/', userRoutes);
-app.use('/admin', adminRoutes);
 
 app.use((req, res) => {
     errorController.get404(req, res);
