@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const usercontroller = require('../controller/usercontroller');
-const adminController = require('../controller/adminController');
+const adminController = require('../controller/admincontroller'); // Fixed casing
 
 // Regular routes
 router.get('/', usercontroller.gethome);

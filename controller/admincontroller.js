@@ -2,7 +2,7 @@ const Song = require('../models/song');
 
 module.exports = {
     getUploadForm: (req, res) => {
-        res.render('upload', { song: null, error: null }); 
+        res.render('upload', { error: null });
     },
 
     postuploadForm: async (req, res) => {

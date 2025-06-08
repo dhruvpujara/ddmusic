@@ -9,7 +9,7 @@ const mongoose = require('mongoose');
 
 // local variables
 const authRoutes = require('./routes/authroutes');
-const userRoutes = require('./routes/userroutes');
+const userRoutes = require('./routes/userroutes'); // Fixed casing
 const errorController = require('./controller/errorController');
 const sendEmail = require('./utils/nodemailer');
 
