@@ -20,8 +20,5 @@ router.get('/admin/upload', adminController.getUploadForm);
 router.post('/admin/upload', adminController.postuploadForm);
 router.get('/admin/find-song', adminController.findSong);
 router.post('/admin/update-song', adminController.updateSong);
-router.get('/player/next', usercontroller.getNextSong);
-router.get('/player/previous', usercontroller.getPreviousSong);
-router.get('/api/random-song', usercontroller.getRandomSongData);
 
 module.exports = router;
