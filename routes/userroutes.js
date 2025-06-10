@@ -17,6 +17,7 @@ router.get('/oldies', usercontroller.getOldies);
 router.get('/recent', usercontroller.getrecentlyplayed);
 router.get('/player/next', usercontroller.getNextSong); // Changed from /next-song/:id
 router.get('/player/previous', usercontroller.getPreviousSong);
+router.get('/player/autoplay-next', usercontroller.getNextSong); // New route for autoplay next song
 
 // Playlist routes
 router.post('/playlist/create', playlistController.createPlaylist);
@@ -30,5 +31,8 @@ router.get('/admin/upload', adminController.getUploadForm);
 router.post('/admin/upload', adminController.postuploadForm);
 router.get('/admin/find-song', adminController.findSong);
 router.post('/admin/update-song', adminController.updateSong);
+
+// Playback time update route
+router.post('/update-playback-time', usercontroller.updatePlaybackTime);
 
 module.exports = router;

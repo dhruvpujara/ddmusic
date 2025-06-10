@@ -113,6 +113,13 @@
                     playPauseBtn.innerHTML = '<i class="fas fa-pause text-lg"></i>';
                 }
 
+                // Set initial playback position if available
+                if (audio && '<%= typeof lastPlaybackTime !== "undefined" %>' === 'true') {
+                    audio.addEventListener('loadedmetadata', () => {
+                        audio.currentTime = <%= lastPlaybackTime || 0 %>;
+                    });
+                }
+
                 // Progress update
                 audio.addEventListener('timeupdate', () => {
                     if (audio.duration) {
@@ -146,6 +153,15 @@
                 audio.addEventListener('ended', () => {
                     playPauseBtn.innerHTML = '<i class="fas fa-play text-lg pl-1"></i>';
                     progress.style.width = '0%';
+                });
+
+                // Add autoplay functionality
+                audio.addEventListener('ended', async () => {
+                    try {
+                        window.location.href = '/player/next';
+                    } catch (error) {
+                        console.error('Error auto-playing next song:', error);
+                    }
                 });
             });
         </script>
