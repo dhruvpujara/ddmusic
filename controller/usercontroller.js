@@ -49,50 +49,42 @@ module.exports.getplaybollywood = async (req, res) => {
 
 module.exports.createPlaylist = async (req, res) => {
     try {
-        const { playlistName, songId } = req.body;
-        if (!playlistName || !songId) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Playlist name and song ID are required' 
-            });
+        if (!req.session.isLoggedIn || !req.session.loggeduser) {
+            return res.redirect('/login');
         }
 
-        let playlist = await Playlist.findOne({ 
-            name: playlistName, 
-            owner: req.session.loggeduser 
-        });
+        const { name, songId } = req.body;
+        console.log('Received playlist data:', { name, songId }); // Debug log
 
-        if (!playlist) {
-            // Create new playlist
-            playlist = new Playlist({
-                name: playlistName,
-                owner: req.session.loggeduser,
-                songs: [songId]
-            });
-        } else {
-            // Add song to existing playlist if not already present
-            if (!playlist.songs.includes(songId)) {
-                playlist.songs.push(songId);
+        const user = await User.findOne({ username: req.session.loggeduser });
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        // Clean and validate songId
+        const cleanSongId = songId ? songId.toString().replace(/^ObjectId\("(.*)"\)$/, '$1') : null;
+        console.log('Clean songId:', cleanSongId); // Debug log
+
+        // Verify song exists if ID provided
+        if (cleanSongId) {
+            const songExists = await Song.findById(cleanSongId);
+            if (!songExists) {
+                console.error('Invalid song ID');
+                return res.redirect('back');
             }
         }
 
-        await playlist.save();
-        
-        // Fetch updated playlists and render library
-        const user = await User.findOne({ username: req.session.loggeduser });
-        const likedSongsCount = user ? user.likedSongs.length : 0;
-        const playlists = await Playlist.find({ owner: req.session.loggeduser })
-            .populate('songs')
-            .lean();
-
-        return res.render('mainpages/library', {
-            isLoggedIn: true,
-            likedSongsCount: likedSongsCount,
-            playlists: playlists
+        const playlist = new Playlist({
+            name,
+            userId: user._id,
+            songs: cleanSongId ? [mongoose.Types.ObjectId(cleanSongId)] : []
         });
 
-    } catch (err) {
-        console.error('Error creating/updating playlist:', err);
+        await playlist.save();
+        console.log('Created playlist:', playlist); // Debug log
+        res.redirect('/library');
+    } catch (error) {
+        console.error('Error creating playlist:', error);
         res.redirect('/library');
     }
 };
@@ -211,7 +203,7 @@ module.exports.gethome = async (req, res) => {
 
 module.exports.library = async (req, res) => {
     try {
-        if (!req.session.isLoggedIn) {
+        if (!req.session.isLoggedIn || !req.session.loggeduser) {
             return res.render('mainpages/library', {
                 isLoggedIn: false,
                 likedSongsCount: 0,
@@ -220,27 +212,30 @@ module.exports.library = async (req, res) => {
         }
 
         const user = await User.findOne({ username: req.session.loggeduser });
-        const likedSongsCount = user ? user.likedSongs.length : 0;
+        if (!user) {
+            throw new Error('User not found');
+        }
 
-        // Fetch playlists for the current user
-        const playlists = await Playlist.find({ owner: req.session.loggeduser })
+        // Find playlists and populate songs
+        const playlists = await Playlist.find({ userId: user._id })
             .populate('songs')
             .lean();
 
+        console.log('Fetched playlists:', playlists); // Debug log
+
+        const likedSongsCount = user.likedSongs ? user.likedSongs.length : 0;
+
         res.render('mainpages/library', {
             isLoggedIn: true,
-            likedSongsCount: likedSongsCount,
-            playlists: playlists
+            likedSongsCount,
+            playlists,
+            username: user.username
         });
     } catch (err) {
-        console.error('Error fetching library data:', err);
-        res.render('mainpages/library', {
-            isLoggedIn: true,
-            likedSongsCount: 0,
-            playlists: []
-        });
+        console.error('Error in library:', err);
+        res.redirect('/');
     }
-}
+};
 
 module.exports.getmusicplayer = (req, res) => {
         res.render('musicplayer');
@@ -257,23 +252,31 @@ module.exports.getprofile = async (req, res) => {
     try {
         if (!req.session.isLoggedIn) {
             return res.render('profile', { 
-                isLoggedIn: false 
+                isLoggedIn: false,
+                likedSongsCount: 0,
+                playlistCount: 0
             });
         }
 
         const user = await User.findOne({ username: req.session.loggeduser });
-        const likedSongsCount = user ? user.likedSongs.length : 0;
-        const playlistCount = await Playlist.countDocuments({ owner: req.session.loggeduser });
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        const likedSongsCount = user.likedSongs ? user.likedSongs.length : 0;
+        // Count playlists where userId matches current user's ID
+        const playlistCount = await Playlist.countDocuments({ userId: user._id });
+        console.log('Found playlists:', playlistCount, 'for user:', user._id); // Debug log
 
         res.render('profile', {
             isLoggedIn: true,
-            username: req.session.loggeduser,
-            likedSongsCount: likedSongsCount,
-            playlistCount: playlistCount
+            username: user.username,
+            likedSongsCount,
+            playlistCount
         });
     } catch (err) {
         console.error('Error fetching profile:', err);
-        res.redirect('/');
+        res.status(500).redirect('/');
     }
 };
 
@@ -389,6 +392,10 @@ module.exports.postMusicPlayer = async (req, res) => {
             return res.status(404).json({ success: false, error: 'Song not found' });
         }
 
+        // Get user's playlists
+        const user = await User.findOne({ username: req.session.loggeduser });
+        const playlists = await Playlist.find({ userId: user._id });
+
         req.session.recentlyplayed = cleanSongId;
         await req.session.save();
 
@@ -398,7 +405,8 @@ module.exports.postMusicPlayer = async (req, res) => {
             songId: cleanSongId,
             hashtags: song.hashtags || [],
             autoplay: true,
-            isLoop: false
+            isLoop: false,
+            playlists: playlists // Pass playlists to the view
         });
     } catch (err) {
         console.error('Error:', err);
@@ -406,88 +414,44 @@ module.exports.postMusicPlayer = async (req, res) => {
     }
 };
 
-module.exports.addToPlaylist = async (req, res) => {
-    try {
-        const { songId, playlistId } = req.body;
-        
-        const playlist = await Playlist.findById(playlistId);
-        if (!playlist) {
-            throw new Error('Playlist not found');
-        }
-
-        if (playlist.owner !== req.session.loggeduser) {
-            throw new Error('Unauthorized');
-        }
-
-        if (!playlist.songs.includes(songId)) {
-            playlist.songs.push(songId);
-            await playlist.save();
-        }
-
-        // Fetch all data needed for music player
-        const song = await Song.findById(songId);
-        const playlists = await Playlist.find({ owner: req.session.loggeduser });
-
-        res.render('musicplayer', {
-            songName: song.name,
-            songLink: song.link,
-            songId: songId,
-            hashtags: song.hashtags,
-            autoplay: true,
-            isLoop: false,
-            playlists: playlists,
-            message: `Added to ${playlist.name}`
-        });
-    } catch (err) {
-        console.error('Error adding to playlist:', err);
-        res.redirect('/library');
-    }
-};
-
-module.exports.getRandomSong = async (req, res) => {
-    try {
-        const allSongs = await Song.find({});
-        const randomIndex = Math.floor(Math.random() * allSongs.length);
-        const randomSong = allSongs[randomIndex];
-
-        res.render('musicplayer', {
-            songName: randomSong.name,
-            songLink: randomSong.link,
-            songId: randomSong._id,
-            hashtags: randomSong.hashtags,
-            isLoop: false,
-            autoplay: true
-        });
-    } catch (err) {
-        console.error('Error getting random song:', err);
-        res.redirect('/explore');
-    }
-};
-
 // Update getNextSong to include autoplay
 module.exports.getNextSong = async (req, res) => {
     try {
+        let nextSong;
+        
+        // Check if we're in playlist context
         if (req.session.playlistContext) {
-            const { songs, currentIndex } = req.session.playlistContext;
+            const { songs } = req.session.playlistContext;
+            const currentIndex = songs.findIndex(id => id.toString() === req.session.recentlyplayed);
             const nextIndex = (currentIndex + 1) % songs.length;
-            const nextSong = songs[nextIndex];
-
-            // Update current index in session
-            req.session.playlistContext.currentIndex = nextIndex;
-            await req.session.save();
-
-            return res.render('musicplayer', {
-                songName: nextSong.name,
-                songLink: nextSong.link,
-                songId: nextSong.id,
-                hashtags: nextSong.hashtags,
-                isLoop: false,
-                inPlaylist: true,
-                autoplay: true
-            });
+            nextSong = await Song.findById(songs[nextIndex]);
+        } else {
+            // Fallback to regular next song logic
+            nextSong = await Song.findOne({
+                _id: { $gt: req.session.recentlyplayed }
+            }).sort({ _id: 1 });
+            
+            if (!nextSong) {
+                nextSong = await Song.findOne().sort({ _id: 1 });
+            }
         }
-        // Fallback to random song
-        return this.getRandomSong(req, res);
+
+        if (!nextSong) {
+            return res.redirect('/explore');
+        }
+
+        req.session.recentlyplayed = nextSong._id;
+        await req.session.save();
+
+        res.render('player/musicplayer', {
+            songName: nextSong.name,
+            songLink: nextSong.link,
+            songId: nextSong._id,
+            hashtags: nextSong.hashtags || [],
+            autoplay: true,
+            isLoop: false,
+            inPlaylist: !!req.session.playlistContext
+        });
     } catch (err) {
         console.error('Error getting next song:', err);
         res.redirect('/explore');
@@ -496,36 +460,40 @@ module.exports.getNextSong = async (req, res) => {
 
 module.exports.getPreviousSong = async (req, res) => {
     try {
+        let prevSong;
+        
+        // Check if we're in playlist context
         if (req.session.playlistContext) {
-            const { songs, currentIndex } = req.session.playlistContext;
+            const { songs } = req.session.playlistContext;
+            const currentIndex = songs.findIndex(id => id.toString() === req.session.recentlyplayed);
             const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
-            const prevSong = songs[prevIndex];
-
-            // Update current index in session
-            req.session.playlistContext.currentIndex = prevIndex;
-            await req.session.save();
-
-            return res.render('musicplayer', {
-                songName: prevSong.name,
-                songLink: prevSong.link,
-                songId: prevSong.id,
-                hashtags: prevSong.hashtags,
-                isLoop: false,
-                inPlaylist: true
-            });
+            prevSong = await Song.findById(songs[prevIndex]);
+        } else {
+            // Fallback to regular previous song logic
+            prevSong = await Song.findOne({
+                _id: { $lt: req.session.recentlyplayed }
+            }).sort({ _id: -1 });
+            
+            if (!prevSong) {
+                prevSong = await Song.findOne().sort({ _id: -1 });
+            }
         }
 
-        // Fallback to random song if not in playlist
-        const allSongs = await Song.find({});
-        const randomIndex = Math.floor(Math.random() * allSongs.length);
-        const prevSong = allSongs[randomIndex];
+        if (!prevSong) {
+            return res.redirect('/explore');
+        }
 
-        res.render('musicplayer', {
+        req.session.recentlyplayed = prevSong._id;
+        await req.session.save();
+
+        res.render('player/musicplayer', {
             songName: prevSong.name,
             songLink: prevSong.link,
             songId: prevSong._id,
-            hashtags: prevSong.hashtags,
-            isLoop: false 
+            hashtags: prevSong.hashtags || [],
+            autoplay: true,
+            isLoop: false,
+            inPlaylist: !!req.session.playlistContext
         });
     } catch (err) {
         console.error('Error getting previous song:', err);
@@ -533,130 +501,190 @@ module.exports.getPreviousSong = async (req, res) => {
     }
 };
 
+// Get single playlist
 module.exports.getPlaylist = async (req, res) => {
     try {
-        const playlistId = req.params.id;
-        const playlist = await Playlist.findById(playlistId).populate('songs');
-        
+        const playlist = await Playlist.findById(req.params.id).populate('songs');
         if (!playlist) {
             return res.redirect('/library');
         }
-
-        res.render('playlist', {
-            playlist: playlist,
-            isLoggedIn: req.session.isLoggedIn || false
-        });
+        
+        // Store playlist context in session
+        req.session.playlistContext = {
+            playlistId: playlist._id,
+            songs: playlist.songs.map(song => song._id)
+        };
+        await req.session.save();
+        
+        res.render('playlist', { playlist, isLoggedIn: req.session.isLoggedIn });
     } catch (err) {
         console.error('Error fetching playlist:', err);
         res.redirect('/library');
     }
 };
 
-module.exports.playPlaylistSong = async (req, res) => {
+// Delete playlist
+module.exports.deletePlaylist = async (req, res) => {
     try {
-        const { playlistId, songId } = req.params;
-        const playlist = await Playlist.findById(playlistId).populate('songs');
+        if (!req.session.isLoggedIn || !req.session.loggeduser) {
+            return res.redirect('/login');
+        }
+
+        const playlistId = req.params.id;
+        const user = await User.findOne({ username: req.session.loggeduser });
         
-        if (!playlist) {
+        // Find playlist and verify ownership
+        const playlist = await Playlist.findById(playlistId);
+        if (!playlist || playlist.userId.toString() !== user._id.toString()) {
             return res.redirect('/library');
         }
 
-        const currentIndex = playlist.songs.findIndex(song => song._id.toString() === songId);
-        
-        // Store playlist context in session
-        req.session.playlistContext = {
-            playlistId,
-            songs: playlist.songs.map(song => ({
-                id: song._id.toString(),
-                name: song.name,
-                link: song.link,
-                hashtags: song.hashtags
-            })),
-            currentIndex
-        };
-        await req.session.save();
-
-        const song = playlist.songs[currentIndex];
-        res.render('musicplayer', {
-            songName: song.name,
-            songLink: song.link,
-            songId: song._id,
-            hashtags: song.hashtags,
-            isLoop: false,
-            inPlaylist: true
-        });
+        await Playlist.findByIdAndDelete(playlistId);
+        res.redirect('/library');
     } catch (err) {
-        console.error('Error playing playlist song:', err);
+        console.error('Error deleting playlist:', err);
         res.redirect('/library');
     }
 };
 
-module.exports.deletePlaylist = async (req, res) => {
+// Create new playlist
+module.exports.createPlaylist = async (req, res) => {
     try {
-        const playlistId = req.params.id;
-        const playlist = await Playlist.findById(playlistId);
-
-        if (!playlist) {
-            return res.status(404).json({ message: "Playlist not found" });
-        }
-
-        // Check if user owns the playlist
-        if (playlist.owner !== req.session.loggeduser) {
-            return res.status(403).json({ message: "Not authorized" });
-        }
-
-        await Playlist.findByIdAndDelete(playlistId);
+        const { name } = req.body;
+        const user = await User.findOne({ username: req.session.loggeduser });
         
-        return res.status(200).json({ message: "Playlist deleted successfully" });
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        const playlist = new Playlist({
+            name,
+            userId: user._id,
+            songs: []
+        });
+
+        await playlist.save();
+        res.redirect('/library');
     } catch (err) {
-        console.error('Error deleting playlist:', err);
-        return res.status(500).json({ message: "Error deleting playlist" });
+        console.error('Error creating playlist:', err);
+        res.redirect('/library');
     }
 };
 
+// Add song to playlist
+module.exports.addSongToPlaylist = async (req, res) => {
+    try {
+        const { songId } = req.body;
+        const playlist = await Playlist.findById(req.params.id);
+        
+        if (!playlist.songs.includes(songId)) {
+            playlist.songs.push(songId);
+            await playlist.save();
+        }
+        
+        res.redirect(`/playlist/${req.params.id}`);
+    } catch (err) {
+        console.error('Error adding song to playlist:', err);
+        res.redirect('/library');
+    }
+};
+
+// Remove song from playlist
 module.exports.removeSongFromPlaylist = async (req, res) => {
     try {
-        const { playlistId, songId } = req.params;
-        
-        const playlist = await Playlist.findById(playlistId);
-        if (!playlist) {
-            return res.status(404).json({ message: 'Playlist not found' });
-        }
-
-        // Check ownership
-        if (playlist.owner !== req.session.loggeduser) {
-            return res.status(403).json({ message: 'Unauthorized' });
-        }
-
-        // Remove song from playlist
-        playlist.songs = playlist.songs.filter(id => id.toString() !== songId);
+        const playlist = await Playlist.findById(req.params.id);
+        playlist.songs = playlist.songs.filter(song => 
+            song.toString() !== req.params.songId
+        );
         await playlist.save();
-
-        res.status(200).json({ message: 'Song removed successfully' });
+        
+        res.redirect(`/playlist/${req.params.id}`);
     } catch (err) {
         console.error('Error removing song from playlist:', err);
-        res.status(500).json({ message: 'Error removing song' });
+        res.redirect(`/playlist/${req.params.id}`);
     }
 };
 
-module.exports.getRandomSongData = async (req, res) => {
+// Update library function to properly fetch playlists
+module.exports.library = async (req, res) => {
     try {
-        const allSongs = await Song.find({});
-        const randomIndex = Math.floor(Math.random() * allSongs.length);
-        const randomSong = allSongs[randomIndex];
+        if (!req.session.isLoggedIn || !req.session.loggeduser) {
+            return res.render('mainpages/library', {
+                isLoggedIn: false,
+                likedSongsCount: 0,
+                playlists: []
+            });
+        }
 
-        res.json({
-            success: true,
-            song: {
-                name: randomSong.name,
-                link: randomSong.link,
-                id: randomSong._id
-            }
+        const user = await User.findOne({ username: req.session.loggeduser });
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        // Find playlists and populate songs
+        const playlists = await Playlist.find({ userId: user._id })
+            .populate('songs')
+            .lean();
+        const likedSongsCount = user.likedSongs ? user.likedSongs.length : 0;
+
+        res.render('mainpages/library', {
+            isLoggedIn: true,
+            likedSongsCount,
+            playlists,
+            username: user.username
         });
     } catch (err) {
-        console.error('Error getting random song:', err);
-        res.status(500).json({ success: false, error: 'Error fetching song' });
+        console.error('Error in library:', err);
+        res.redirect('/');
     }
 };
+
+// // Add to playlist functionality
+// module.exports.addToPlaylist = async (req, res) => {
+//     try {
+//         if (!req.session.isLoggedIn) {
+//             console.log('User not logged in');
+//             return res.redirect('/login');
+//         }
+
+//         const { playlistId, songId } = req.body;
+//         console.log('Received request to add song:', { playlistId, songId });
+
+//         const cleanSongId = songId.toString().replace(/^ObjectId\("(.*)"\)$/, '$1');
+//         console.log('Cleaned song ID:', cleanSongId);
+
+//         // Verify playlist exists and user owns it
+//         const playlist = await Playlist.findById(playlistId);
+//         if (!playlist) {
+//             console.log('Playlist not found:', playlistId);
+//             return res.redirect('back');
+//         }
+
+//         // Verify song exists
+//         const song = await Song.findById(cleanSongId);
+//         if (!song) {
+//             console.log('Song not found:', cleanSongId);
+//             return res.redirect('back');
+//         }
+
+//         // Check if song already exists in playlist
+//         if (!playlist.songs.includes(cleanSongId)) {
+//             playlist.songs.push(mongoose.Types.ObjectId(cleanSongId));
+//             await playlist.save();
+//             console.log('Successfully added song to playlist:', {
+//                 playlistName: playlist.name,
+//                 songName: song.name,
+//                 songId: cleanSongId
+//             });
+//         } else {
+//             console.log('Song already exists in playlist');
+//         }
+
+//         res.redirect('back');
+//     } catch (err) {
+//         console.error('Error in addToPlaylist:', err);
+//         res.redirect('back');
+//     }
+// };
 
 

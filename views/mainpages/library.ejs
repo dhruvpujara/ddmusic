@@ -42,6 +42,14 @@
         .theme-green { background: linear-gradient(135deg, #065f46 0%, #059669 100%); }
         .theme-orange { background: linear-gradient(135deg, #7c2d12 0%, #ea580c 100%); }
         .theme-indigo { background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); }
+
+        /* New gradient styles for playlists */
+        .gradient-1 { background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%); }
+        .gradient-2 { background: linear-gradient(135deg, #4ECDC4 0%, #56B4D3 100%); }
+        .gradient-3 { background: linear-gradient(135deg, #9B59B6 0%, #8E44AD 100%); }
+        .gradient-4 { background: linear-gradient(135deg, #3498DB 0%, #2980B9 100%); }
+        .gradient-5 { background: linear-gradient(135deg, #2ECC71 0%, #27AE60 100%); }
+        .gradient-6 { background: linear-gradient(135deg, #F1C40F 0%, #F39C12 100%); }
     </style>
 </head>
 <body class="bg-black min-h-screen flex flex-col">
@@ -82,86 +90,48 @@
                 </a>
             </section>
 
-            <!-- Your Playlists Section -->
+            <!-- Playlists Section -->
             <section class="py-4">
                 <div class="mb-3">
-                    <h2 class="text-white text-lg font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Your Playlists</h2>
+                    <h2 class="text-white text-lg font-semibold">Your Playlists</h2>
                 </div>
-                <div class="grid grid-cols-2 gap-4" id="playlistsContainer">
+                <div class="grid grid-cols-2 gap-4">
                     <% if (playlists && playlists.length > 0) { %>
-                        <% 
-                        const themes = ['theme-purple', 'theme-blue', 'theme-pink', 'theme-green', 'theme-orange', 'theme-indigo'];
-                        playlists.forEach((playlist, index) => { %>
-                            <div class="playlist-card" style="--delay: <%= index %>" data-playlist-id="<%= playlist._id %>">
-                                <div class="card-bg bg-gray-900/50 p-4 rounded-lg relative backdrop-blur-sm border border-white/5 transition-all duration-300">
-                                    <a href="/playlist/<%= playlist._id %>" class="block">
-                                        <div class="<%= themes[index % themes.length] %> aspect-square rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-                                            <i class="fas fa-music text-2xl text-white/80 playlist-icon"></i>
-                                        </div>
-                                        <div class="flex justify-between items-end group">
-                                            <div>
-                                                <h3 class="text-white font-medium group-hover:text-purple-300 transition-colors"><%= playlist.name %></h3>
-                                                <p class="text-gray-400 text-sm"><%= playlist.songs.length %> songs</p>
+                        <% playlists.forEach((playlist, index) => { %>
+                            <div class="rounded-lg relative">
+                                <a href="/playlist/<%= playlist._id %>">
+                                    <div class="aspect-square <%= `gradient-${(index % 6) + 1}` %> rounded-lg mb-3 p-4 flex flex-col justify-between hover:scale-[0.98] transition-transform">
+                                        <i class="fas fa-music text-2xl text-white/60"></i>
+                                        <div>
+                                            <h3 class="text-white font-medium truncate"><%= playlist.name %></h3>
+                                            <div class="flex justify-between items-center mt-1">
+                                                <p class="text-white/80 text-sm"><%= playlist.songs.length %> songs</p>
+                                                <form action="/delete-playlist/<%= playlist._id %>" method="POST" 
+                                                      class="inline-block"
+                                                      onsubmit="return confirm('Are you sure you want to delete this playlist?')">
+                                                    <button type="submit" 
+                                                            class="w-8 h-8 rounded-full bg-black/20 hover:bg-black/30 
+                                                                   flex items-center justify-center transition-all 
+                                                                   active:scale-95">
+                                                        <i class="fas fa-trash text-white/80 text-sm"></i>
+                                                    </button>
+                                                </form>
                                             </div>
-                                            <button onclick="confirmDelete('<%= playlist._id %>', '<%= playlist.name %>')" 
-                                                    class="w-8 h-8 bg-white/5 hover:bg-red-500/20 rounded-full flex items-center justify-center transition-all duration-300 hover:rotate-12">
-                                                <i class="fas fa-trash-alt text-white/60 text-sm group-hover:text-red-400"></i>
-                                            </button>
                                         </div>
-                                    </a>
-                                </div>
+                                    </div>
+                                </a>
                             </div>
                         <% }); %>
                     <% } else { %>
-                        <div class="col-span-2 text-center py-12 text-gray-400 animate-fade-in">
-                            <i class="fas fa-music text-4xl mb-4 text-purple-500/50"></i>
-                            <p class="text-lg">No playlists yet.</p>
-                            <p class="text-sm text-gray-500">Add songs to create playlists!</p>
+                        <div class="col-span-2 text-center py-8 text-gray-500">
+                            <p>No playlists yet</p>
                         </div>
                     <% } %>
                 </div>
             </section>
-
-            <script>
-                function confirmDelete(playlistId, playlistName) {
-                    if (confirm(`Are you sure you want to delete "${playlistName}"?`)) {
-                        deletePlaylist(playlistId);
-                    }
-                }
-
-                async function deletePlaylist(playlistId) {
-                    try {
-                        const response = await fetch(`/playlist/${playlistId}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'Content-Type': 'application/json'
-                        }
-                    });
-
-                        const data = await response.json();
-
-                        if (response.ok) {
-                            // Remove the playlist element from DOM
-                            const playlistElement = document.querySelector(`[data-playlist-id="${playlistId}"]`);
-                            if (playlistElement) {
-                                playlistElement.remove();
-                            }
-                            // Reload if last playlist was deleted
-                            if (document.querySelectorAll('[data-playlist-id]').length === 0) {
-                                location.reload();
-                            }
-                        } else {
-                            alert(data.message || 'Error deleting playlist');
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
-                        alert('Error deleting playlist');
-                    }
-                }
-            </script>
         <% } %>
     </main>
-
+    
     <!-- Bottom Navigation -->
     <nav class="fixed bottom-0 w-full bg-black/90 backdrop-blur-lg border-t border-gray-800">
         <div class="flex justify-around py-3">

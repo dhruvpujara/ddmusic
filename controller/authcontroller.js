@@ -20,28 +20,20 @@ module.exports.getlogin = (req, res) => {
 };
 
 module.exports.postlogin = async (req, res) => {
-    const { email, password } = req.body;
     try {
-        const user = await User.findOne({ email: email });
-        if (!user) {
-            return res.render('login', { error: 'Invalid email' });
-        }
-        const isMatch = await user.comparePassword(password);
-        if (!isMatch) {
-            return res.render('login', { error: 'Invalid password' });
-        }
-        req.session.isLoggedIn = true;
-        req.session.loggeduser = user.username;
-        req.session.save((err) => {
-            if (err) {
-                console.error('Session save error:', err);
-                return res.render('login', { error: 'An error occurred. Please try again.' });
-            }
+        const user = await User.findOne({ email: req.body.email });
+        if (user && await user.comparePassword(req.body.password)) {
+            req.session.isLoggedIn = true;
+            req.session.loggeduser = user.username;
+            req.session.userId = user._id; // Add this line
+            await req.session.save();
             res.redirect('/profile');
-        });
+        } else {
+            res.render('login', { error: 'Invalid credentials' });
+        }
     } catch (err) {
         console.error('Login error:', err);
-        res.render('login', { error: 'An error occurred. Please try again.' });
+        res.render('login', { error: 'An error occurred' });
     }
 };
 

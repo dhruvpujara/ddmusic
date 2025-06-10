@@ -26,33 +26,37 @@
                 <button id="dropdownButton" class="text-white/60 hover:text-white transition-colors p-2">
                     <i class="fas fa-ellipsis-vertical text-xl"></i>
                 </button>
-                <div id="dropdownMenu" class="hidden absolute right-0 mt-1 w-72 rounded-lg shadow-lg bg-black/90 backdrop-blur-xl border border-white/10">
-                    <% if (typeof playlists !== 'undefined' && playlists.length > 0) { %>
-                        <% playlists.forEach(playlist => { %>
-                            <form action="/add-to-playlist" method="POST" class="w-full">
-                                <input type="hidden" name="songId" value="<%= songId %>">
-                                <input type="hidden" name="playlistId" value="<%= playlist._id %>">
-                                <button type="submit" 
-                                        class="w-full px-4 py-4 text-base text-white/70 hover:text-white hover:bg-violet-600/20 flex items-center justify-between transition-all duration-200">
-                                    <div class="flex items-center gap-3">
-                                        <i class="fas fa-music text-sm bg-violet-500/20 p-2 rounded-full"></i>
-                                        <span class="font-medium text-violet-300">Add to</span>
-                                        <span class="font-medium"><%= playlist.name %></span>
-                                    </div>
-                                    <i class="fas fa-plus text-sm opacity-60"></i>
-                                </button>
-                            </form>
-                        <% }); %>
-                        <div class="border-t border-white/10 my-1"></div>
-                    <% } %>
-                    <button type="button" 
-                            onclick="showPlaylistDialog()" 
-                            class="w-full px-4 py-4 text-base text-white/70 hover:text-white hover:bg-violet-600/20 flex items-center transition-all duration-200">
-                        <div class="flex items-center gap-3">
-                            <i class="fas fa-plus text-sm bg-violet-500/20 p-2 rounded-full"></i>
-                            <span class="font-medium">Create New Playlist</span>
-                        </div>
-                    </button>
+                <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-64 rounded-lg bg-black/90 backdrop-blur-xl border border-white/10 divide-y divide-gray-800">
+                    <!-- Existing Playlists -->
+                    <div class="py-1">
+                        <% if (typeof playlists !== 'undefined' && playlists.length > 0) { %>
+                            <% playlists.forEach(playlist => { %>
+                                <form action="/add-to-playlist" method="POST">
+                                    <input type="hidden" name="songId" value="<%= songId %>">
+                                    <input type="hidden" name="playlistId" value="<%= playlist._id %>">
+                                    <button type="submit" 
+                                            class="w-full px-4 py-3 text-left text-sm flex items-center justify-between text-white/70 hover:text-white hover:bg-white/5">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-list text-violet-400"></i>
+                                            <span>Add to <%= playlist.name %></span>
+                                        </div>
+                                        <i class="fas fa-plus text-xs opacity-60"></i>
+                                    </button>
+                                </form>
+                            <% }); %>
+                        <% } else { %>
+                            <p class="px-4 py-3 text-sm text-gray-500">No playlists yet</p>
+                        <% } %>
+                    </div>
+                    
+                    <!-- Create New Playlist Button -->
+                    <div class="py-1">
+                        <button onclick="showPlaylistDialog()" 
+                                class="w-full px-4 py-3 text-left text-sm flex items-center gap-2 text-white/70 hover:text-white hover:bg-white/5">
+                            <i class="fas fa-plus text-violet-400"></i>
+                            <span>Create New Playlist</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -67,11 +71,11 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form action="/create-playlist" method="POST">
-                <input type="hidden" name="songId" value="<%= songId %>">
+            <form action="/playlist/create" method="POST">
+                <input type="hidden" name="songId" value="<%= typeof songId === 'string' ? songId.replace(/^ObjectId\("(.*)"\)$/, '$1') : songId %>">
                 <div class="relative">
                     <input type="text" 
-                           name="playlistName" 
+                           name="name" 
                            placeholder="Playlist Name" 
                            maxlength="30"
                            class="w-full bg-white/5 border border-white/10 rounded h-12 pl-4 pr-12 text-white 
@@ -334,6 +338,38 @@
                             playSong(button.dataset.songId);
                         });
                     });
+
+                    async function playNextSong() {
+                        try {
+                            const currentSongId = '<%= songId %>'; // Get current song ID from EJS
+                            const response = await fetch(`/next-song/${currentSongId}`);
+                            
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+
+                            const data = await response.json();
+                            if (data.success && data.song) {
+                                // Update the audio source
+                                const audioPlayer = document.getElementById('audioPlayer');
+                                audioPlayer.src = data.song.link;
+                                
+                                // Update song information on the page
+                                document.getElementById('songName').textContent = data.song.name;
+                                
+                                // Update the current song ID (if you need it for further operations)
+                                document.getElementById('currentSongId').value = data.song.id;
+                                
+                                // Start playing the new song
+                                audioPlayer.play();
+                            }
+                        } catch (error) {
+                            console.error('Error playing next song:', error);
+                        }
+                    }
+
+                    // Add event listener for song end to auto-play next song
+                    document.getElementById('audioPlayer').addEventListener('ended', playNextSong);
                 </script>
             </div>
         </div>
@@ -380,6 +416,11 @@
 
     function hidePlaylistDialog() {
         document.getElementById('playlistDialog').classList.add('hidden');
+    }
+
+    function togglePlaylistModal() {
+        const modal = document.getElementById('playlistModal');
+        modal.classList.toggle('hidden');
     }
 </script>
 </body>

@@ -38,13 +38,21 @@ app.set('views', [
 // Session configuration
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // Changed to true
+    saveUninitialized: true, // Changed to true
     cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-        secure: process.env.NODE_ENV === 'production'
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true
     }
 }));
+
+// Add this middleware to make session data available to all templates
+app.use((req, res, next) => {
+    res.locals.isLoggedIn = req.session.isLoggedIn;
+    res.locals.loggeduser = req.session.loggeduser;
+    next();
+});
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // Add this line
@@ -92,4 +100,10 @@ mongoose.connect(process.env.MONGODB_URI)
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
+});
+
+// Add this before your error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Something went wrong!' });
 });

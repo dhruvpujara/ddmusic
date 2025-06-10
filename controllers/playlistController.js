@@ -1,46 +1,55 @@
-const TryCatch = require('../middleware/TryCatch');
-const User = require('../models/userModel');
-const Playlist = require('../models/playlistModel');
+const User = require('../models/user');
+const Playlist = require('../models/playlist');
 
-exports.createPlaylist = TryCatch(async (req, res) => {
-    const { name } = req.body;
-    const playlist = await Playlist.create({
-        name,
-        owner: req.user._id,
-        songs: []
-    });
-    
-    return res.status(201).json({
-        success: true,
-        playlist
-    });
-});
+exports.createPlaylist = async (req, res) => {
+    try {
+        const { name, songId } = req.body;
+        if (!req.session.loggeduser) {
+            return res.redirect('/login');
+        }
 
-exports.addToPlaylist = TryCatch(async (req, res) => {
-    const { playlistId, songId } = req.params;
-    
-    const playlist = await Playlist.findById(playlistId);
-    if (!playlist) {
-        return res.status(404).json({ message: "Playlist not found" });
+        const user = await User.findOne({ username: req.session.loggeduser });
+        const playlist = await Playlist.create({
+            name,
+            userId: user._id,
+            songs: songId ? [songId] : []
+        });
+        
+        res.redirect('/library');
+    } catch (error) {
+        console.error('Error creating playlist:', error);
+        res.redirect('/library');
     }
-    
-    if (playlist.owner.toString() !== req.user._id.toString()) {
-        return res.status(403).json({ message: "Unauthorized" });
+};
+
+exports.addToPlaylist = async (req, res) => {
+    try {
+        const { playlistId, songId } = req.body;
+        
+        const playlist = await Playlist.findById(playlistId);
+        if (!playlist) {
+            return res.redirect('back');
+        }
+
+        if (!playlist.songs.includes(songId)) {
+            playlist.songs.push(songId);
+            await playlist.save();
+        }
+        
+        res.redirect('back');
+    } catch (error) {
+        console.error('Error adding to playlist:', error);
+        res.redirect('back');
     }
+};
 
-    if (playlist.songs.includes(songId)) {
-        const index = playlist.songs.indexOf(songId);
-        playlist.songs.splice(index, 1);
-        await playlist.save();
-        return res.json({ message: "Song removed from playlist" });
+exports.getUserPlaylists = async (req, res) => {
+    try {
+        const user = await User.findOne({ username: req.session.loggeduser });
+        const playlists = await Playlist.find({ userId: user._id }).populate('songs');
+        res.render('library', { playlists });
+    } catch (error) {
+        console.error('Error getting playlists:', error);
+        res.redirect('/');
     }
-
-    playlist.songs.push(songId);
-    await playlist.save();
-    return res.json({ message: "Song added to playlist" });
-});
-
-exports.getUserPlaylists = TryCatch(async (req, res) => {
-    const playlists = await Playlist.find({ owner: req.user._id });
-    return res.json({ playlists });
-});
+};
