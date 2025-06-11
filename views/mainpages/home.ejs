@@ -149,19 +149,13 @@
                     }
                 });
 
-                // Track ended
-                audio.addEventListener('ended', () => {
+                // Replace track ended event with autoplay
+                audio.addEventListener('ended', async () => {
                     playPauseBtn.innerHTML = '<i class="fas fa-play text-lg pl-1"></i>';
                     progress.style.width = '0%';
-                });
-
-                // Add autoplay functionality
-                audio.addEventListener('ended', async () => {
-                    try {
-                        window.location.href = '/player/next';
-                    } catch (error) {
-                        console.error('Error auto-playing next song:', error);
-                    }
+                    
+                    // Auto navigate to next song
+                    window.location.href = '/player/next';
                 });
             });
         </script>

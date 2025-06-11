@@ -266,33 +266,39 @@ module.exports.logout = (req, res) => {
 
 module.exports.getprofile = async (req, res) => {
     try {
-        if (!req.session.isLoggedIn) {
-            return res.render('profile', { 
+        // If not logged in, show default profile
+        if (!req.session.isLoggedIn || !req.session.loggeduser) {
+            return res.render('profile', {
                 isLoggedIn: false,
-                likedSongsCount: 0,
-                playlistCount: 0
+                stats: {
+                    likedSongs: 0,
+                    playlists: 0
+                }
             });
         }
 
+        // Get user data
         const user = await User.findOne({ username: req.session.loggeduser });
         if (!user) {
             throw new Error('User not found');
         }
 
-        const likedSongsCount = user.likedSongs ? user.likedSongs.length : 0;
-        // Count playlists where userId matches current user's ID
-        const playlistCount = await Playlist.countDocuments({ userId: user._id });
-        console.log('Found playlists:', playlistCount, 'for user:', user._id); // Debug log
+        // Get stats
+        const stats = {
+            likedSongs: user.likedSongs ? user.likedSongs.length : 0,
+            playlists: await Playlist.countDocuments({ userId: user._id })
+        };
+
+        console.log(`Stats for user ${user.username}:`, stats);
 
         res.render('profile', {
             isLoggedIn: true,
             username: user.username,
-            likedSongsCount,
-            playlistCount
+            stats
         });
-    } catch (err) {
-        console.error('Error fetching profile:', err);
-        res.status(500).redirect('/');
+    } catch (error) {
+        console.error('Profile error:', error);
+        res.redirect('/');
     }
 };
 
@@ -440,21 +446,18 @@ module.exports.postMusicPlayer = async (req, res) => {
 module.exports.getNextSong = async (req, res) => {
     try {
         let nextSong;
-        const currentSongId = req.session.recentlyplayed;
-
+        
         // Check if we're in playlist context
         if (req.session.playlistContext) {
             const { songs } = req.session.playlistContext;
-            const currentIndex = songs.findIndex(id => id.toString() === currentSongId);
+            const currentIndex = songs.findIndex(id => id.toString() === req.session.recentlyplayed);
             const nextIndex = (currentIndex + 1) % songs.length;
             nextSong = await Song.findById(songs[nextIndex]);
         } else {
-            // Get next song by ID
             nextSong = await Song.findOne({
-                _id: { $gt: currentSongId }
+                _id: { $gt: req.session.recentlyplayed }
             }).sort({ _id: 1 });
             
-            // If no next song, loop back to first
             if (!nextSong) {
                 nextSong = await Song.findOne().sort({ _id: 1 });
             }
@@ -464,20 +467,27 @@ module.exports.getNextSong = async (req, res) => {
             return res.redirect('/explore');
         }
 
-        // Update session with new song
+        // Update session
         req.session.recentlyplayed = nextSong._id;
         await req.session.save();
 
-        // Render with autoplay enabled
-        res.render('player/musicplayer', {
-            songName: nextSong.name,
-            songLink: nextSong.link,
-            songId: nextSong._id,
-            hashtags: nextSong.hashtags || [],
-            autoplay: true,
-            isLoop: false,
-            inPlaylist: !!req.session.playlistContext
-        });
+        // Check if request came from home page
+        const referer = req.get('Referer') || '';
+        const isFromHome = referer.endsWith('/');
+
+        if (isFromHome) {
+            res.redirect('/'); // Return to home with new song
+        } else {
+            res.render('player/musicplayer', {
+                songName: nextSong.name,
+                songLink: nextSong.link,
+                songId: nextSong._id,
+                hashtags: nextSong.hashtags || [],
+                autoplay: true,
+                isLoop: false,
+                inPlaylist: !!req.session.playlistContext
+            });
+        }
     } catch (err) {
         console.error('Error getting next song:', err);
         res.redirect('/explore');
@@ -542,7 +552,7 @@ module.exports.getPlaylist = async (req, res) => {
         };
         await req.session.save();
         
-        res.render('playlist', { playlist, isLoggedIn: req.session.isLoggedIn });
+        res.render('player/playlist', { playlist, isLoggedIn: req.session.isLoggedIn });
     } catch (err) {
         console.error('Error fetching playlist:', err);
         res.redirect('/library');

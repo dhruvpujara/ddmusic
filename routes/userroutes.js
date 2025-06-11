@@ -17,7 +17,6 @@ router.get('/oldies', usercontroller.getOldies);
 router.get('/recent', usercontroller.getrecentlyplayed);
 router.get('/player/next', usercontroller.getNextSong); // Changed from /next-song/:id
 router.get('/player/previous', usercontroller.getPreviousSong);
-router.get('/player/autoplay-next', usercontroller.getNextSong); // New route for autoplay next song
 
 // Playlist routes
 router.post('/playlist/create', playlistController.createPlaylist);

@@ -286,21 +286,8 @@
 
                     // Add autoplay functionality
                     audio.addEventListener('ended', async () => {
-                        const inPlaylist = <%= typeof inPlaylist !== 'undefined' && inPlaylist %>;
-                        
-                        try {
-                            const response = await fetch(inPlaylist ? '/player/next' : '/player/random', {
-                                method: 'GET',
-                            });
-
-                            if (response.ok) {
-                                location.reload();
-                            } else {
-                                console.error('Error fetching next song');
-                            }
-                        } catch (error) {
-                            console.error('Error:', error);
-                        }
+                        const inPlaylist = <%= typeof inPlaylist !== 'undefined' && inPlaylist ? 'true' : 'false' %>;
+                        window.location.href = '/player/next';
                     });
 
                     async function playSong(songId) {

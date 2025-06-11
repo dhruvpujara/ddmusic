@@ -117,12 +117,16 @@ module.exports.getregister = (req, res) => {
     });
 };
 
-module.exports.postlogout = (req, res) => {
+
+
+module.exports.logout = (req, res) => {
+    // Clear session data
     req.session.destroy((err) => {
         if (err) {
-            console.error('Error destroying session:', err);
+            console.error('Error during logout:', err);
         }
-        res.redirect('/');
+        // Redirect to login page after logout
+        res.redirect('/login');
     });
 };
 
@@ -130,30 +134,29 @@ module.exports.getprofile = async (req, res) => {
     try {
         if (!req.session.isLoggedIn) {
             return res.render('mainpages/profile', { 
-                isLoggedIn: false 
+                isLoggedIn: false,
+                likedSongsCount: 0,
+                playlistCount: 0
             });
         }
 
-        // Fetch user, liked songs count, and playlist count
-        const username = req.session.loggeduser;
-        const user = await User.findOne({ username });
-        const likedSongsCount = user ? user.likedSongs.length : 0;
-        const playlistCount = await Playlist.countDocuments({ owner: username });
+        const user = await User.findOne({ username: req.session.loggeduser });
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        const likedSongsCount = user.likedSongs ? user.likedSongs.length : 0;
+        const playlistCount = await Playlist.countDocuments({ userId: user._id });
 
         res.render('mainpages/profile', {
             isLoggedIn: true,
-            username,
+            username: user.username,
             likedSongsCount,
             playlistCount
         });
-    } catch (err) {
-        console.error('Error fetching profile:', err);
-        res.render('mainpages/profile', { 
-            isLoggedIn: true,
-            username: req.session.loggeduser,
-            likedSongsCount: 0,
-            playlistCount: 0
-        });
+    } catch (error) {
+        console.error('Profile error:', error);
+        res.redirect('/');
     }
 }
 
