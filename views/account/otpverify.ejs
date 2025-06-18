@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Account - DDMusic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-gray-900 to-black min-h-screen text-white flex items-center justify-center p-4">
+    <!-- Decorative Background -->
+    <div class="fixed inset-0 bg-gradient-to-b from-violet-900/10 to-transparent"></div>
+    
+    <div class="relative w-full max-w-md">
+        <!-- Card Container -->
+        <div class="bg-black/40 backdrop-blur-xl rounded-2xl p-8 border border-white/5">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <i class="fas fa-envelope-open-text text-2xl text-white"></i>
+                </div>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">
+                    Verify Your Email
+                </h1>
+               
+            </div>
+
+            <!-- Error Message Display -->
+            <% if (locals.error) { %>
+                <div class="mb-4 px-3 py-2 bg-red-950/30 rounded-lg">
+                    <p class="text-white text-lg font-semibold"><%= error %></p>
+                </div>
+            <% } %>
+
+            <!-- Welcome Message -->
+            <div class="text-center mb-10">
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent mb-3">
+                    Welcome to the Family!
+                </h1>
+                <p class="text-gray-500 text-sm">Together, let's create your musical journey.</p>
+            </div>
+
+            <!-- OTP Input Form -->
+            <form action="/verified" method="POST" class="space-y-6" id="otpForm">
+                <input type="hidden" name="verificationCode" id="combinedOtp">
+                <div class="flex justify-center gap-2">
+                    <% for(let i = 0; i < 5; i++) { %>
+                        <input type="text" 
+                               maxlength="1"
+                               class="w-12 h-12 text-center bg-gray-800/50 border border-gray-700 rounded-lg text-lg font-mono
+                                      focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20
+                                      <%= locals.error ? 'border-red-500/50' : '' %>"
+                               data-index="<%= i %>"
+                               required>
+                    <% } %>
+                </div>
+
+                <button type="submit" 
+                        class="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg text-white 
+                               font-semibold hover:from-violet-500 hover:to-indigo-500 
+                               focus:ring-2 focus:ring-violet-500/20 focus:outline-none
+                               transform transition-all hover:scale-[1.02] active:scale-[0.98]">
+                    Verify Account
+                </button>
+
+                <div class="text-center">
+                    <p class="text-gray-400 text-sm">
+                        Didn't receive the code? 
+                        <a href="/resend-otp" class="text-violet-400 hover:text-violet-300">Resend</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Logo -->
+        <div class="text-center mt-8">
+            <a href="/" class="text-2xl font-bold bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">
+                DDMusic
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputs = document.querySelectorAll('input[type="text"]');
+            const form = document.getElementById('otpForm');
+            const combinedOtpInput = document.getElementById('combinedOtp');
+            
+            // Auto-focus first input
+            inputs[0].focus();
+
+            // Handle input
+            inputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1) {
+                        if (index < inputs.length - 1) {
+                            inputs[index + 1].focus();
+                        }
+                    }
+                });
+
+                // Handle backspace
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        inputs[index - 1].focus();
+                    }
+                });
+            });
+
+            // Combine OTP digits before form submission
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const otpValue = Array.from(inputs).map(input => input.value).join('');
+                combinedOtpInput.value = parseInt(otpValue, 10);
+                form.submit();
+            });
+        });
+    </script>
+</body>
+</html>

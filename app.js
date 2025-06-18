@@ -11,19 +11,19 @@ const mongoose = require('mongoose');
 const authRoutes = require('./routes/authroutes');
 const userRoutes = require('./routes/userroutes'); // Fixed casing
 const errorController = require('./controller/errorController');
-const sendEmail = require('./utils/nodemailer');
 
 
 
 const app = express();
 const rootdir = __dirname;
 const port = process.env.PORT;
-const dburl = process.env.MONGODB_URI;
 
 
 
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
+
+
 app.set('views', [
     path.join(rootdir, 'views'),
     path.join(rootdir, 'views/admin'),
@@ -46,6 +46,8 @@ app.use(session({
         httpOnly: true
     }
 }));
+
+
 
 // Add this middleware to make session data available to all templates
 app.use((req, res, next) => {
@@ -107,3 +109,4 @@ app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Something went wrong!' });
 });
+

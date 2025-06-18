@@ -1,0 +1,102 @@
+<% if (recentSong) { %>
+    <div class="fixed bottom-16 left-0 right-0 bg-black/90 backdrop-blur-lg border-t border-gray-800">
+        <!-- Progress Bar -->
+        <div class="relative w-full h-1 bg-gray-800">
+            <div class="h-full bg-violet-600 w-0 transition-all duration-300" id="progress"></div>
+        </div>
+
+        <!-- Player Controls -->
+        <div class="flex items-center justify-between px-4 py-3">
+            <div class="flex items-center space-x-3 flex-1 min-w-0">
+                <div class="min-w-0">
+                    <p class="text-white text-sm font-medium truncate"><%= recentSong.name %></p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <a href="/player/previous" class="w-10 h-10 rounded-full flex items-center justify-center text-white/60 hover:text-violet-400 transition-all">
+                    <i class="fas fa-backward-step text-lg"></i>
+                </a>
+                
+                <button id="playPauseBtn" class="w-12 h-12 rounded-full bg-gradient-to-br from-violet-800 to-indigo-900 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg shadow-violet-900/25 border border-white/10">
+                    <i class="fas fa-pause text-lg"></i>
+                </button>
+                
+                <a href="/player/next" class="w-10 h-10 rounded-full flex items-center justify-center text-white/60 hover:text-violet-400 transition-all">
+                    <i class="fas fa-forward-step text-lg"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Hidden Audio Player -->
+        <audio id="audioPlayer" class="hidden" preload="auto">
+            <source src="<%= recentSong.link %>" type="audio/mp3">
+        </audio>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                try {
+                    const audio = document.getElementById('audioPlayer');
+                    const playPauseBtn = document.getElementById('playPauseBtn');
+                    const progress = document.getElementById('progress');
+                    let isPlayPending = false;
+
+                    const wasPlaying = <%= typeof isPlaying !== 'undefined' && isPlaying ? 'true' : 'false' %>;
+                    
+                    if (<%= typeof lastPlaybackTime !== 'undefined' %>) {
+                        audio.currentTime = <%= lastPlaybackTime || 0 %>;
+                    }
+
+                    if (wasPlaying) {
+                        playPauseBtn.innerHTML = '<i class="fas fa-pause text-lg"></i>';
+                        audio.play().catch(console.error);
+                    } else {
+                        playPauseBtn.innerHTML = '<i class="fas fa-play text-lg pl-1"></i>';
+                    }
+
+                    audio.addEventListener('timeupdate', () => {
+                        try {
+                            if (audio.duration) {
+                                const percent = (audio.currentTime / audio.duration) * 100;
+                                progress.style.width = `${percent}%`;
+                            }
+
+                            fetch('/update-playback-time', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    songId: '<%= recentSong._id %>',
+                                    currentTime: audio.currentTime,
+                                    isPlaying: !audio.paused
+                                })
+                            }).catch(err => console.error('Error updating playback time:', err));
+                        } catch (err) {
+                            console.error('Time update error:', err);
+                        }
+                    });
+
+                    playPauseBtn.addEventListener('click', async () => {
+                        if (isPlayPending) return;
+                        isPlayPending = true;
+
+                        try {
+                            if (audio.paused) {
+                                await audio.play();
+                                playPauseBtn.innerHTML = '<i class="fas fa-pause text-lg"></i>';
+                            } else {
+                                audio.pause();
+                                playPauseBtn.innerHTML = '<i class="fas fa-play text-lg pl-1"></i>';
+                            }
+                        } catch (err) {
+                            console.error('Playback error:', err);
+                        } finally {
+                            isPlayPending = false;
+                        }
+                    });
+                } catch (err) {
+                    console.error('Player initialization error:', err);
+                }
+            });
+        </script>
+    </div>
+<% } %>

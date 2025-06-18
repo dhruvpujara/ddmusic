@@ -239,20 +239,6 @@
                         const percent = (audio.currentTime / audio.duration) * 100;
                         progress.style.width = `${percent}%`;
                         currentTimeEl.textContent = formatTime(audio.currentTime);
-
-                        // Add time tracking
-                        const currentTime = audio.currentTime;
-                        // Store current time in session via AJAX
-                        fetch('/update-playback-time', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                songId: '<%= songId %>',
-                                currentTime: currentTime
-                            })
-                        }).catch(err => console.error('Error updating playback time:', err));
                     });
 
                     // Set duration when metadata is loaded

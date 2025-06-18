@@ -5,6 +5,7 @@ const emailService = require('../utils/nodemailer');
 const errorMiddleware = require('../errorhandler/errorhandler');
 const  catchAsyncError = require('../middleware/catchAsyncerror')
 const Playlist = require('../models/playlist');
+const Song = require('../models/song');
 
 
 // Add middleware at the top
@@ -15,26 +16,105 @@ const isAuth = (req, res, next) => {
     next();
 };
 
-module.exports.getlogin = (req, res) => {
-    res.render('login', { error: null });
+const getPlaybackState = async (req) => {
+    let recentSong = null;
+    let lastPlaybackTime = 0;
+    let isPlaying = false;
+    
+    if (req.session && req.session.recentlyplayed) {
+        recentSong = await Song.findById(req.session.recentlyplayed);
+        if (req.session.lastPlaybackSong === req.session.recentlyplayed) {
+            lastPlaybackTime = req.session.lastPlaybackTime || 0;
+            isPlaying = req.session.isPlaying || false;
+        }
+    }
+    return { recentSong, lastPlaybackTime, isPlaying };
+};
+
+module.exports.getlogin = async (req, res) => {
+    const playbackState = await getPlaybackState(req);
+    res.render('login', { error: null, ...playbackState });
 };
 
 module.exports.postlogin = async (req, res) => {
     try {
         const user = await User.findOne({ email: req.body.email });
         if (user && await user.comparePassword(req.body.password)) {
-            req.session.isLoggedIn = true;
-            req.session.loggeduser = user.username;
-            req.session.userId = user._id; // Add this line
-            await req.session.save();
-            res.redirect('/profile');
+            if (user.verified) {
+                req.session.isLoggedIn = true;
+                req.session.loggeduser = user.username;
+                req.session.userId = user._id;
+                await req.session.save();
+                res.redirect('/profile');
+            } else {
+                req.session.emailForVerification = user.email;
+                res.render('account/otpverify', { error: null });
+            }
         } else {
-            res.render('login', { error: 'Invalid credentials' });
+            const playbackState = await getPlaybackState(req);
+            res.render('login', { error: 'Invalid credentials', ...playbackState });
         }
     } catch (err) {
         console.error('Login error:', err);
         res.render('login', { error: 'An error occurred' });
     }
+};
+
+module.exports.getverified = async (req, res) => {
+    try {
+        const verificationCode = parseInt(req.body.verificationCode);
+        const email = req.session.emailForVerification;
+
+        if (!email || !verificationCode) {
+            return res.render('account/otpverify', { error: 'Missing verification data' });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.render('account/otpverify', { error: 'User not found' });
+        }
+
+        console.log('Verification attempt:', {
+            receivedCode: verificationCode,
+            storedCode: user.verificationCode,
+            email: email
+        });
+
+        if (user.verificationCode === verificationCode) {
+            user.verified = true; // Changed from Verified to verified
+            user.verificationCode = null;
+            await user.save();
+
+            console.log('User verified successfully:', {
+                email: user.email,
+                verified: user.verified
+            });
+
+            req.session.isLoggedIn = true;
+            req.session.loggeduser = user.username;
+            req.session.userId = user._id;
+            await req.session.save();
+
+            return res.redirect('/profile');
+        } else {
+            console.log('Invalid verification code:', {
+                received: verificationCode,
+                stored: user.verificationCode
+            });
+            return res.render('account/otpverify', { 
+                error: 'Invalid verification code'
+            });
+        }
+    } catch (err) {
+        console.error('Verification error:', err);
+        res.render('account/otpverify', { 
+            error: 'An error occurred during verification'
+        });
+    }
+};
+
+module.exports.getforgotPassword = (req, res) => {
+    res.render('account/forgotPassword', { error: null });
 };
 
 module.exports.postregister = async (req, res) => {
@@ -117,7 +197,14 @@ module.exports.getregister = (req, res) => {
     });
 };
 
-
+module.exports.getresetpassword = (req, res) => {
+    console.log(req.body);
+    res.render('mainpages/profile', {
+        isLoggedIn: req.session.isLoggedIn || false,
+        username: req.session.loggeduser || '',
+        error: null
+    });
+};
 
 module.exports.logout = (req, res) => {
     // Clear session data
@@ -130,13 +217,30 @@ module.exports.logout = (req, res) => {
     });
 };
 
+module.exports.verifyEmail = (req, res) => {
+    res.render('account/otpverify', { error: null });  // Pass error as null by default
+};
+
 module.exports.getprofile = async (req, res) => {
     try {
+        // Get recent song data
+        let recentSong = null;
+        let lastPlaybackTime = 0;
+        
+        if (req.session && req.session.recentlyplayed) {
+            recentSong = await Song.findById(req.session.recentlyplayed);
+            if (req.session.lastPlaybackSong === req.session.recentlyplayed) {
+                lastPlaybackTime = req.session.lastPlaybackTime || 0;
+            }
+        }
+
         if (!req.session.isLoggedIn) {
             return res.render('mainpages/profile', { 
                 isLoggedIn: false,
                 likedSongsCount: 0,
-                playlistCount: 0
+                playlistCount: 0,
+                recentSong,
+                lastPlaybackTime
             });
         }
 
@@ -152,7 +256,9 @@ module.exports.getprofile = async (req, res) => {
             isLoggedIn: true,
             username: user.username,
             likedSongsCount,
-            playlistCount
+            playlistCount,
+            recentSong,
+            lastPlaybackTime
         });
     } catch (error) {
         console.error('Profile error:', error);

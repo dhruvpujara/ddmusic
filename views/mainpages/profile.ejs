@@ -15,11 +15,6 @@
     <header class="fixed top-0 w-full bg-black/90 backdrop-blur-lg z-50 px-4 py-3 border-b border-gray-800">
         <div class="flex items-center justify-between max-w-lg mx-auto">
             <h1 class="text-xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">Profile</h1>
-            <% if (isLoggedIn) { %>
-                <a href="/auth/logout" class="text-white/60 hover:text-white transition-colors">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
-            <% } %>
         </div>
     </header>
 
@@ -40,7 +35,7 @@
                         <!-- Username -->
                         <h2 class="mt-4 text-xl font-semibold text-white"><%= username %></h2>
                         <!-- Logout Button -->
-                        <a href="/auth/logout" 
+                        <a href="/logout" 
                            class="mt-6 px-6 py-3 mb-2 bg-gray-800/50 hover:bg-gray-800 rounded-full 
                                   text-gray-400 hover:text-white text-sm flex items-center gap-2 transition-all">
                             <i class="fas fa-sign-out-alt"></i>
@@ -85,8 +80,10 @@
         </div>
     </main>
 
+    <%- include('../partials/miniplayer') %>
+
     <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-black/40 backdrop-blur-xl border-t border-white/5">
+    <nav class="fixed bottom-0 left-0 right-0 w-full bg-black/90 backdrop-blur-lg border-t border-gray-800 z-50">
         <div class="flex justify-around py-3">
             <a href="/" class="text-gray-400 flex flex-col items-center">
                 <i class="fas fa-home"></i>

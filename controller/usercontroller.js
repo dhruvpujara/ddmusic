@@ -4,26 +4,69 @@ const Playlist = require('../models/playlist');
 const mongoose = require('mongoose'); // Import mongoose
 // get methods
 
+const getPlaybackState = async (req) => {
+    let recentSong = null;
+    let lastPlaybackTime = 0;
+    let isPlaying = false;
+    
+    if (req.session && req.session.recentlyplayed) {
+        recentSong = await Song.findById(req.session.recentlyplayed);
+        if (req.session.lastPlaybackSong === req.session.recentlyplayed) {
+            lastPlaybackTime = req.session.lastPlaybackTime || 0;
+            isPlaying = req.session.isPlaying || false;
+        }
+    }
+    return { recentSong, lastPlaybackTime, isPlaying };
+};
+
+// Add this helper function at the top
+const getPlayerContext = async (req) => {
+    let recentSong = null;
+    let lastPlaybackTime = 0;
+    let isPlaying = false;
+    
+    if (req.session && req.session.recentlyplayed) {
+        recentSong = await Song.findById(req.session.recentlyplayed);
+        if (req.session.lastPlaybackSong === req.session.recentlyplayed) {
+            lastPlaybackTime = req.session.lastPlaybackTime || 0;
+            isPlaying = req.session.isPlaying || false;
+        }
+    }
+    
+    return { recentSong, lastPlaybackTime, isPlaying };
+};
+
 module.exports.getExplore = async (req, res) => {
     try {
-        // Simpler query without chaining unsupported methods
-        let allSongs = await Song.find({}, 'name link hashtags _id');
+        // Get recent song data
+        let recentSong = null;
+        let lastPlaybackTime = 0;
         
-        // Randomize the songs array
+        if (req.session && req.session.recentlyplayed) {
+            recentSong = await Song.findById(req.session.recentlyplayed);
+            if (req.session.lastPlaybackSong === req.session.recentlyplayed) {
+                lastPlaybackTime = req.session.lastPlaybackTime || 0;
+            }
+        }
+
+        let allSongs = await Song.find({}, 'name link hashtags _id');
         allSongs = allSongs.sort(() => Math.random() - 0.5);
 
         res.render('explore', { 
             songs: allSongs,
             artists: ["ArijitSingh", "KK", "Badshah", "HoneySingh", "NehaKakkar"],
-            error: null
+            error: null,
+            recentSong,
+            lastPlaybackTime
         });
     } catch (err) {
         console.error('Error fetching data:', err);
-        // Render explore page with error instead of redirecting
         res.render('explore', {
             songs: [],
             artists: [],
-            error: 'Unable to load songs. Please try again.'
+            error: 'Unable to load songs. Please try again.',
+            recentSong: null,
+            lastPlaybackTime: 0
         });
     }
 };
@@ -180,38 +223,14 @@ module.exports.getlikedsongs = async (req, res) => {
 
 module.exports.gethome = async (req, res) => {
     try {
-        let recentSong = null;
-        let lastPlaybackTime = 0;
-        
-        if (req.session && req.session.recentlyplayed) {
-            recentSong = await Song.findById(req.session.recentlyplayed);
-            // Get stored playback time if it's the same song
-            if (req.session.lastPlaybackSong === req.session.recentlyplayed) {
-                lastPlaybackTime = req.session.lastPlaybackTime || 0;
-            }
-        }
-
-        // Add fallback song if no recent song exists
-        if (!recentSong) {
-            // Get a random song as fallback
-            const allSongs = await Song.find({});
-            if (allSongs.length > 0) {
-                recentSong = allSongs[Math.floor(Math.random() * allSongs.length)];
-            }
-        }
-
-        res.render('home', {
+        const playerContext = await getPlayerContext(req);
+        res.render('mainpages/home', {
             isLoggedIn: req.session.isLoggedIn || false,
-            recentSong: recentSong,
-            lastPlaybackTime: lastPlaybackTime
+            ...playerContext
         });
     } catch (err) {
-        console.error('Error in gethome:', err);
-        res.render('home', {
-            isLoggedIn: req.session.isLoggedIn || false,
-            recentSong: null,
-            lastPlaybackTime: 0
-        });
+        console.error('Home error:', err);
+        res.redirect('/');
     }
 };
 
@@ -219,11 +238,16 @@ module.exports.gethome = async (req, res) => {
 
 module.exports.library = async (req, res) => {
     try {
+        const playerContext = await getPlayerContext(req);
+
         if (!req.session.isLoggedIn || !req.session.loggeduser) {
             return res.render('mainpages/library', {
                 isLoggedIn: false,
                 likedSongsCount: 0,
-                playlists: []
+                playlists: [],
+                recentSong: playerContext.recentSong,
+                lastPlaybackTime: playerContext.lastPlaybackTime,
+                isPlaying: playerContext.isPlaying
             });
         }
 
@@ -236,19 +260,17 @@ module.exports.library = async (req, res) => {
         const playlists = await Playlist.find({ userId: user._id })
             .populate('songs')
             .lean();
-
-        console.log('Fetched playlists:', playlists); // Debug log
-
         const likedSongsCount = user.likedSongs ? user.likedSongs.length : 0;
 
         res.render('mainpages/library', {
             isLoggedIn: true,
             likedSongsCount,
             playlists,
-            username: user.username
+            username: user.username,
+            ...playerContext
         });
     } catch (err) {
-        console.error('Error in library:', err);
+        console.error('Library error:', err);
         res.redirect('/');
     }
 };
@@ -266,35 +288,33 @@ module.exports.logout = (req, res) => {
 
 module.exports.getprofile = async (req, res) => {
     try {
-        // If not logged in, show default profile
-        if (!req.session.isLoggedIn || !req.session.loggeduser) {
-            return res.render('profile', {
+        const playbackState = await getPlaybackState(req);
+
+        if (!req.session.isLoggedIn) {
+            return res.render('mainpages/profile', {
                 isLoggedIn: false,
-                stats: {
-                    likedSongs: 0,
-                    playlists: 0
-                }
+                likedSongsCount: 0,
+                playlistCount: 0,
+                recentSong: playbackState.recentSong,
+                lastPlaybackTime: playbackState.lastPlaybackTime,
+                isPlaying: playbackState.isPlaying
             });
         }
 
-        // Get user data
         const user = await User.findOne({ username: req.session.loggeduser });
         if (!user) {
             throw new Error('User not found');
         }
 
-        // Get stats
-        const stats = {
-            likedSongs: user.likedSongs ? user.likedSongs.length : 0,
-            playlists: await Playlist.countDocuments({ userId: user._id })
-        };
+        const likedSongsCount = user.likedSongs ? user.likedSongs.length : 0;
+        const playlistCount = await Playlist.countDocuments({ userId: user._id });
 
-        console.log(`Stats for user ${user.username}:`, stats);
-
-        res.render('profile', {
+        res.render('mainpages/profile', {
             isLoggedIn: true,
             username: user.username,
-            stats
+            likedSongsCount,
+            playlistCount,
+            ...playbackState
         });
     } catch (error) {
         console.error('Profile error:', error);
@@ -404,7 +424,7 @@ module.exports.postaddtoplaylist = async (req, res) => {
     }
 }
 
-module.exports.postMusicPlayer = async (req, res) => {
+module.exports.postPlayer =async (req, res) => {
     try {
         const songId = req.body.objectId;
         const cleanSongId = songId.replace(/^ObjectId\("(.*)"\)$/, '$1');
@@ -628,27 +648,36 @@ module.exports.addSongToPlaylist = async (req, res) => {
 // Remove song from playlist
 module.exports.removeSongFromPlaylist = async (req, res) => {
     try {
-        const playlist = await Playlist.findById(req.params.id);
-        playlist.songs = playlist.songs.filter(song => 
-            song.toString() !== req.params.songId
-        );
+        const { playlistId, songId } = req.body;
+        
+        const playlist = await Playlist.findById(playlistId);
+        if (!playlist) {
+            return res.status(404).json({ error: 'Playlist not found' });
+        }
+
+        playlist.songs = playlist.songs.filter(song => song.toString() !== songId);
         await playlist.save();
         
-        res.redirect(`/playlist/${req.params.id}`);
-    } catch (err) {
-        console.error('Error removing song from playlist:', err);
-        res.redirect(`/playlist/${req.params.id}`);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error removing song:', error);
+        res.status(500).json({ error: 'Failed to remove song' });
     }
 };
 
 // Update library function to properly fetch playlists
 module.exports.library = async (req, res) => {
     try {
+        const playerContext = await getPlayerContext(req);
+
         if (!req.session.isLoggedIn || !req.session.loggeduser) {
             return res.render('mainpages/library', {
                 isLoggedIn: false,
                 likedSongsCount: 0,
-                playlists: []
+                playlists: [],
+                recentSong: playerContext.recentSong,
+                lastPlaybackTime: playerContext.lastPlaybackTime,
+                isPlaying: playerContext.isPlaying
             });
         }
 
@@ -667,7 +696,8 @@ module.exports.library = async (req, res) => {
             isLoggedIn: true,
             likedSongsCount,
             playlists,
-            username: user.username
+            username: user.username,
+            ...playerContext
         });
     } catch (err) {
         console.error('Error in library:', err);
@@ -675,15 +705,74 @@ module.exports.library = async (req, res) => {
     }
 };
 
-// Add new route handler for updating playback time
-module.exports.updatePlaybackTime = async (req, res) => {
-    const { songId, currentTime } = req.body;
-    if (req.session) {
-        req.session.lastPlaybackTime = currentTime;
-        req.session.lastPlaybackSong = songId;
+// Toggle loop functionality
+module.exports.toggleLoop = async (req, res) => {
+    try {
+        const { songId, songLink, songName } = req.body;
+        // Get current loop state from session or default to false
+        const isLoop = !req.session.isLoop;
+        // Store loop state in session
+        req.session.isLoop = isLoop;
         await req.session.save();
+
+        res.render('player/musicplayer', {
+            songId,
+            songLink,
+            songName,
+            isLoop,
+            autoplay: true,
+            hashtags: []
+        });
+    } catch (err) {
+        console.error('Error toggling loop:', err);
+        res.redirect('/');
     }
-    res.json({ success: true });
 };
 
+module.exports.getLanguageMusic = async (req, res) => {
+    try {
+        const language = req.params.language;
+        const exactHashtag = `#${language}`;
+
+        // Find songs with exact hashtag match
+        const songs = await Song.find({ 
+            hashtags: exactHashtag  // This will match the exact hashtag only
+        }).sort({ createdAt: -1 });
+
+        // Get recently played song for miniplayer
+        const recentSong = req.session.recentlyplayed ? 
+            await Song.findById(req.session.recentlyplayed) : null;
+
+        res.render('mainpages/language', {
+            songs,
+            language: language.charAt(0).toUpperCase() + language.slice(1),
+            recentSong,
+            lastPlaybackTime: req.session.lastPlaybackTime || 0,
+            isPlaying: req.session.isPlaying || false,
+            isLoggedIn: req.session.isLoggedIn || false
+        });
+    } catch (error) {
+        console.error('Language music error:', error);
+        res.redirect('/');
+    }
+};
+
+// Update playback time handler
+module.exports.updatePlaybackTime = async (req, res) => {
+    try {
+        const { songId, currentTime, isPlaying } = req.body;
+        
+        if (req.session) {
+            req.session.lastPlaybackTime = currentTime;
+            req.session.lastPlaybackSong = songId;
+            req.session.isPlaying = isPlaying;
+            await req.session.save();
+        }
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Update playback error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
 
