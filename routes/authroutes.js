@@ -4,7 +4,7 @@ const authcontroller = require('../controller/authcontroller');
 
 authroutes.get('/login', authcontroller.getlogin);
 authroutes.get('/forgotPassword', authcontroller.getforgotPassword);
-authroutes.get('/reset-password', authcontroller.getresetpassword);
+authroutes.post('/reset-password', authcontroller.getresetpassword);
 authroutes.post('/login', authcontroller.postlogin);
 authroutes.get('/register', authcontroller.getregister);
 authroutes.post('/register', authcontroller.postregister);

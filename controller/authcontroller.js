@@ -197,13 +197,24 @@ module.exports.getregister = (req, res) => {
     });
 };
 
-module.exports.getresetpassword = (req, res) => {
+module.exports.getresetpassword = async (req, res) => {
     console.log(req.body);
-    res.render('mainpages/profile', {
-        isLoggedIn: req.session.isLoggedIn || false,
-        username: req.session.loggeduser || '',
-        error: null
-    });
+      if (req.session && req.session.recentlyplayed) {
+            recentSong = await Song.findById(req.session.recentlyplayed);
+            if (req.session.lastPlaybackSong === req.session.recentlyplayed) {
+                lastPlaybackTime = req.session.lastPlaybackTime || 0;
+            }
+        }
+
+        if (!req.session.isLoggedIn) {
+            return res.render('mainpages/profile', { 
+                isLoggedIn: false,
+                likedSongsCount: 0,
+                playlistCount: 0,
+                recentSong,
+                lastPlaybackTime
+            });
+        }
 };
 
 module.exports.logout = (req, res) => {
