@@ -12,8 +12,6 @@ router.get('/explore', usercontroller.getExplore);
 router.post('/player', usercontroller.postPlayer); 
 router.post('/like', usercontroller.songliked);
 router.get('/likedsongs', usercontroller.getlikedsongs);
-router.get('/playbollywood', usercontroller.getplaybollywood);
-router.get('/oldies', usercontroller.getOldies);
 router.get('/recent', usercontroller.getrecentlyplayed);
 router.get('/player/next', usercontroller.getNextSong); 
 router.get('/player/previous', usercontroller.getPreviousSong);
@@ -34,5 +32,8 @@ router.post('/admin/upload', adminController.postuploadForm);
 router.get('/admin/find-song', adminController.findSong);
 router.post('/admin/update-song', adminController.updateSong);
 router.get('/search-song',  adminController.findSong);
+
+// Add this route for featured playlists (bollywood/oldies)
+router.get('/featured/:type', usercontroller.getFeaturedPlaylist);
 
 module.exports = router;

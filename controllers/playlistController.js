@@ -28,6 +28,8 @@ exports.createPlaylist = async (req, res) => {
                     hashtags: song.hashtags || [],
                     autoplay: true,
                     isLoop: false,
+                    playlistCreated : true,
+                    popupMessage :"Playlist created successfully",
                     message: 'Playlist created successfully',
                     playlists: playlists // Pass playlists to view
                 });
@@ -65,6 +67,8 @@ exports.addToPlaylist = async (req, res) => {
                 hashtags: song.hashtags || [],
                 autoplay: true,
                 isLoop: false,
+                playlistCreated : true,
+                popupMessage :"Song added to playlist",
                 message: 'Song added to playlist'
             });
         }

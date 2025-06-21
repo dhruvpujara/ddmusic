@@ -71,34 +71,6 @@ module.exports.getExplore = async (req, res) => {
     }
 };
 
-module.exports.getplaybollywood = async (req, res) => {
-    try {
-        const bollywoodSongs = await Song.find({ 
-            hashtags: { $in: [ 
-                '#BollywoodVibes', 
-                '#bollywood',
-                '#BollywoodMusic',
-                '#BollywoodRomance',
-                '#BollywoodPlaylist',
-                '#MusicalBollywood',
-                '#TSeries',
-                '#RomanticBollywood',
-                '#BollywoodLovers',
-
-             ] } 
-        });
-        
-        res.render('playbollywood', { 
-            songs: bollywoodSongs,
-            isLoggedIn: req.session.isLoggedIn || false
-        });
-    } catch (err) {
-        console.error('Error fetching bollywood songs:', err);
-        res.redirect('/');
-    }
-
-};
-
 module.exports.createPlaylist = async (req, res) => {
     try {
         if (!req.session.isLoggedIn || !req.session.loggeduser) {
@@ -142,10 +114,26 @@ module.exports.createPlaylist = async (req, res) => {
 };
 
 
-module.exports.getOldies = async (req, res) => {
+module.exports.getFeaturedPlaylist = async (req, res) => {
     try {
-        const oldiesSongs = await Song.find({ 
-            hashtags: { $in: [
+        const type = req.params.type; // 'bollywood' or 'oldies'
+        let hashtags = [];
+        let sectionTitle = '';
+        if (type === 'bollywood') {
+            hashtags = [
+                '#BollywoodVibes', 
+                '#bollywood',
+                '#BollywoodMusic',
+                '#BollywoodRomance',
+                '#BollywoodPlaylist',
+                '#MusicalBollywood',
+                '#TSeries',
+                '#RomanticBollywood',
+                '#BollywoodLovers'
+            ];
+            sectionTitle = 'Bollywood Hits';
+        } else if (type === 'oldies') {
+            hashtags = [
                 '#OldIsGold', 
                 '#GoldenEraSongs',
                 '#VintageHindiSongs',
@@ -155,17 +143,23 @@ module.exports.getOldies = async (req, res) => {
                 '#MohammadRafiForever',
                 '#KishoreKumarMagic',
                 '#GoldenOldies',
-                 '#retro', 
-                '#oldies',
-            ] } 
-        });
-        
-        res.render('oldies', { 
-            songs: oldiesSongs,
+                '#retro', 
+                '#oldies'
+            ];
+            sectionTitle = 'Oldies Gold';
+        } else {
+            return res.redirect('/');
+        }
+
+        const songs = await Song.find({ hashtags: { $in: hashtags } });
+
+        res.render('mainpages/featured', { 
+            songs,
+            sectionTitle,
             isLoggedIn: req.session.isLoggedIn || false
         });
     } catch (err) {
-        console.error('Error fetching oldies songs:', err);
+        console.error('Error fetching featured playlist:', err);
         res.redirect('/');
     }
 };
@@ -775,4 +769,3 @@ module.exports.updatePlaybackTime = async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 };
-

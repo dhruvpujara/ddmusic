@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Featured Playlists - DDMusic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/output.css">
+    <style>
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .dialogue-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #f472b6;
+            font-family: 'Georgia', 'Times New Roman', Times, serif;
+            letter-spacing: 0.02em;
+            background: linear-gradient(90deg, #f472b6 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+            text-shadow: 0 2px 8px rgba(167, 139, 250, 0.2);
+            padding: 0.25rem 0;
+        }
+    </style>
+</head>
+<body class="bg-black min-h-screen flex flex-col">
+
+    <!-- Top Bar -->
+    <header class="fixed top-0 w-full bg-black/90 backdrop-blur-lg z-50 px-4 py-3 border-b border-gray-800">
+        <div class="flex justify-center items-center">
+            <span class="dialogue-header">Featured Playlists</span>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 mt-16 mb-32 px-4">
+        <section class="py-4">
+            <h2 class="text-white text-lg font-semibold mb-3"><%= sectionTitle || "Featured Playlists" %></h2>
+            <div class="flex flex-col divide-y divide-gray-800">
+                <% songs.forEach(function(song) { %>
+                    <a href="/player/<%= song._id %>" class="flex items-center px-3 py-3 hover:bg-gray-800 transition-colors group">
+                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-pink-400 via-purple-400 to-indigo-400 rounded-lg flex items-center justify-center mr-4">
+                            <i class="fas fa-music text-white/70 text-xl"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white font-medium truncate"><%= song.name %></p>
+                            <% if (song.hashtags && song.hashtags.length) { %>
+                                <p class="text-xs text-gray-400 truncate"><%= song.hashtags.join(' ') %></p>
+                            <% } %>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-500 ml-2 group-hover:text-pink-400"></i>
+                    </a>
+                <% }) %>
+            </div>
+        </section>
+    </main>
+
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 w-full bg-black/90 backdrop-blur-lg border-t border-gray-800 z-50">
+        <div class="flex justify-around py-3">
+            <a href="/" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-home"></i>
+                <span class="text-xs mt-1">Home</span>
+            </a>
+            <a href="/explore" class="text-white flex flex-col items-center">
+                <i class="fas fa-compass"></i>
+                <span class="text-xs mt-1">Explore</span>
+            </a>
+            <a href="/library" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-heart"></i>
+                <span class="text-xs mt-1">Library</span>
+            </a>
+            <a href="/profile" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-user"></i>
+                <span class="text-xs mt-1">Profile</span>
+            </a>
+        </div>
+    </nav>
+</body>
+</html>
