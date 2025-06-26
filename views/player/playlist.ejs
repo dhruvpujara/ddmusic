@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= playlist.name %> - DDMusic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="bg-black min-h-screen">
+    <!-- Header -->
+    <header class="fixed top-0 w-full bg-black/90 backdrop-blur-lg z-50 px-4 py-3 border-b border-gray-800">
+        <div class="flex items-center gap-4">
+            <a href="/library" class="text-white/60 hover:text-white">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <h1 class="text-xl font-bold text-white"><%= playlist.name %></h1>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="mt-16 mb-24 px-4">
+        <div class="space-y-4">
+            <% if (playlist.songs && playlist.songs.length > 0) { %>
+                <% playlist.songs.forEach(song => { %>
+                    <div class="flex items-center w-full bg-gray-900/50 rounded-lg">
+                        <form action="/player" method="POST" class="flex-1">
+                            <input type="hidden" name="objectId" value="<%= song._id %>">
+                            <button type="submit" class="w-full p-4 hover:bg-gray-800/50 transition-all text-left">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-pink-400 via-purple-400 to-indigo-400 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-music text-white/70 text-xl"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-white font-medium truncate"><%= song.name %></h3>
+                                    </div>
+                                </div>
+                            </button>
+                        </form>
+                        <button onclick="removeSong('<%= playlist._id %>', '<%= song._id %>')" 
+                                class="px-4 text-red-400 hover:text-red-300">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="text-center py-8 text-gray-500">
+                    <p>No songs in this playlist yet</p>
+                </div>
+            <% } %>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 w-full bg-black/90 backdrop-blur-lg border-t border-gray-800">
+        <div class="flex justify-around py-3">
+            <a href="/" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-home"></i>
+                <span class="text-xs mt-1">Home</span>
+            </a>
+            <a href="/explore" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-compass"></i>
+                <span class="text-xs mt-1">Explore</span>
+            </a>
+            <a href="/library" class="text-white flex flex-col items-center">
+                <i class="fas fa-heart"></i>
+                <span class="text-xs mt-1">Library</span>
+            </a>
+            <a href="/profile" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-user"></i>
+                <span class="text-xs mt-1">Profile</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+    async function removeSong(playlistId, songId) {
+        if (!confirm('Remove this song from playlist?')) return;
+
+        try {
+            const response = await fetch('/playlist/remove-song', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playlistId, songId })
+            });
+
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Failed to remove song');
+            }
+        } catch (err) {
+            console.error('Error:', err);
+            alert('Failed to remove song');
+        }
+    }
+    </script>
+</body>
+</html>
+    </script>
+</body>
+</html>

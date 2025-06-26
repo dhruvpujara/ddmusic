@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDMusic Mobile</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/output.css">
+    <style>
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        /* Add custom style for the dialogue header */
+        .dialogue-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #f472b6; /* pink-400 */
+            font-family: 'Georgia', 'Times New Roman', Times, serif;
+            letter-spacing: 0.02em;
+            background: linear-gradient(90deg, #f472b6 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+            text-shadow: 0 2px 8px rgba(167, 139, 250, 0.2);
+            padding: 0.25rem 0;
+        }
+    </style>
+</head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-9DMMG2K7DR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-9DMMG2K7DR');
+</script>
+
+<body class="bg-black min-h-screen flex flex-col">
+
+  
+    <!-- Top Bar -->
+    <header class="fixed top-0 w-full bg-black/90 backdrop-blur-lg z-50 px-4 py-3 border-b border-gray-800">
+        <div class="flex justify-center items-center">
+            <span class="dialogue-header">Feel the Music</span>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 mt-16 mb-32 px-4">
+    
+        <!-- Featured Section -->
+        <section class="py-4">
+            <h2 class="text-white text-lg font-semibold mb-3">Featured Playlists</h2>
+            <div class="flex overflow-x-auto space-x-4 pb-4">
+                <a href="/featured/bollywood" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
+                    <div class="bg-gradient-to-br from-rose-400 via-pink-400 to-violet-400 aspect-square rounded-lg mb-2 relative overflow-hidden group">
+                        <i class="fas fa-film absolute text-3xl text-white/30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform"></i>
+                    </div>
+                    <p class="text-white text-sm">Bollywood</p>
+                </a>
+                <a href="/featured/oldies" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
+                    <div class="bg-gradient-to-br from-cyan-400 via-teal-400 to-emerald-400 aspect-square rounded-lg mb-2 relative overflow-hidden group">
+                        <i class="fas fa-record-vinyl absolute text-3xl text-white/30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:rotate-45 transition-transform"></i>
+                    </div>
+                    <p class="text-white text-sm">Retro</p>
+                </a>
+                <div class="flex-shrink-0 w-32">
+                    <div class="bg-gradient-to-br from-indigo-400 via-blue-400 to-sky-400 aspect-square rounded-lg mb-2 relative overflow-hidden group">
+                        <i class="fas fa-moon absolute text-3xl text-white/30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform"></i>
+                    </div>
+                    <p class="text-white text-sm">Chill Mix</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Regional Music Section -->
+        <section class="py-4">
+            <h2 class="text-white text-lg font-semibold mb-3">Regional Music</h2>
+            <div class="flex overflow-x-auto space-x-4 pb-4">
+                <a href="/language/gujarati" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
+                    <div class="bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 aspect-square rounded-lg relative overflow-hidden group">
+                        <img src="/images/gujrat-logo.png" 
+                             alt="Gujarat Logo" 
+                             class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
+                             loading="lazy">
+                    </div>
+                </a>
+                <a href="/language/hindi" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
+                    <div class="bg-gradient-to-br from-rose-500 via-red-500 to-orange-500 aspect-square rounded-lg relative overflow-hidden group">
+                        <img src="/images/hindi-logo.png" 
+                             alt="Hindi Music" 
+                             class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
+                             loading="lazy">
+                    </div>
+                </a>
+                <a href="/language/punjabi" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
+                    <div class="bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-500 aspect-square rounded-lg relative overflow-hidden group">
+                        <img src="/images/punjabi-logo.png" 
+                             alt="Punjabi Music" 
+                             class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
+                             loading="lazy">
+                    </div>
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <%- include('../partials/miniplayer') %>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 w-full bg-black/90 backdrop-blur-lg border-t border-gray-800 z-50">
+        <div class="flex justify-around py-3">
+            <a href="/" class="text-white flex flex-col items-center">
+                <i class="fas fa-home"></i>
+                <span class="text-xs mt-1">Home</span>
+            </a>
+            <a href="/explore" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-compass"></i>
+                <span class="text-xs mt-1">Explore</span>
+            </a>
+            <a href="/library" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-heart"></i>
+                <span class="text-xs mt-1">Library</span>
+            </a>
+            <a href="/profile" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-user"></i>
+                <span class="text-xs mt-1">Profile</span>
+            </a>
+        </div>
+    </nav>
+</body>
+</html>

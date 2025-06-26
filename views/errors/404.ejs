@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | DDMusic</title>
+    <link rel="stylesheet" href="/css/output.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .glitch-text {
+            animation: glitch 1s linear infinite;
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 3px 3px 20px rgba(99, 102, 241, 0.5);
+        }
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); filter: hue-rotate(90deg); }
+            40% { transform: translate(-2px, -2px); filter: hue-rotate(180deg); }
+            60% { transform: translate(2px, 2px); filter: hue-rotate(270deg); }
+            80% { transform: translate(2px, -2px); filter: hue-rotate(360deg); }
+            100% { transform: translate(0); }
+        }
+        .slide-up {
+            animation: slideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-black min-h-screen flex items-center justify-center p-4">
+    <div class="text-center space-y-6">
+        <h1 class="glitch-text text-9xl font-black tracking-tighter">404</h1>
+        <div class="slide-up space-y-6">
+            <p class="text-3xl font-light bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Signal Lost</p>
+            <div class="w-16 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full"></div>
+            <p class="text-gray-400 text-lg">The page you're looking for has drifted into space</p>
+            <a href="/" class="inline-block px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg transform transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20">
+                <span class="mr-2">←</span> Return Home
+            </a>
+        </div>
+    </div>
+</body>
+</html>

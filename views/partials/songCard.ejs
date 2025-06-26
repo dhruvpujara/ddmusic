@@ -1,0 +1,14 @@
+<form action="/player" method="POST" class="song-item">
+    <input type="hidden" name="objectId" value="<%= song._id %>">
+    <button type="submit" class="w-full bg-gray-900/50 p-4 rounded-lg hover:bg-gray-800/50 transition-all">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-violet-900/30 rounded-lg flex items-center justify-center">
+                <i class="fas fa-music text-white/60"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 class="text-white font-medium truncate"><%= song.name %></h3>
+            </div>
+            <i class="fas fa-play text-white/60"></i>
+        </div>
+    </button>
+</form>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - DDMusic</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/output.css">
+</head>
+<body class="bg-black min-h-screen">
+    <!-- Decorative Background -->
+    <div class="fixed inset-0 bg-gradient-to-b from-gray-900/50 via-black to-black"></div>
+
+    <!-- Header -->
+    <header class="fixed top-0 w-full bg-black/90 backdrop-blur-lg z-50 px-4 py-3 border-b border-gray-800">
+        <div class="flex items-center justify-between max-w-lg mx-auto">
+            <h1 class="text-xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">Profile</h1>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="relative z-10 pt-24 pb-24 mt-16 px-4">
+        <div class="max-w-lg mx-auto">
+            <% if (isLoggedIn) { %>
+                <!-- Profile Card -->
+                <div class="relative bg-gray-900/50 rounded-lg p-6 mb-8">
+                    <!-- User Info -->
+                    <div class="flex flex-col items-center">
+                        <!-- Avatar Container -->
+                        <div class="relative">
+                            <div class="w-28 h-28 bg-gradient-to-br from-violet-600 via-fuchsia-500 to-pink-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-4xl text-white"></i>
+                            </div>
+                        </div>
+                        <!-- Username -->
+                        <h2 class="mt-4 text-xl font-semibold text-white"><%= username %></h2>
+                        <!-- Logout Button -->
+                        <a href="/logout" 
+                           class="mt-6 px-6 py-3 mb-2 bg-gray-800/50 hover:bg-gray-800 rounded-full 
+                                  text-gray-400 hover:text-white text-sm flex items-center gap-2 transition-all">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Stats Section -->
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Liked Songs Card -->
+                    <div class="bg-gray-900/50 rounded-lg p-6">
+                        <div class="flex flex-col items-center h-28 justify-between">
+                            <div class="w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-heart text-white"></i>
+                            </div>
+                            <span class="text-2xl font-bold text-white"><%= likedSongsCount %></span>
+                            <p class="text-sm text-gray-400">Liked Songs</p>
+                        </div>
+                    </div>
+
+                    <!-- Playlists Card -->
+                    <div class="bg-gray-900/50 rounded-lg p-6">
+                        <div class="flex flex-col items-center h-28 justify-between">
+                            <div class="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-music text-white"></i>
+                            </div>
+                            <span class="text-2xl font-bold text-white"><%= playlistCount %></span>
+                            <p class="text-sm text-gray-400">Playlists</p>
+                        </div>
+                    </div>
+                </div>
+            <% } else { %>
+                <div class="bg-gray-900/50 rounded-lg p-8 text-center">
+                    <i class="fas fa-user-circle text-4xl text-gray-600 mb-4"></i>
+                    <p class="text-gray-400 mb-6">Please login to view your profile</p>
+                    <a href="/login" class="px-8 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors">
+                        Login
+                    </a>
+                </div>
+            <% } %>
+        </div>
+    </main>
+
+    <%- include('../partials/miniplayer') %>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 w-full bg-black/90 backdrop-blur-lg border-t border-gray-800 z-50">
+        <div class="flex justify-around py-3">
+            <a href="/" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-home"></i>
+                <span class="text-xs mt-1">Home</span>
+            </a>
+            <a href="/explore" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-compass"></i>
+                <span class="text-xs mt-1">Explore</span>
+            </a>
+            <a href="/library" class="text-gray-400 flex flex-col items-center">
+                <i class="fas fa-heart"></i>
+                <span class="text-xs mt-1">Library</span>
+            </a>
+            <a href="/profile" class="text-white flex flex-col items-center">
+                <i class="fas fa-user"></i>
+                <span class="text-xs mt-1">Profile</span>
+            </a>
+        </div>
+    </nav>
+</body>
+</html>
