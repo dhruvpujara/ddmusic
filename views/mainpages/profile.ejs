@@ -68,6 +68,37 @@
                         </div>
                     </div>
                 </div>
+                
+<form action="/preferred-languages" method="POST">
+  <div class="bg-gray-900/50 rounded-lg p-6 mt-4 h-44 overflow-hidden">
+    <h3 class="text-white text-base font-semibold mb-4 text-center">Preferred Languages</h3>
+
+    <!-- Scrollable tags with checkboxes -->
+    <div class="flex space-x-4 overflow-x-auto pb-3 scrollbar-hide mb-4">
+      <% const languages = ['hindi', 'gujarati', 'english', 'punjabi']; %>
+      <% languages.forEach((lang, index) => { %>
+        <label for="lang-<%= index %>" class="flex items-center gap-2 min-w-[130px] px-4 py-2 bg-gray-800 text-gray-200 rounded-full text-sm font-medium cursor-pointer transition-all hover:bg-gray-700">
+          <input 
+            type="checkbox" 
+            name="languages" 
+            value="<%= lang %>" 
+            id="lang-<%= index %>" 
+            class="accent-violet-500 w-4 h-4">
+          <span><%= lang.charAt(0).toUpperCase() + lang.slice(1) %></span>
+        </label>
+      <% }); %>
+    </div>
+
+    <!-- Submit -->
+    <button type="submit" class="w-full py-2 text-sm font-semibold bg-gradient-to-r from-pink-500 to-violet-500 text-white rounded-lg hover:opacity-90 transition">
+      Submit Preferences
+    </button>
+  </div>
+</form>
+
+
+
+
             <% } else { %>
                 <div class="bg-gray-900/50 rounded-lg p-8 text-center">
                     <i class="fas fa-user-circle text-4xl text-gray-600 mb-4"></i>
@@ -79,6 +110,8 @@
             <% } %>
         </div>
     </main>
+
+    
 
     <%- include('../partials/miniplayer') %>
 

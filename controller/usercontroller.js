@@ -216,7 +216,8 @@ module.exports.getlikedsongs = async (req, res) => {
         }
 
         res.render('likedsongs', {
-            likedSongs: likedSongs
+            likedSongs: likedSongs,
+            //  playerContext,
         });
     } catch (err) {
         console.error('Error fetching liked songs:', err);

@@ -21,7 +21,7 @@
     <header class="fixed top-0 w-full bg-black/40 backdrop-blur-xl z-50 px-6 py-4 border-b border-white/5">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <a href="/explore" class="hover:opacity-75 transition-opacity">
+                <a href="/explore" id="backBtn" class="hover:opacity-75 transition-opacity">
                     <i class="fas fa-chevron-left text-xl"></i>
                 </a>
                 <h1 class="text-xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">Now
@@ -227,6 +227,35 @@
 
                     // Debug logging
                     console.log('Audio source:', audio.querySelector('source').src);
+
+                    const backBtn = document.getElementById('backBtn');
+
+if (backBtn) {
+    backBtn.addEventListener('click', function (e) {
+        e.preventDefault(); // Stop default navigation
+
+        // Update session state before navigating
+        try {
+        updatePlaybackState(!audio.paused,  '<%= songId %>', audio.currentTime)
+        window.location.href = '/explore';
+        } catch (error) {
+            console.error('Error updating playback state:', error);
+        } 
+    });
+}
+
+
+                    function updatePlaybackState(isPlaying, songId, currentTime) {
+                   fetch('/update-playback-time', {
+                   method: 'POST',
+                   headers: { 'Content-Type': 'application/json' },
+                       body: JSON.stringify({
+                      isPlaying : isPlaying,
+                      songId: '<%= songId %>',
+                      currentTime: audio.currentTime
+                  })
+                   }).catch(err => console.error('Error updating playback state:', err));
+            }
 
                     function handleAudioError() {
                         console.error('Audio failed to load:', audio.querySelector('source').src);

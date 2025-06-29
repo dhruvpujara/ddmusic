@@ -1,16 +1,24 @@
 const express = require('express');
-const authroutes = express.Router();
+const router = express.Router();
 const authcontroller = require('../controller/authcontroller');
 
-authroutes.get('/login', authcontroller.getlogin);
-authroutes.get('/forgotPassword', authcontroller.getforgotPassword);
-authroutes.post('/reset-password', authcontroller.getresetpassword);
-authroutes.post('/login', authcontroller.postlogin);
-authroutes.get('/register', authcontroller.getregister);
-authroutes.post('/register', authcontroller.postregister);
-authroutes.get('/profile', authcontroller.getprofile);
-authroutes.get('/logout', authcontroller.logout);
-authroutes.get('/verifyEmail', authcontroller.verifyEmail);
-authroutes.get('/verified', authcontroller.getverified);
-authroutes.post('/verified', authcontroller.getverified);
-module.exports = authroutes;
+
+// get methods
+router.get('/login', authcontroller.getlogin);
+router.get('/forgotPassword', authcontroller.getforgotPassword);
+router.get('/register', authcontroller.getregister);
+router.get('/profile', authcontroller.getprofile);
+router.get('/logout', authcontroller.logout);
+router.get('/verifyEmail', authcontroller.verifyEmail);
+router.get('/verified', authcontroller.getverified);
+
+
+// post methods
+router.post('/reset-password', authcontroller.getresetpassword);
+router.post('/login', authcontroller.postlogin);
+router.post('/register', authcontroller.postregister);
+router.post('/verified', authcontroller.getverified);
+router.post('/preferred-languages', authcontroller.postUpddatePreferences);
+
+
+module.exports = router;
