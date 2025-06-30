@@ -34,6 +34,9 @@ router.get('/admin/find-song', adminController.findSong);
 router.post('/admin/update-song', adminController.updateSong);
 router.get('/search-song', adminController.findSong);
 
+// language prefference 
+router.post('/preferred-languages', usercontroller.postUpddatePreferences);
+
 // Add this route for featured playlists (bollywood/oldies)
 router.get('/featured/:type', usercontroller.getFeaturedPlaylist);
 

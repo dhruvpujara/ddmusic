@@ -43,60 +43,64 @@
             </div>
         </div> -->
 
-
-        <!-- <form action="/preferred-languages" method="POST">
+<div class="container mx-auto px-4 py-8 max-w-5xl pt-24">
+<form action="/preferred-languages" method="POST">
   <div class="bg-gray-900/50 rounded-lg p-6 mt-4 h-44 overflow-hidden">
     <h3 class="text-white text-base font-semibold mb-4 text-center">Preferred Languages</h3> -->
 
-   <!--   Scrollable tags with checkboxes -->
+     <!-- Scrollable tags with checkboxes -->
 
-   <!--  <div class="flex space-x-4 overflow-x-auto pb-3 scrollbar-hide mb-4">
+ <div class="flex space-x-4 overflow-x-auto pb-3 scrollbar-hide mb-4">
       <% const languages = ['hindi', 'gujarati', 'english', 'punjabi']; %>
       <% languages.forEach((lang, index) => { %>
-        <label for="lang-<%= index %>" class="flex items-center gap-2 min-w-[130px] px-4 py-2 bg-gray-800 text-gray-200 rounded-full text-sm font-medium cursor-pointer transition-all hover:bg-gray-700">
-          <input 
-            type="checkbox" 
-            name="languages" 
-            value="<%= lang %>" 
-            id="lang-<%= index %>" 
-            class="accent-violet-500 w-4 h-4">
-          <span><%= lang.charAt(0).toUpperCase() + lang.slice(1) %></span>
-        </label>
-      <% }); %>
-    </div>  -->
+      <label for="lang-<%= index %>" class="flex items-center gap-2 min-w-[130px] px-4 py-2 bg-gray-800 text-gray-200 rounded-full text-sm font-medium cursor-pointer transition-all hover:bg-gray-700"
+">
+      <input 
+      type="checkbox" 
+      name="languages" 
+      value="<%= lang %>" 
+      id="lang-<%= index %>" 
+      class="accent-violet-500 w-4 h-4"
+      <%= preferredLanguages && preferredLanguages.includes(lang) ? 'checked' : '' %>>
+      <span><%= lang.charAt(0).toUpperCase() + lang.slice(1) %></span>
+      </label>
+<% }); %>
+    </div>  
 
     <!-- Submit -->
-  <!--   <button type="submit" class="w-full py-2 text-sm font-semibold bg-gradient-to-r from-pink-500 to-violet-500 text-white rounded-lg hover:opacity-90 transition">
+    <button type="submit" class="w-full py-2 text-sm font-semibold bg-gradient-to-r from-pink-500 to-violet-500 text-white rounded-lg hover:opacity-90 transition">
       Submit Preferences
     </button>
   </div>
-</form> -->
+</form>
+</div>
 
         <!-- Songs List -->
-        <div class="space-y-3 max-w-2xl mx-auto mt-16">
-            <% songs.forEach(song => { %>
-                <form action="/player" method="POST" class="w-full">
-                    <input type="hidden" name="objectId" value="<%= song._id %>">
-                    <button type="submit" 
-                        class="w-full bg-gradient-to-r from-gray-800/30 via-gray-800/40 to-gray-800/30 
-                               backdrop-blur-sm rounded-lg p-4 flex items-center justify-between 
-                               hover:bg-gradient-to-r hover:from-indigo-900/40 hover:via-purple-900/40 hover:to-pink-900/40 
-                               transition-all duration-500 transform hover:scale-[1.01] hover:shadow-lg hover:shadow-purple-500/10">
-                        <div class="flex items-center gap-3 flex-1 min-w-0">
-                            <div class="w-9 h-9 bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 
-                                      rounded-lg flex-shrink-0 flex items-center justify-center">
-                                <i class="fas fa-music text-base text-white/90"></i>
-                            </div>
-                            <h3 class="text-sm font-medium text-white/90 truncate"><%= song.name %></h3>
-                        </div>
-                        <div class="w-7 h-7 bg-white/5 hover:bg-white/10 rounded-full 
-                                  flex items-center justify-center transition-all duration-300 hover:scale-110 flex-shrink-0">
-                            <i class="fas fa-play text-xs text-purple-400 hover:text-purple-300"></i>
-                        </div>
-                    </button>
-                </form>
-            <% }); %>
+      <div class="w-full max-w-4xl mx-auto px-4 mt-28 space-y-3">
+  <% songs.forEach(song => { %>
+    <form action="/player" method="POST" class="w-full">
+      <input type="hidden" name="objectId" value="<%= song._id %>">
+      <button type="submit" 
+        class="w-full bg-gradient-to-r from-gray-800/30 via-gray-800/40 to-gray-800/30 
+               backdrop-blur-sm rounded-lg p-4 flex items-center justify-between 
+               hover:bg-gradient-to-r hover:from-indigo-900/40 hover:via-purple-900/40 hover:to-pink-900/40 
+               transition-all duration-500 transform hover:scale-[1.01] hover:shadow-lg hover:shadow-purple-500/10">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+          <div class="w-9 h-9 bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 
+                      rounded-lg flex-shrink-0 flex items-center justify-center">
+            <i class="fas fa-music text-base text-white/90"></i>
+          </div>
+          <h3 class="text-sm font-medium text-white/90 truncate"><%= song.name %></h3>
         </div>
+        <div class="w-7 h-7 bg-white/5 hover:bg-white/10 rounded-full 
+                    flex items-center justify-center transition-all duration-300 hover:scale-110 flex-shrink-0">
+          <i class="fas fa-play text-xs text-purple-400 hover:text-purple-300"></i>
+        </div>
+      </button>
+    </form>
+  <% }); %>
+</div>
+
     </div>
 
     <%- include('../partials/miniplayer') %>

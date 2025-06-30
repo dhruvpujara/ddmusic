@@ -278,29 +278,4 @@ module.exports.getprofile = async (req, res) => {
 }
 
 
-module.exports.postUpddatePreferences = async (req, res) => {
-    try {
-        const { preferredLanguages } = req.body;
-        if (!req.session.isLoggedIn) {
-            return res.status(401).send('Unauthorized');
-        }
-        const user = await User.findById(req.session.userId);
-        if (!user) {
-            return res.status(404).send('User not found');
-        }
-        // Update user preferences
-        user.preferredLanguages = preferredLanguages.split(',').map(lang => lang.trim());
-        await user.save();
-        // Redirect to profile page after updating preferences
-        req.session.preferredLanguages = user.preferredLanguages; // Update session
-        console.log('User preferences updated:', user.preferredLanguages);
-        
-        res.redirect('/profile');
-    } catch (error) {
-        console.error('Error updating user preferences:', error);
-        res.status(500).send('Internal Server Error');
-    }
-};
-
-
 module.exports.isAuth = isAuth; // Export middleware
