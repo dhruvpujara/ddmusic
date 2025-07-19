@@ -120,6 +120,29 @@
             </div>
         </section>
 
+ <!-- Artist Section -->
+<section class="py-4">
+  <h2 class="text-white text-lg font-semibold mb-3">Artists</h2>
+  <div class="flex overflow-x-auto space-x-4 pb-4">
+    <% if (artists && artists.length > 0) { %>
+      <% artists.forEach(artist => { %>
+        <a href="/artist/<%= artist.name %>" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
+          <div class="bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 aspect-square rounded-lg relative overflow-hidden group">
+            <img src="<%= artist.thumbnail %>" 
+                 alt="<%= artist.name %>" 
+                 class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
+                 loading="lazy">
+          </div>
+          <div class="text-white text-base mt-2 text-center"><%= artist.name %></div>
+        </a>
+      <% }); %>
+    <% } else { %>
+      <p class="text-gray-400 text-sm">No artists available.</p>
+    <% } %>
+  </div>
+</section>
+
+
     </main>
 
     <%- include('../partials/miniplayer') %>

@@ -19,8 +19,4 @@ router.post('/login', authcontroller.postlogin);
 router.post('/register', authcontroller.postregister);
 router.post('/verified', authcontroller.getverified);
 
-
-//router.post('/preferred-languages', authcontroller.postUpddatePreferences);
-
-
 module.exports = router;

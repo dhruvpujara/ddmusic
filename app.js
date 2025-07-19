@@ -31,8 +31,6 @@ app.set('views', [
     path.join(rootdir, 'views/mainpages'),
     path.join(rootdir, 'views/player'),
     path.join(rootdir, 'views/account'),
-
-
 ]);
 
 // Session configuration

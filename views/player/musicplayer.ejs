@@ -388,6 +388,17 @@ if (backBtn) {
                         });
                     });
 
+
+                    audio.addEventListener('paused', () => {
+                        playPauseBtn.innerHTML = '<i class="fas fa-play text-xl pl-1"></i>';
+                        updatePlaybackState(false, '<%= songId %>', audio.currentTime);
+                    });
+
+                    audio.addEventListener('playing', () => {
+                        playPauseBtn.innerHTML = '<i class="fas fa-pause text-xl"></i>';
+                        updatePlaybackState(true, '<%= songId %>', audio.currentTime);
+                    });
+
                     async function playNextSong() {
                         try {
                             const currentSongId = '<%= songId %>'; // Get current song ID from EJS

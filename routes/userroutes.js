@@ -15,7 +15,6 @@ router.get('/likedsongs', usercontroller.getlikedsongs);
 router.get('/recent', usercontroller.getrecentlyplayed);
 router.get('/player/next', usercontroller.getNextSong);
 router.get('/player/previous', usercontroller.getPreviousSong);
-router.get('/language/:language', usercontroller.getLanguageMusic);
 router.post('/update-playback-time', usercontroller.updatePlaybackTime); // New route for updating playback time
 router.post('/update-playback', usercontroller.postUpdateSongInfo); // New route for updating song info
 
@@ -33,11 +32,16 @@ router.post('/admin/upload', adminController.postuploadForm);
 router.get('/admin/find-song', adminController.findSong);
 router.post('/admin/update-song', adminController.updateSong);
 router.get('/search-song', adminController.findSong);
-
+router.get('/admin/artist', adminController.getArtist);
+router.post('/admin/upload-artist', adminController.postArtistUpload);
 // language prefference 
 router.post('/preferred-languages', usercontroller.postUpddatePreferences);
 
 // Add this route for featured playlists (bollywood/oldies)
 router.get('/featured/:type', usercontroller.getFeaturedPlaylist);
+
+//choices
+router.get('/language/:language', usercontroller.getLanguageMusic);
+router.get('/artist/:artist', usercontroller.getArtistMusic);
 
 module.exports = router;

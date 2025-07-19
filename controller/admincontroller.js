@@ -1,11 +1,18 @@
 const Song = require('../models/song');
+const Artist = require('../models/artist');
 
-module.exports = {
-    getUploadForm: (req, res) => {
-        res.render('upload', { error: null });
+// get methods
+
+ module.exports.getUploadForm = (req, res) => {
+   res.render('upload', { error: null });
     },
 
-    postuploadForm: async (req, res) => {
+module.exports.getArtist =  (req, res) => {
+    res.render('artist', { error: null });
+   }
+    // post methods
+
+     module.exports.postuploadForm = async (req, res) => {
         try {
             // Process custom hashtags
             const hashtags = req.body.customHashtags
@@ -31,7 +38,7 @@ module.exports = {
         }
     },
 
-    findSong: async (req, res) => {
+     module.exports.findSong = async (req, res) => {
         try {
             const songName = req.query.name;
             const song = await Song.findOne({ name: { $regex: songName, $options: 'i' } });
@@ -45,7 +52,7 @@ module.exports = {
         }
     },
 
-    updateSong: async (req, res) => {
+     module.exports.updateSong = async (req, res) => {
         try {
             const { id, name, link, hashtags } = req.body;
             const updatedSong = await Song.findByIdAndUpdate(
@@ -62,4 +69,25 @@ module.exports = {
             res.status(500).json({ error: 'Error updating song' });
         }
     }
-};
+
+
+    module.exports.postArtistUpload = async (req, res) => {
+        try {
+            const { name, hashtags, thumbnail, bio } = req.body;
+
+            // Create and save artist
+            const artist = new Artist({
+                name,
+                hashtags: hashtags ? hashtags.split(',').map(tag => tag.trim()) : [],
+                thumbnail: thumbnail || 'default-thumbnail.jpg',
+                bio: bio || 'No biography available.'
+            });
+
+            await artist.save();
+            console.log('Artist saved successfully:', artist);
+            res.redirect('/admin/artist');
+        } catch (error) {
+            console.error('Error in artist upload:', error);
+            res.status(500).render('artist', { error: 'Failed to upload artist' });
+        }
+    }

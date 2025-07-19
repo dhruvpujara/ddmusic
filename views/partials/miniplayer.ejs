@@ -94,9 +94,24 @@
                         }
                     });
                 } catch (err) {
-                    console.error('Player initialization error:', err);
+                    console.error('Error initializing audio player:', err);
                 }
             });
+
+         audio.addEventListener('ended', () => {
+            fetch('/player/next')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        audio.src = data.nextSong.link;
+                        audio.play();
+                    } else {
+                        console.error('Error fetching next song:', data.message);
+                    }
+                })
+                .catch(err => console.error('Error fetching next song:', err));
+         });
+
         </script>
     </div>
 <% } %>

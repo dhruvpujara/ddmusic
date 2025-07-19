@@ -3,6 +3,7 @@ const Song = require('../models/song');
 const Playlist = require('../models/playlist');
 const mongoose = require('mongoose');  
 const cookie = require('cookie');
+const Artist = require('../models/artist');
 
 //    get methods
 //    post methods
@@ -37,6 +38,45 @@ module.exports.getLanguageMusic = async (req, res) => {
         res.redirect('/');
     }
 };
+
+module.exports.getArtistMusic = async (req, res) => {
+  try {
+    const artist = await Artist.findOne({ name: req.params.artist }); 
+    if (!artist) return res.redirect('/');
+
+    // Extract the actual string from the first array element and split it
+    const rawHashtagsString = artist.hashtags[0] || '';
+    const hashtagsArray = rawHashtagsString
+      .replace(/"/g, '')            // remove quotes
+      .split(',')                   // split by commas
+      .map(tag => tag.trim())       // remove whitespace
+      .filter(tag => tag.length > 0);
+
+    const songs = await Song.find({
+      hashtags: { $in: hashtagsArray }
+    }).sort({ createdAt: -1 });
+
+    const recentSong = req.session.recentlyplayed
+      ? await Song.findById(req.session.recentlyplayed)
+      : null;
+
+    res.render('mainpages/artist', {
+      songs,
+      artistThumbnail: artist.thumbnail, 
+      artistBio: artist.bio,
+      artistName: artist.name,
+      recentSong,
+      lastPlaybackTime: req.session.lastPlaybackTime || 0,
+      isPlaying: req.session.isPlaying || false,
+      isLoggedIn: req.session.isLoggedIn || false
+    });
+
+  } catch (error) {
+    console.error('Artist music error:', error);
+    res.redirect('/');
+  }
+};
+
 
 module.exports.getprofile = async (req, res) => {
     try {
@@ -141,9 +181,11 @@ module.exports.getlikedsongs = async (req, res) => {
 module.exports.gethome = async (req, res) => {
     try {
         const playerContext = await getPlayerContext(req);
+        const artists = await Artist.find().lean(); // Fetch top 10 artists
         res.render('mainpages/home', {
             isLoggedIn: req.session.isLoggedIn || false,
-            ...playerContext
+            ...playerContext,
+            artists: artists
         });
     } catch (err) {
         console.error('Home error:', err);
@@ -534,12 +576,40 @@ module.exports.getNextSong = async (req, res) => {
             const nextIndex = (currentIndex + 1) % songs.length;
             nextSong = await Song.findById(songs[nextIndex]);
         } else {
-            nextSong = await Song.findOne({
-                _id: { $gt: req.session.recentlyplayed }
-            }).sort({ _id: 1 });
+            // Check for preferredLanguages cookie
+            let preferredLanguages = [];
+            if (req.headers.cookie) {
+                const cookies = cookie.parse(req.headers.cookie);
+                if (cookies.preferredLanguages) {
+                    try {
+                        preferredLanguages = JSON.parse(cookies.preferredLanguages);
+                    } catch (e) {
+                        preferredLanguages = [];
+                    }
+                }
+            }
 
-            if (!nextSong) {
-                nextSong = await Song.findOne().sort({ _id: 1 });
+            if (preferredLanguages.length > 0) {
+                // Find next song with hashtag in preferredLanguages
+                nextSong = await Song.findOne({
+                    hashtags: { $in: preferredLanguages.map(l => `#${l}`) },
+                    _id: { $gt: req.session.recentlyplayed }
+                }).sort({ _id: 1 });
+
+                if (!nextSong) {
+                    // If none found after current, get first matching
+                    nextSong = await Song.findOne({
+                        hashtags: { $in: preferredLanguages.map(l => `#${l}`) }
+                    }).sort({ _id: 1 });
+                }
+            } else {
+                nextSong = await Song.findOne({
+                    _id: { $gt: req.session.recentlyplayed }
+                }).sort({ _id: 1 });
+
+                if (!nextSong) {
+                    nextSong = await Song.findOne().sort({ _id: 1 });
+                }
             }
         }
 
