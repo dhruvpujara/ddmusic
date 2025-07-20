@@ -4,6 +4,7 @@ const Playlist = require('../models/playlist');
 const mongoose = require('mongoose');  
 const cookie = require('cookie');
 const Artist = require('../models/artist');
+let backbutton;
 
 //    get methods
 //    post methods
@@ -15,6 +16,7 @@ module.exports.getLanguageMusic = async (req, res) => {
     try {
         const language = req.params.language;
         const exactHashtag = `#${language}`;
+        backbutton = req.headers.referer;
 
         // Find songs with exact hashtag match
         const songs = await Song.find({
@@ -31,7 +33,8 @@ module.exports.getLanguageMusic = async (req, res) => {
             recentSong,
             lastPlaybackTime: req.session.lastPlaybackTime || 0,
             isPlaying: req.session.isPlaying || false,
-            isLoggedIn: req.session.isLoggedIn || false
+            isLoggedIn: req.session.isLoggedIn || false,
+            backbutton: backbutton
         });
     } catch (error) {
         console.error('Language music error:', error);
@@ -43,6 +46,9 @@ module.exports.getArtistMusic = async (req, res) => {
   try {
     const artist = await Artist.findOne({ name: req.params.artist }); 
     if (!artist) return res.redirect('/');
+
+   let backbutton = req.headers.referer;
+   console.log('Back button URL:', backbutton);
 
     // Extract the actual string from the first array element and split it
     const rawHashtagsString = artist.hashtags[0] || '';
@@ -68,7 +74,8 @@ module.exports.getArtistMusic = async (req, res) => {
       recentSong,
       lastPlaybackTime: req.session.lastPlaybackTime || 0,
       isPlaying: req.session.isPlaying || false,
-      isLoggedIn: req.session.isLoggedIn || false
+      isLoggedIn: req.session.isLoggedIn || false,
+      backbutton: backbutton,
     });
 
   } catch (error) {
@@ -538,6 +545,7 @@ module.exports.postPlayer = async (req, res) => {
 
         // Store song in session even if user is not logged in
         req.session.recentlyplayed = cleanSongId;
+        req.session.lastVisitedPage = req.headers.referer || '/explore';
         await req.session.save();
 
         let playlists = [];
@@ -556,7 +564,8 @@ module.exports.postPlayer = async (req, res) => {
             hashtags: song.hashtags || [],
             autoplay: true,
             isLoop: false,
-            playlists: playlists
+            playlists: playlists,
+            backbutton: req.session.lastVisitedPage,
         });
     } catch (err) {
         console.error('Error:', err);
@@ -643,6 +652,53 @@ module.exports.getNextSong = async (req, res) => {
         res.redirect('/explore');
     }
 };
+
+module.exports.apiNextSong = async (req, res) => {
+  try {
+    const currentSongId = req.params.songId;
+    let nextSong = null;
+
+    // First check for playlist context
+    if (req.session.playlistContext) {
+      const { songs } = req.session.playlistContext;
+      const currentIndex = songs.findIndex(id => id.toString() === currentSongId);
+      const nextIndex = (currentIndex + 1) % songs.length;
+      nextSong = await Song.findById(songs[nextIndex]);
+    } else {
+      // No playlist, fallback to normal song flow
+      const allSongs = await Song.find().sort({ createdAt: -1 });
+      const currentIndex = allSongs.findIndex(song => song._id.toString() === currentSongId);
+
+      if (currentIndex !== -1 && currentIndex < allSongs.length - 1) {
+        nextSong = allSongs[currentIndex + 1];
+      } else {
+        nextSong = allSongs[0]; // fallback to first song if at the end
+      }
+    }
+
+    if (!nextSong) {
+      return res.json({ success: false, message: "No more songs." });
+    }
+
+    // Update the session playback state
+    req.session.recentlyplayed = nextSong._id;
+    await req.session.save();
+
+    return res.json({
+      success: true,
+      song: {
+        id: nextSong._id,
+        name: nextSong.name,
+        link: nextSong.link
+      }
+    });
+
+  } catch (err) {
+    console.error('Error fetching next song:', err);
+    return res.status(500).json({ success: false, message: "Server error." });
+  }
+};
+
 
 module.exports.getPreviousSong = async (req, res) => {
     try {
@@ -864,7 +920,7 @@ module.exports.toggleLoop = async (req, res) => {
 // Update playback time handler
 module.exports.updatePlaybackTime = async (req, res) => {
     try {
-        const { songId, currentTime, isPlaying } = req.body;
+        const { songId, currentTime, isPlaying,  } = req.body;
 
         if (req.session) {
             req.session.lastPlaybackTime = currentTime;

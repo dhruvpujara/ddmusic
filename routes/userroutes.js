@@ -14,6 +14,7 @@ router.post('/like', usercontroller.songliked);
 router.get('/likedsongs', usercontroller.getlikedsongs);
 router.get('/recent', usercontroller.getrecentlyplayed);
 router.get('/player/next', usercontroller.getNextSong);
+router.get('/api/next-song/:songId', usercontroller.apiNextSong);
 router.get('/player/previous', usercontroller.getPreviousSong);
 router.post('/update-playback-time', usercontroller.updatePlaybackTime); // New route for updating playback time
 router.post('/update-playback', usercontroller.postUpdateSongInfo); // New route for updating song info

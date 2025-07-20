@@ -9,7 +9,7 @@
         <div class="flex items-center justify-between px-4 py-3">
             <div class="flex items-center space-x-3 flex-1 min-w-0">
                 <div class="min-w-0">
-                    <p class="text-white text-sm font-medium truncate"><%= recentSong.name %></p>
+                    <p id="songName" class="text-white text-sm font-medium truncate"><%= recentSong.name %></p>
                 </div>
             </div>
 
@@ -34,6 +34,10 @@
         </audio>
 
         <script>
+
+        let currentSongId = '<%= recentSong._id %>';
+
+
             document.addEventListener('DOMContentLoaded', () => {
                 try {
                     const audio = document.getElementById('audioPlayer');
@@ -53,6 +57,30 @@
                     } else {
                         playPauseBtn.innerHTML = '<i class="fas fa-play text-lg pl-1"></i>';
                     }
+
+                       audio.addEventListener('ended', async () => {
+                        try {
+                            const response = await fetch(`/api/next-song/${currentSongId}`);
+                            if (!response.ok) throw new Error('Network response was not ok');
+
+                            const data = await response.json();
+
+
+                            if (data.success && data.song) {
+                                audioPlayer.src = data.song.link;
+                                document.getElementById('songName').textContent = data.song.name;
+
+                                currentSongId = data.song.id;
+
+                                await audioPlayer.play();
+                            } else {
+                                console.log('No more songs to play.');
+                            }
+
+                        } catch (error) {
+                            console.error('Error playing next song:', error);
+                        }
+                    });
 
                     audio.addEventListener('timeupdate', () => {
                         try {
@@ -98,19 +126,6 @@
                 }
             });
 
-         audio.addEventListener('ended', () => {
-            fetch('/player/next')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        audio.src = data.nextSong.link;
-                        audio.play();
-                    } else {
-                        console.error('Error fetching next song:', data.message);
-                    }
-                })
-                .catch(err => console.error('Error fetching next song:', err));
-         });
 
         </script>
     </div>

@@ -21,7 +21,7 @@
     <header class="fixed top-0 w-full bg-black/40 backdrop-blur-xl z-50 px-6 py-4 border-b border-white/5">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <a href="/explore" id="backBtn" class="hover:opacity-75 transition-opacity">
+                <a href="<%= backbutton %>" id="backBtn" class="hover:opacity-75 transition-opacity">
                     <i class="fas fa-chevron-left text-xl"></i>
                 </a>
                 <h1 class="text-xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">Now
@@ -169,7 +169,8 @@
             <!-- Song Info -->
             <div class="text-center mt-8 mb-6 w-full">
                 <h2
-                    class="text-2xl font-bold mb-2 bg-gradient-to-r from-violet-200 to-violet-400 bg-clip-text text-transparent">
+                    id="songName"
+                    class=" text-2xl font-bold mb-2 bg-gradient-to-r from-violet-200 to-violet-400 bg-clip-text text-transparent">
                     <%=songName%>
                 </h2>
                 <p class="text-violet-300/30">DDMusic Player</p>
@@ -224,9 +225,8 @@
                     const currentTimeEl = document.getElementById('currentTime');
                     const durationEl = document.getElementById('duration');
                     const playerStatus = document.getElementById('playerStatus');
-
-                    // Debug logging
-                    console.log('Audio source:', audio.querySelector('source').src);
+                    const songNameElement = document.getElementById('songName');
+                    let currentSongId = '<%= songId %>';
 
                     const backBtn = document.getElementById('backBtn');
 
@@ -237,7 +237,7 @@ if (backBtn) {
         // Update session state before navigating
         try {
         updatePlaybackState(!audio.paused,  '<%= songId %>', audio.currentTime)
-        window.location.href = '/explore';
+        window.location.href ="<%= backbutton %>">
         } catch (error) {
             console.error('Error updating playback state:', error);
         } 
@@ -252,7 +252,7 @@ if (backBtn) {
                        body: JSON.stringify({
                       isPlaying : isPlaying,
                       songId: '<%= songId %>',
-                      currentTime: audio.currentTime
+                      currentTime: audio.currentTime,
                   })
                    }).catch(err => console.error('Error updating playback state:', err));
             }
@@ -333,9 +333,28 @@ if (backBtn) {
                     });
 
                     // Add autoplay functionality
-                    audio.addEventListener('ended', async () => {
-                        const inPlaylist = <%= typeof inPlaylist !== 'undefined' && inPlaylist ? 'true' : 'false' %>;
-                        window.location.href = '/player/next';
+                         audio.addEventListener('ended', async () => {
+                        try {
+                            const response = await fetch(`/api/next-song/${currentSongId}`);
+                            if (!response.ok) throw new Error('Network response was not ok');
+
+                            const data = await response.json();
+
+
+                            if (data.success && data.song) {
+                                audioPlayer.src = data.song.link;
+                                document.getElementById('songName').textContent = data.song.name;
+
+                                currentSongId = data.song.id;
+
+                                await audioPlayer.play();
+                            } else {
+                                console.log('No more songs to play.');
+                            }
+
+                        } catch (error) {
+                            console.error('Error playing next song:', error);
+                        }
                     });
 
                     async function playSong(songId) {
