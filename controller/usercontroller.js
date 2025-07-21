@@ -644,7 +644,8 @@ module.exports.getNextSong = async (req, res) => {
                 hashtags: nextSong.hashtags || [],
                 autoplay: true,
                 isLoop: false,
-                inPlaylist: !!req.session.playlistContext
+                inPlaylist: !!req.session.playlistContext,
+                backbutton: req.session.lastVisitedPage || '/explore'
             });
         }
     } catch (err) {
