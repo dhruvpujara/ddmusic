@@ -234,10 +234,9 @@ if (backBtn) {
     backBtn.addEventListener('click', function (e) {
         e.preventDefault(); // Stop default navigation
 
-        // Update session state before navigating
         try {
-        updatePlaybackState(!audio.paused,  '<%= songId %>', audio.currentTime)
-        window.location.href ="<%= backbutton %>">
+        updatePlaybackState(!audio.paused,  '<%= songId %>', audio.currentTime);
+        window.location.href ="<%= backbutton %>";
         } catch (error) {
             console.error('Error updating playback state:', error);
         } 
