@@ -227,8 +227,50 @@
                     const playerStatus = document.getElementById('playerStatus');
                     const songNameElement = document.getElementById('songName');
                     let currentSongId = '<%= songId %>';
-
+                    let songQueue = []; // Cache for upcoming songs
                     const backBtn = document.getElementById('backBtn');
+                    let wakeLock = null;
+
+
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      console.log('Wake Lock is active');
+
+      // Optional: handle tab switching
+      wakeLock.addEventListener('release', () => {
+        console.log('Wake Lock was released');
+      });
+
+      // Reacquire on visibility change
+      document.addEventListener('visibilitychange', async () => {
+        if (wakeLock !== null && document.visibilityState === 'visible') {
+          wakeLock = await navigator.wakeLock.request('screen');
+          console.log('Wake Lock reacquired');
+        }
+      });
+    } else {
+      console.warn('Wake Lock API not supported in this browser');
+    }
+  } catch (err) {
+    console.error(`Wake Lock error: ${err.name}, ${err.message}`);
+  }
+}
+
+async function preloadSongs(currentId) {
+  try {
+    const res = await fetch(`/api/next-songs/${currentId}`);
+    const data = await res.json();
+
+    if (data.success && data.songs) {
+      songQueue = data.songs;
+    }
+  } catch (err) {
+    console.error("Error preloading songs:", err);
+  }
+}
+
 
 if (backBtn) {
     backBtn.addEventListener('click', function (e) {
@@ -301,6 +343,7 @@ if (backBtn) {
                             if (audio.paused) {
                                 console.log('Attempting to play audio...');
                                 await audio.play();
+                                requestWakeLock();
                                 playPauseBtn.innerHTML = '<i class="fas fa-pause text-xl"></i>';
                                 fetch('/update-playback-time', {
                                     method: 'POST',
@@ -314,6 +357,7 @@ if (backBtn) {
 
                             } else {
                                 audio.pause();
+                                requestWakeLock();
                                 playPauseBtn.innerHTML = '<i class="fas fa-play text-xl pl-1"></i>';
                                 fetch('/update-playback-time', {
                                     method: 'POST',
@@ -333,28 +377,29 @@ if (backBtn) {
 
                     // Add autoplay functionality
                          audio.addEventListener('ended', async () => {
-                        try {
-                            const response = await fetch(`/api/next-song/${currentSongId}`);
-                            if (!response.ok) throw new Error('Network response was not ok');
+  if (songQueue.length === 0) {
+    // Try fetching more if user is online
+    await preloadSongs(currentSongId);
+  }
 
-                            const data = await response.json();
+  if (songQueue.length > 0) {
+    const nextSong = songQueue.shift();
+    audioPlayer.pause();
+    audioPlayer.src = nextSong.link;
+    audioPlayer.load();
+    document.getElementById('songName').textContent = nextSong.name;
+    currentSongId = nextSong.id;
+    await audioPlayer.play();
 
+    // Optionally preload again if queue is low
+    if (songQueue.length < 3) {
+      preloadSongs(currentSongId);
+    }
 
-                            if (data.success && data.song) {
-                                audioPlayer.src = data.song.link;
-                                document.getElementById('songName').textContent = data.song.name;
-
-                                currentSongId = data.song.id;
-
-                                await audioPlayer.play();
-                            } else {
-                                console.log('No more songs to play.');
-                            }
-
-                        } catch (error) {
-                            console.error('Error playing next song:', error);
-                        }
-                    });
+  } else {
+    console.log("No more songs to play.");
+  }
+});
 
                     async function playSong(songId) {
                         try {

@@ -701,6 +701,38 @@ module.exports.apiNextSong = async (req, res) => {
 };
 
 
+let cachedSongs = [];
+
+module.exports.apiNextSongs = async (req, res) => {
+  try {
+    const { currentId } = req.params;
+
+    // Fetch 9 new songs from DB excluding current one
+    const songs = await Song.find({ _id: { $ne: currentId } })
+                            .sort({ createdAt: -1 })
+                            .limit(9)
+                            .lean();
+
+    if (!songs.length) return res.json({ success: false, message: "No songs" });
+
+    // Store in cache if you want (optional)
+    cachedSongs = songs;
+
+    res.json({
+      success: true,
+      songs: songs.map(song => ({
+        id: song._id,
+        link: song.link,
+        name: song.name
+      }))
+    });
+  } catch (error) {
+    console.error('Next Songs API Error:', error);
+    res.json({ success: false, message: 'Server error' });
+  }
+};
+
+
 module.exports.getPreviousSong = async (req, res) => {
     try {
         let prevSong;
