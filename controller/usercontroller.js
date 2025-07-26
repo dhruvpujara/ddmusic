@@ -4,6 +4,7 @@ const Playlist = require('../models/playlist');
 const mongoose = require('mongoose');  
 const cookie = require('cookie');
 const Artist = require('../models/artist');
+const mixedModel = require('../models/mixedModel');
 let backbutton;
 
 //    get methods
@@ -184,21 +185,69 @@ module.exports.getlikedsongs = async (req, res) => {
     }
 };
 
-
 module.exports.gethome = async (req, res) => {
     try {
         const playerContext = await getPlayerContext(req);
+        const mixedmodel = await mixedModel.find().lean(); // Fetch mixed model data
         const artists = await Artist.find().lean(); // Fetch top 10 artists
         res.render('mainpages/home', {
             isLoggedIn: req.session.isLoggedIn || false,
             ...playerContext,
-            artists: artists
+            artists: artists,
+            mixedmodel: mixedmodel
         });
     } catch (err) {
         console.error('Home error:', err);
         res.redirect('/');
     }
 };
+
+
+// module.exports.gethome = async (req, res) => {
+//     try {
+//         const playerContext = await getPlayerContext(req);
+//         const mixedmodel = await mixedModel.find().lean(); // Mixed content (sliders)
+//         // let preferredArtists = []; // To store filtered artists
+
+//         // Read preferredLanguages from cookies
+//         // let preferredLanguages = [];
+//         // if (req.headers.cookie) {
+//         //     const cookies = cookie.parse(req.headers.cookie);
+//         //     if (cookies.preferredLanguages) {
+//         //         try {
+//         //             preferredLanguages = JSON.parse(cookies.preferredLanguages);
+//         //         } catch (e) {
+//         //             preferredLanguages = [];
+//         //         }
+//         //     }
+//         // }
+
+//         // Filter artists using language hashtags if any
+//         // if (preferredLanguages.length > 0) {
+//         //     preferredArtists = await Artist.find({
+//         //         hashtags: { $in: preferredLanguages.map(l => `#${l}`) }
+//         //     }).lean();
+//         // } else {
+//         //     preferredArtists = await Artist.find().lean(); // fallback: all artists
+//         // }
+
+//         // Optional: shuffle preferred artists
+//         // preferredArtists = preferredArtists.sort(() => Math.random() - 0.5);
+//         // console.log('Preferred Artists:', preferredArtists);
+//         // console.log('preffered languages',preferredLanguages);
+
+//         res.render('mainpages/home', {
+//             isLoggedIn: req.session.isLoggedIn || false,
+//             ...playerContext,
+//             artists: preferredArtists, // filtered or all
+//             mixedmodel: mixedmodel
+//         });
+//     } catch (err) {
+//         console.error('Home error:', err);
+//         res.redirect('/');
+//     }
+// };
+
 
 
 
@@ -329,6 +378,37 @@ getPlayerContext = async (req) => {
     return { recentSong, lastPlaybackTime, isPlaying };
 };
 
+module.exports.getPersonMusic = async (req, res) => {
+    const personName = req.params.personname;
+    try {
+        const person = await mixedModel.findOne({
+            name: personName    
+        }).lean();
+        if (!person) {
+            return res.status(404).render('error', { message: 'Person not found' });
+        }
+        const songs = await Song.find({
+            hashtags: { $in: person.hashtags }
+        }).sort({ createdAt: -1 });
+        const playerContext = await getPlayerContext(req);
+        res.render('mainpages/artist', {
+            songs,
+            artistThumbnail: person.thumbnail,
+            artistBio: person.bio,
+            artistName: person.name,
+            recentSong: playerContext.recentSong,
+            lastPlaybackTime: playerContext.lastPlaybackTime,
+            isPlaying: playerContext.isPlaying,
+            isLoggedIn: req.session.isLoggedIn || false,
+            backbutton: req.headers.referer || '/'
+        });
+    } catch (error) {
+        console.error('Error fetching person music:', error);
+        res.status(500).render('error', { message: 'Internal server error' });
+    }
+};
+
+
 module.exports.getExplore = async (req, res) => {
     try {
         // Get recent song data
@@ -390,6 +470,7 @@ module.exports.getExplore = async (req, res) => {
         });
     }
 };
+
 
 
 // post methods
@@ -701,17 +782,48 @@ module.exports.apiNextSong = async (req, res) => {
 };
 
 
-let cachedSongs = [];
+let songs = [];
 
 module.exports.apiNextSongs = async (req, res) => {
   try {
     const { currentId } = req.params;
 
-    // Fetch 9 new songs from DB excluding current one
-    const songs = await Song.find({ _id: { $ne: currentId } })
-                            .sort({ createdAt: -1 })
-                            .limit(9)
-                            .lean();
+      if (req.session.playlistContext) {
+            const { songs } = req.session.playlistContext;
+            const currentIndex = songs.findIndex(id => id.toString() === req.session.recentlyplayed);
+            const nextIndex = (currentIndex + 1) % songs.length;
+            nextSong = await Song.findById(songs[nextIndex]);
+        } else {
+            // Check for preferredLanguages cookie
+            let preferredLanguages = [];
+            if (req.headers.cookie) {
+                const cookies = cookie.parse(req.headers.cookie);
+                if (cookies.preferredLanguages) {
+                    try {
+                        preferredLanguages = JSON.parse(cookies.preferredLanguages);
+                    } catch (e) {
+                        preferredLanguages = [];
+                    }
+                }
+            }
+
+    if (preferredLanguages.length > 0) {
+        // Find next songs with hashtag in preferredLanguages
+         songs = await Song.find({
+            hashtags: { $in: preferredLanguages.map(l => `#${l}`) },
+            _id: { $ne: currentId }
+        }).sort({ _id: 1 }).limit(9);   
+    } else {
+        // Fallback to all songs excluding the current one
+         songs = await Song.find({
+            _id: { $ne: currentId }
+        }).sort({ _id: 1 }).limit(9);
+    }
+    }
+    if (!songs || songs.length === 0) {
+        return res.json({ success: false, message: "No songs found." });
+    }
+
 
     if (!songs.length) return res.json({ success: false, message: "No songs" });
 
