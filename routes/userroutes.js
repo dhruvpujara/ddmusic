@@ -37,6 +37,10 @@ router.post('/admin/upload-artist', adminController.postArtistUpload);
 router.post('/admin/update-song', adminController.updateSong);
 router.post('/admin/upload', adminController.postuploadForm);
 router.post('/admin/upload-mixedmodel', adminController.postUploadMixedModel);
+router.get('/admin/find-artist', adminController.findArtist); // search
+router.post('/admin/update-artist', adminController.updateArtist); // update
+router.post('/admin/delete-artist', adminController.deleteArtist); // delete
+
 
 
 

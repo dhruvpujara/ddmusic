@@ -138,3 +138,33 @@ module.exports.getArtist =  (req, res) => {
             res.status(500).json({ error: 'Error updating song' });
         }
     }
+
+    exports.findArtist = async (req, res) => {
+  try {
+    const artist = await Artist.findOne({ name: new RegExp(req.query.name, 'i') });
+    if (!artist) return res.json({ success: false, message: 'Artist not found' });
+    res.json({ success: true, artist });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+exports.updateArtist = async (req, res) => {
+  try {
+    const { id, name, thumbnail, hashtags, bio } = req.body;
+    await Artist.findByIdAndUpdate(id, { name, thumbnail, hashtags, bio });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+exports.deleteArtist = async (req, res) => {
+  try {
+    const { id } = req.body;
+    await Artist.findByIdAndDelete(id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
