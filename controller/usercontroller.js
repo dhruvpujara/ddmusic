@@ -185,61 +185,15 @@ module.exports.getlikedsongs = async (req, res) => {
     }
 };
 
-module.exports.gethome = async (req, res) => {
-    try {
-        const playerContext = await getPlayerContext(req);
-        const mixedmodel = await mixedModel.find().lean(); // Fetch mixed model data
-        const artists = await Artist.find().lean(); // Fetch top 10 artists
-        res.render('mainpages/home', {
-            isLoggedIn: req.session.isLoggedIn || false,
-            ...playerContext,
-            artists: artists,
-            mixedmodel: mixedmodel
-        });
-    } catch (err) {
-        console.error('Home error:', err);
-        res.redirect('/');
-    }
-};
-
-
 // module.exports.gethome = async (req, res) => {
 //     try {
 //         const playerContext = await getPlayerContext(req);
-//         const mixedmodel = await mixedModel.find().lean(); // Mixed content (sliders)
-//         // let preferredArtists = []; // To store filtered artists
-
-//         // Read preferredLanguages from cookies
-//         // let preferredLanguages = [];
-//         // if (req.headers.cookie) {
-//         //     const cookies = cookie.parse(req.headers.cookie);
-//         //     if (cookies.preferredLanguages) {
-//         //         try {
-//         //             preferredLanguages = JSON.parse(cookies.preferredLanguages);
-//         //         } catch (e) {
-//         //             preferredLanguages = [];
-//         //         }
-//         //     }
-//         // }
-
-//         // Filter artists using language hashtags if any
-//         // if (preferredLanguages.length > 0) {
-//         //     preferredArtists = await Artist.find({
-//         //         hashtags: { $in: preferredLanguages.map(l => `#${l}`) }
-//         //     }).lean();
-//         // } else {
-//         //     preferredArtists = await Artist.find().lean(); // fallback: all artists
-//         // }
-
-//         // Optional: shuffle preferred artists
-//         // preferredArtists = preferredArtists.sort(() => Math.random() - 0.5);
-//         // console.log('Preferred Artists:', preferredArtists);
-//         // console.log('preffered languages',preferredLanguages);
-
+//         const mixedmodel = await mixedModel.find().lean(); // Fetch mixed model data
+//         const artists = await Artist.find().lean(); // Fetch top 10 artists
 //         res.render('mainpages/home', {
 //             isLoggedIn: req.session.isLoggedIn || false,
 //             ...playerContext,
-//             artists: preferredArtists, // filtered or all
+//             artists: artists,
 //             mixedmodel: mixedmodel
 //         });
 //     } catch (err) {
@@ -247,6 +201,54 @@ module.exports.gethome = async (req, res) => {
 //         res.redirect('/');
 //     }
 // };
+
+
+module.exports.gethome = async (req, res) => {
+    try {
+        const playerContext = await getPlayerContext(req);
+        const mixedmodel = await mixedModel.find().lean(); // Mixed content (sliders)
+        let preferredArtists = []; // To store filtered artists
+
+       // Read preferredLanguages from cookies
+        let preferredLanguages = [];
+        let preferredLanguagesHashtags = [];
+        if (req.headers.cookie) {
+            const cookies = cookie.parse(req.headers.cookie);
+            if (cookies.preferredLanguages) {
+                try {
+                    preferredLanguages = JSON.parse(cookies.preferredLanguages);
+                    preferredLanguagesHashtags = preferredLanguages.map(l => `#${l}`);
+                } catch (e) {
+                    preferredLanguages = [];
+                }
+            }
+        }
+
+        // Filter artists using language hashtags if any
+         if (preferredLanguages.length > 0) {
+            preferredArtists = await Artist.find({
+                hashtags: { $in: preferredLanguagesHashtags.map(l => `${l}`) }
+            }).lean();
+
+        } else {
+            preferredArtists = await Artist.find().lean(); // fallback: all artists
+
+        }
+
+       // Optional: shuffle preferred artists
+        preferredArtists = preferredArtists.sort(() => Math.random() - 0.5);
+
+        res.render('mainpages/home', {
+            isLoggedIn: req.session.isLoggedIn || false,
+            ...playerContext,
+            artists: preferredArtists, // filtered or all
+            mixedmodel: mixedmodel
+        });
+    } catch (err) {
+        console.error('Home error:', err);
+        res.redirect('/');
+    }
+};
 
 
 

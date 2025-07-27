@@ -258,18 +258,6 @@ async function requestWakeLock() {
   }
 }
 
-async function preloadSongs(currentId) {
-  try {
-    const res = await fetch(`/api/next-songs/${currentId}`);
-    const data = await res.json();
-
-    if (data.success && data.songs) {
-      songQueue = data.songs;
-    }
-  } catch (err) {
-    console.error("Error preloading songs:", err);
-  }
-}
 
 
 if (backBtn) {
@@ -375,31 +363,66 @@ if (backBtn) {
                         }
                     });
 
+async function preloadSongs(currentId) {
+    try {
+        const res = await fetch(`/api/next-songs/${currentId}`);
+        const data = await res.json();
+
+        if (data.success && Array.isArray(data.songs)) {
+            const validSongs = data.songs.filter(song =>
+                song.link && typeof song.link === 'string' && song.link.startsWith('http')
+            );
+
+            if (validSongs.length === 0) {
+                console.warn("No valid songs to preload.");
+            }
+
+            songQueue.push(...validSongs);  // Push instead of replacing
+            console.log("Preloaded valid songs:", validSongs);
+        } else {
+            console.warn("Unexpected song response:", data);
+        }
+    } catch (err) {
+        console.error("Error preloading songs:", err);
+    }
+}
+
+
                     // Add autoplay functionality
-                         audio.addEventListener('ended', async () => {
+                        audio.addEventListener('ended', async () => {
   if (songQueue.length === 0) {
-    // Try fetching more if user is online
     await preloadSongs(currentSongId);
   }
 
   if (songQueue.length > 0) {
     const nextSong = songQueue.shift();
+    if (!nextSong || !nextSong.link) {
+      console.error("Invalid song data:", nextSong);
+      return;
+    }
+
     audioPlayer.pause();
     audioPlayer.src = nextSong.link;
     audioPlayer.load();
     document.getElementById('songName').textContent = nextSong.name;
     currentSongId = nextSong.id;
-    await audioPlayer.play();
 
-    // Optionally preload again if queue is low
+    try {
+      await audioPlayer.play();
+    } catch (err) {
+      console.error("Playback failed:", err);
+    }
+
+    // Make sure new songs are preloaded before we run out again
     if (songQueue.length < 3) {
-      preloadSongs(currentSongId);
+      await preloadSongs(currentSongId); // ✅ use await here
     }
 
   } else {
     console.log("No more songs to play.");
   }
 });
+
 
                     async function playSong(songId) {
                         try {

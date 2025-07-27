@@ -120,3 +120,21 @@ module.exports.getArtist =  (req, res) => {
             res.status(500).render('artist', { error: 'Failed to upload artist' });
         }
     }
+
+         module.exports.updateArtist = async (req, res) => {
+        try {
+            const { id, name, link, hashtags } = req.body;
+            const updateArtist = await Song.findByIdAndUpdate(
+                id,
+                { 
+                    name, 
+                    link, 
+                    hashtags: hashtags.split(',').map(tag => tag.trim())
+                },
+                { new: true }
+            );
+            res.json({ success: true, song: updateArtist });
+        } catch (err) {
+            res.status(500).json({ error: 'Error updating song' });
+        }
+    }
