@@ -69,67 +69,7 @@
 </div></h2>
                 </section>
 
-        
-<!-- Image Slider Start (Landscape) -->
- <!-- <main class="w-full bg-black flex justify-center items-center rounded-lg py-2">
-  <div x-data="slider()" class="relative w-full max-w-3xl aspect-video overflow-hidden rounded-md">
-    <div
-      class="flex w-full h-full transition-transform duration-300 ease-in-out"
-      :style="`transform: translateX(-${(current - 1) * 100}%);`"
-      @touchstart="start($event)"
-      @touchmove="move($event)"
-      @touchend="end()"
-    >
-      <template x-for="(img, index) in images" :key="index">
-        <img :src="img" alt="slide"
-             class="w-full h-full object-cover flex-shrink-0" />
-      </template>
-    </div>
-  </div>
-</main>
-
-<script>
-  document.addEventListener("alpine:init", () => {
-    Alpine.data("slider", () => ({
-      current: 1,
-      startX: 0,
-      endX: 0,
-      interval: null,
-      images: <%- JSON.stringify(mixedmodel.map(model => model.thumbnail)) %>,
-
-      start(e) {
-        this.startX = e.touches[0].clientX;
-        clearInterval(this.interval);
-      },
-      move(e) {
-        this.endX = e.touches[0].clientX;
-      },
-      end() {
-        if (this.startX - this.endX > 50) {
-          this.next();
-        } else if (this.endX - this.startX > 50) {
-          this.prev();
-        }
-        this.startAutoSlide();
-      },
-      next() {
-        this.current = this.current < this.images.length ? this.current + 1 : 1;
-      },
-      prev() {
-        this.current = this.current > 1 ? this.current - 1 : this.images.length;
-      },
-      startAutoSlide() {
-        this.interval = setInterval(() => {
-          this.next();
-        }, 3000);
-      },
-      init() {
-        this.startAutoSlide();
-      }
-    }));
-  });
-</script>  -->
-
+    
 
         <!-- Featured Section -->
         <section class="py-4">

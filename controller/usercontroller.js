@@ -4,7 +4,7 @@ const Playlist = require('../models/playlist');
 const mongoose = require('mongoose');  
 const cookie = require('cookie');
 const Artist = require('../models/artist');
-const mixedModel = require('../models/mixedModel');
+// const mixedModel = require('../models/mixedModel');
 let backbutton;
 
 //    get methods
@@ -206,7 +206,7 @@ module.exports.getlikedsongs = async (req, res) => {
 module.exports.gethome = async (req, res) => {
     try {
         const playerContext = await getPlayerContext(req);
-        const mixedmodel = await mixedModel.find().lean(); // Mixed content (sliders)
+        // const mixedmodel = await mixedModel.find().lean(); // Mixed content (sliders)
         let preferredArtists = []; // To store filtered artists
 
        // Read preferredLanguages from cookies
@@ -242,7 +242,7 @@ module.exports.gethome = async (req, res) => {
             isLoggedIn: req.session.isLoggedIn || false,
             ...playerContext,
             artists: preferredArtists, // filtered or all
-            mixedmodel: mixedmodel
+           // mixedmodel: mixedmodel
         });
     } catch (err) {
         console.error('Home error:', err);
