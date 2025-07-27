@@ -49,7 +49,7 @@ router.post('/preferred-languages', usercontroller.postUpddatePreferences);
 
 // Add this route for featured playlists (bollywood/oldies)
 router.get('/featured/:type', usercontroller.getFeaturedPlaylist);
-router.get('/play/:personname', usercontroller.getPersonMusic);
+// router.get('/play/:personname', usercontroller.getPersonMusic);
 
 //choices
 router.get('/language/:language', usercontroller.getLanguageMusic);
