@@ -1,6 +1,6 @@
 const Song = require('../models/song');
 const Artist = require('../models/artist');
-const mixedModel = require('../models/mixedModel');
+// const mixedModel = require('../models/mixedModel');
 
 // get methods
 
@@ -71,12 +71,12 @@ module.exports.getArtist =  (req, res) => {
         }
     }
 
-    module.exports.getUploadMixedModelForm = (req, res) => {
-    res.render('admin/mixedmodel', {
-        isLoggedIn: req.session.isLoggedIn || false,
-        username: req.session.loggeduser || ''
-    });
-};
+//     module.exports.getUploadMixedModelForm = (req, res) => {
+//     res.render('admin/mixedmodel', {
+//         isLoggedIn: req.session.isLoggedIn || false,
+//         username: req.session.loggeduser || ''
+//     });
+// };
 
 
     module.exports.postArtistUpload = async (req, res) => {
@@ -100,26 +100,26 @@ module.exports.getArtist =  (req, res) => {
         }
     }
 
-        module.exports.postUploadMixedModel = async (req, res) => {
-        try {
-            const { name, hashtags, thumbnail, bio } = req.body;
+    //     module.exports.postUploadMixedModel = async (req, res) => {
+    //     try {
+    //         const { name, hashtags, thumbnail, bio } = req.body;
 
-            // Create and save artist
-            const mixmodel = new mixedModel({
-                name,
-                hashtags: hashtags ? hashtags.split(',').map(tag => tag.trim()) : [],
-                thumbnail: thumbnail || 'default-thumbnail.jpg',
-                bio: bio || 'No biography available.'
-            });
+    //         // Create and save artist
+    //         const mixmodel = new mixedModel({
+    //             name,
+    //             hashtags: hashtags ? hashtags.split(',').map(tag => tag.trim()) : [],
+    //             thumbnail: thumbnail || 'default-thumbnail.jpg',
+    //             bio: bio || 'No biography available.'
+    //         });
 
-            await mixmodel.save();
-            console.log('mixmodel saved successfully:', artist);
-            res.redirect('/admin/mixedmodel');
-        } catch (error) {
-            console.error('Error in artist upload:', error);
-            res.status(500).render('artist', { error: 'Failed to upload artist' });
-        }
-    }
+    //         await mixmodel.save();
+    //         console.log('mixmodel saved successfully:', artist);
+    //         res.redirect('/admin/mixedmodel');
+    //     } catch (error) {
+    //         console.error('Error in artist upload:', error);
+    //         res.status(500).render('artist', { error: 'Failed to upload artist' });
+    //     }
+    // }
 
          module.exports.updateArtist = async (req, res) => {
         try {
