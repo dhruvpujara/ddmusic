@@ -4,7 +4,7 @@ const Playlist = require('../models/playlist');
 const mongoose = require('mongoose');  
 const cookie = require('cookie');
 const Artist = require('../models/artist');
-// const mixedModel = require('../models/mixedModel');
+const mixedModel = require('../models/mixedModelSchema');
 let backbutton;
 
 //    get methods
@@ -380,35 +380,35 @@ getPlayerContext = async (req) => {
     return { recentSong, lastPlaybackTime, isPlaying };
 };
 
-// module.exports.getPersonMusic = async (req, res) => {
-//     const personName = req.params.personname;
-//     try {
-//         const person = await mixedModel.findOne({
-//             name: personName    
-//         }).lean();
-//         if (!person) {
-//             return res.status(404).render('error', { message: 'Person not found' });
-//         }
-//         const songs = await Song.find({
-//             hashtags: { $in: person.hashtags }
-//         }).sort({ createdAt: -1 });
-//         const playerContext = await getPlayerContext(req);
-//         res.render('mainpages/artist', {
-//             songs,
-//             artistThumbnail: person.thumbnail,
-//             artistBio: person.bio,
-//             artistName: person.name,
-//             recentSong: playerContext.recentSong,
-//             lastPlaybackTime: playerContext.lastPlaybackTime,
-//             isPlaying: playerContext.isPlaying,
-//             isLoggedIn: req.session.isLoggedIn || false,
-//             backbutton: req.headers.referer || '/'
-//         });
-//     } catch (error) {
-//         console.error('Error fetching person music:', error);
-//         res.status(500).render('error', { message: 'Internal server error' });
-//     }
-// };
+module.exports.getPersonMusic = async (req, res) => {
+    const personName = req.params.personname;
+    try {
+        const person = await mixedModel.findOne({
+            name: personName    
+        }).lean();
+        if (!person) {
+            return res.status(404).render('error', { message: 'Person not found' });
+        }
+        const songs = await Song.find({
+            hashtags: { $in: person.hashtags }
+        }).sort({ createdAt: -1 });
+        const playerContext = await getPlayerContext(req);
+        res.render('mainpages/artist', {
+            songs,
+            artistThumbnail: person.thumbnail,
+            artistBio: person.bio,
+            artistName: person.name,
+            recentSong: playerContext.recentSong,
+            lastPlaybackTime: playerContext.lastPlaybackTime,
+            isPlaying: playerContext.isPlaying,
+            isLoggedIn: req.session.isLoggedIn || false,
+            backbutton: req.headers.referer || '/'
+        });
+    } catch (error) {
+        console.error('Error fetching person music:', error);
+        res.status(500).render('error', { message: 'Internal server error' });
+    }
+};
 
 
 module.exports.getExplore = async (req, res) => {

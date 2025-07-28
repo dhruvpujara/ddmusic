@@ -18,4 +18,4 @@ const mixedModelSchema = new mongoose.Schema({
 
 // hello
 
-module.exports = mongoose.model('mixedModel', mixedModelSchema);
+module.exports = mongoose.model('mixedModelSchema', mixedModelSchema);
