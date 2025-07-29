@@ -690,7 +690,26 @@ module.exports.getNextSong = async (req, res) => {
                 }
             }
 
-            if (preferredLanguages.length > 0) {
+            if (req.headers.referer && req.headers.referer.includes('/artist/')) {
+                // If coming from artist page, use hashtags from the artist
+                const artistName = req.headers.referer.split('/artist/')[1];
+                const artist = await Artist.findOne({ name: artistName });
+                if (artist) {
+                   nextSong = await Song.findOne({
+                        hashtags: { $in: artist.hashtags },
+                        _id: { $gt: req.session.recentlyplayed }
+                    }).sort({ _id: 1 });
+
+                    if (!nextSong) {
+                        // If none found after current, get first matching
+                        nextSong = await Song.findOne({
+                            hashtags: { $in: artist.hashtags }
+                        }).sort({ _id: 1 });
+                    }
+                }
+            } else {
+
+                  if (preferredLanguages.length > 0) {
                 // Find next song with hashtag in preferredLanguages
                 nextSong = await Song.findOne({
                     hashtags: { $in: preferredLanguages.map(l => `#${l}`) },
@@ -713,6 +732,8 @@ module.exports.getNextSong = async (req, res) => {
                 }
             }
         }
+     }
+
 
         if (!nextSong) {
             return res.redirect('/explore');
