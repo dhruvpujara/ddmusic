@@ -28,15 +28,24 @@ module.exports.getLanguageMusic = async (req, res) => {
         const recentSong = req.session.recentlyplayed ?
             await Song.findById(req.session.recentlyplayed) : null;
 
-        res.render('mainpages/language', {
+            res.render('mainpages/featured', {
             songs,
-            language: language.charAt(0).toUpperCase() + language.slice(1),
             recentSong,
-            lastPlaybackTime: req.session.lastPlaybackTime || 0,
+            sectionTitle : `${language.charAt(0).toUpperCase() + language.slice(1)}`,
             isPlaying: req.session.isPlaying || false,
             isLoggedIn: req.session.isLoggedIn || false,
             backbutton: backbutton
         });
+
+        // res.render('mainpages/language', {
+        //     songs,
+        //     language: language.charAt(0).toUpperCase() + language.slice(1),
+        //     recentSong,
+        //     lastPlaybackTime: req.session.lastPlaybackTime || 0,
+        //     isPlaying: req.session.isPlaying || false,
+        //     isLoggedIn: req.session.isLoggedIn || false,
+        //     backbutton: backbutton
+        // });
     } catch (error) {
         console.error('Language music error:', error);
         res.redirect('/');

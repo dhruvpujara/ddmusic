@@ -363,66 +363,71 @@ if (backBtn) {
                         }
                     });
 
-async function preloadSongs(currentId) {
-    try {
-        const res = await fetch(`/api/next-songs/${currentId}`);
-        const data = await res.json();
+// async function preloadSongs(currentId) {
+//     try {
+//         const res = await fetch(`/api/next-songs/${currentId}`);
+//         const data = await res.json();
 
-        if (data.success && Array.isArray(data.songs)) {
-            const validSongs = data.songs.filter(song =>
-                song.link && typeof song.link === 'string' && song.link.startsWith('http')
-            );
+//         if (data.success && Array.isArray(data.songs)) {
+//             const validSongs = data.songs.filter(song =>
+//                 song.link && typeof song.link === 'string' && song.link.startsWith('http')
+//             );
 
-            if (validSongs.length === 0) {
-                console.warn("No valid songs to preload.");
-            }
+//             if (validSongs.length === 0) {
+//                 console.warn("No valid songs to preload.");
+//             }
 
-            songQueue.push(...validSongs);  // Push instead of replacing
-            console.log("Preloaded valid songs:", validSongs);
-        } else {
-            console.warn("Unexpected song response:", data);
-        }
-    } catch (err) {
-        console.error("Error preloading songs:", err);
-    }
-}
+//             songQueue.push(...validSongs);  // Push instead of replacing
+//             console.log("Preloaded valid songs:", validSongs);
+//         } else {
+//             console.warn("Unexpected song response:", data);
+//         }
+//     } catch (err) {
+//         console.error("Error preloading songs:", err);
+//     }
+// }
 
+
+// Add autoplay functionality
+//     audio.addEventListener('ended', async () => {
+//   if (songQueue.length === 0) {
+//     await preloadSongs(currentSongId);
+//   }
+
+//   if (songQueue.length > 0) {
+//     const nextSong = songQueue.shift();
+//     if (!nextSong || !nextSong.link) {
+//       console.error("Invalid song data:", nextSong);
+//       return;
+//     }
+
+//     audioPlayer.pause();
+//     audioPlayer.src = nextSong.link;
+//     audioPlayer.load();
+//     document.getElementById('songName').textContent = nextSong.name;
+//     currentSongId = nextSong.id;
+
+//     try {
+//       await audioPlayer.play();
+//     } catch (err) {
+//       console.error("Playback failed:", err);
+//     }
+
+//     // Make sure new songs are preloaded before we run out again
+//     if (songQueue.length < 3) {
+//       await preloadSongs(currentSongId); // ✅ use await here
+//     }
+
+//   } else {
+//     console.log("No more songs to play.");
+//   }
+// });
 
                     // Add autoplay functionality
-                        audio.addEventListener('ended', async () => {
-  if (songQueue.length === 0) {
-    await preloadSongs(currentSongId);
-  }
-
-  if (songQueue.length > 0) {
-    const nextSong = songQueue.shift();
-    if (!nextSong || !nextSong.link) {
-      console.error("Invalid song data:", nextSong);
-      return;
-    }
-
-    audioPlayer.pause();
-    audioPlayer.src = nextSong.link;
-    audioPlayer.load();
-    document.getElementById('songName').textContent = nextSong.name;
-    currentSongId = nextSong.id;
-
-    try {
-      await audioPlayer.play();
-    } catch (err) {
-      console.error("Playback failed:", err);
-    }
-
-    // Make sure new songs are preloaded before we run out again
-    if (songQueue.length < 3) {
-      await preloadSongs(currentSongId); // ✅ use await here
-    }
-
-  } else {
-    console.log("No more songs to play.");
-  }
-});
-
+                    audio.addEventListener('ended', async () => {
+                        const inPlaylist = <%= typeof inPlaylist !== 'undefined' && inPlaylist ? 'true' : 'false' %>;
+                        window.location.href = '/player/next';
+                    });
 
                     async function playSong(songId) {
                         try {
