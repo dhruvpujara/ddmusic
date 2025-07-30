@@ -427,6 +427,14 @@ if (backBtn) {
                     audio.addEventListener('ended', async () => {
                         const inPlaylist = <%= typeof inPlaylist !== 'undefined' && inPlaylist ? 'true' : 'false' %>;
                         window.location.href = '/player/next';
+                        
+                    audio.addEventListener('loadeddata', () => {
+                        console.log('Audio loaded successfully');
+                        audio.volume = 1.0;
+                        playPauseBtn.innerHTML = '<i class="fas fa-pause text-xl"></i>';
+                        audio.loop = <%= typeof isLoop !== 'undefined' && isLoop ? 'true' : 'false' %>;
+                    });
+                    
                     });
 
                     async function playSong(songId) {

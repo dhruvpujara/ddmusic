@@ -58,7 +58,6 @@ module.exports.getArtistMusic = async (req, res) => {
     if (!artist) return res.redirect('/');
 
    let backbutton = req.headers.referer;
-   console.log('Back button URL:', backbutton);
 
     // Extract the actual string from the first array element and split it
     const rawHashtagsString = artist.hashtags[0] || '';
