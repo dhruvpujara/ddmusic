@@ -664,6 +664,8 @@ module.exports.postPlayer = async (req, res) => {
     }
 };
 
+
+
 // Update getNextSong to include autoplay
 module.exports.getNextSong = async (req, res) => {
     try {
@@ -675,24 +677,13 @@ module.exports.getNextSong = async (req, res) => {
             const currentIndex = songs.findIndex(id => id.toString() === req.session.recentlyplayed);
             const nextIndex = (currentIndex + 1) % songs.length;
             nextSong = await Song.findById(songs[nextIndex]);
-        } else {
-            // Check for preferredLanguages cookie
-            let preferredLanguages = [];
-            if (req.headers.cookie) {
-                const cookies = cookie.parse(req.headers.cookie);
-                if (cookies.preferredLanguages) {
-                    try {
-                        preferredLanguages = JSON.parse(cookies.preferredLanguages);
-                    } catch (e) {
-                        preferredLanguages = [];
-                    }
-                }
-            }
-
-            if (req.headers.referer && req.headers.referer.includes('/artist/')) {
+        } 
+        else  if ((req.headers.referer && req.headers.referer.includes('/artist/')))
+            {
                 // If coming from artist page, use hashtags from the artist
                 const artistName = req.headers.referer.split('/artist/')[1];
                 const artist = await Artist.findOne({ name: artistName });
+                console.log('Artist found:', artist);
                 if (artist) {
                    nextSong = await Song.findOne({
                         hashtags: { $in: artist.hashtags },
@@ -707,6 +698,19 @@ module.exports.getNextSong = async (req, res) => {
                     }
                 }
             } else {
+             console.log('No playlist context or artist page, using default logic');
+             // Check for preferredLanguages cookie
+              let preferredLanguages = [];
+                if (req.headers.cookie) {
+                const cookies = cookie.parse(req.headers.cookie);
+                if (cookies.preferredLanguages) {
+                    try {
+                        preferredLanguages = JSON.parse(cookies.preferredLanguages);
+                    } catch (e) {
+                        preferredLanguages = [];
+                    }
+                }
+            }
 
                   if (preferredLanguages.length > 0) {
                 // Find next song with hashtag in preferredLanguages
@@ -721,23 +725,9 @@ module.exports.getNextSong = async (req, res) => {
                         hashtags: { $in: preferredLanguages.map(l => `#${l}`) }
                     }).sort({ _id: 1 });
                 }
-            } else {
-                nextSong = await Song.findOne({
-                    _id: { $gt: req.session.recentlyplayed }
-                }).sort({ _id: 1 });
-
-                if (!nextSong) {
-                    nextSong = await Song.findOne().sort({ _id: 1 });
-                }
             }
         }
-     }
-
-
-        if (!nextSong) {
-            return res.redirect('/explore');
-        }
-
+     
         // Update session
         req.session.recentlyplayed = nextSong._id;
         await req.session.save();
