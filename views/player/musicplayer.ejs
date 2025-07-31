@@ -571,7 +571,46 @@ if (backBtn) {
                     </span>
                 </div>
             </div>
+
+            <!-- Share Popup -->
+            <div id="sharePopup"
+                class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-black/90 border border-white/10 backdrop-blur-lg
+                        rounded-lg px-4 py-3 flex items-center gap-3 shadow-lg max-w-sm w-[90%] animate-share-in">
+            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-500/20">
+                <i class="fas fa-bullhorn text-yellow-400"></i>
+            </div>
+            <span class="text-white text-sm font-medium flex-1">Share with friends and support us</span>
+            <button onclick="closeSharePopup()" class="text-white/50 hover:text-white text-lg">
+                &times;
+            </button>
+            </div>
+
+            
             <style>
+
+              @keyframes share-in {
+                    0% {
+                        transform: translate(-50%, -40px);
+                        opacity: 0;
+                    }
+                    60% {
+                        transform: translate(-50%, 10px);
+                        opacity: 1;
+                    }
+                    80% {
+                        transform: translate(-50%, -2px);
+                    }
+                    100% {
+                        transform: translate(-50%, 0);
+                        opacity: 1;
+                    }
+                    }
+
+                    .animate-share-in {
+                    animation: share-in 0.7s ease-out;
+                    }
+
+
                 #playlist-popup>div {
                     animation: popup-bounce 0.7s;
                 }
@@ -598,6 +637,14 @@ if (backBtn) {
                 }
             </style>
             <script>
+                function closeSharePopup() {
+                const popup = document.getElementById('sharePopup');
+                if (popup) {
+                    popup.style.display = 'none';
+                }
+                requestWakeLock(); // trigger wake lock on close
+                }
+
                 setTimeout(() => {
                     const popup = document.getElementById('playlist-popup');
                     if (popup) popup.style.display = 'none';

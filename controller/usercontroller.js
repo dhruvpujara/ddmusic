@@ -55,10 +55,12 @@ module.exports.getLanguageMusic = async (req, res) => {
 module.exports.getArtistMusic = async (req, res) => {
   try {
     const artist = await Artist.findOne({ name: req.params.artist }); 
+    req.session.artistName = req.params.artist; 
+    req.session.inArtistPage = true; 
+    let backbutton = req.headers.referer;
+
     if (!artist) return res.redirect('/');
-
-   let backbutton = req.headers.referer;
-
+  
     // Extract the actual string from the first array element and split it
     const rawHashtagsString = artist.hashtags[0] || '';
     const hashtagsArray = rawHashtagsString
@@ -213,6 +215,15 @@ module.exports.getlikedsongs = async (req, res) => {
 
 module.exports.gethome = async (req, res) => {
     try {
+
+        // atrist context
+        if (req.session.inArtistPage) {
+            req.session.inArtistPage = false; // Reset after use
+            req.session.artistName = ''; // Clear artist name
+        }
+        if (req.session.playlistContext) {
+            req.session.playlistContext = null; // Reset playlist context
+        }
         const playerContext = await getPlayerContext(req);
         // const mixedmodel = await mixedModel.find().lean(); // Mixed content (sliders)
         let preferredArtists = []; // To store filtered artists
@@ -263,6 +274,13 @@ module.exports.gethome = async (req, res) => {
 
 module.exports.library = async (req, res) => {
     try {
+        if (req.session.inArtistPage) {
+            req.session.inArtistPage = false; // Reset after use
+            req.session.artistName = ''; // Clear artist name
+        }
+        if (req.session.playlistContext) {
+            req.session.playlistContext = null; // Reset playlist context
+        }
         const playerContext = await getPlayerContext(req);
 
         if (!req.session.isLoggedIn || !req.session.loggeduser) {
@@ -421,6 +439,13 @@ module.exports.getPersonMusic = async (req, res) => {
 
 module.exports.getExplore = async (req, res) => {
     try {
+        if (req.session.inArtistPage) {
+            req.session.inArtistPage = false; // Reset after use
+            req.session.artistName = ''; // Clear artist name
+        }
+        if (req.session.playlistContext) {
+            req.session.playlistContext = null; // Reset playlist context
+        }
         // Get recent song data
         let recentSong = null;
         let lastPlaybackTime = 0;
@@ -664,41 +689,45 @@ module.exports.postPlayer = async (req, res) => {
     }
 };
 
-
+ let artistName = '';
 
 // Update getNextSong to include autoplay
 module.exports.getNextSong = async (req, res) => {
     try {
         let nextSong;
-
+    
         // Check if we're in playlist context
         if (req.session.playlistContext) {
             const { songs } = req.session.playlistContext;
             const currentIndex = songs.findIndex(id => id.toString() === req.session.recentlyplayed);
             const nextIndex = (currentIndex + 1) % songs.length;
             nextSong = await Song.findById(songs[nextIndex]);
-        } 
-        else  if ((req.headers.referer && req.headers.referer.includes('/artist/')))
-            {
-                // If coming from artist page, use hashtags from the artist
-                const artistName = req.headers.referer.split('/artist/')[1];
+        }  
+        else if (req.session.inArtistPage) {
+
+                const artistName = req.session.artistName;
+                const currentSongId = req.session.recentlyplayed;
                 const artist = await Artist.findOne({ name: artistName });
-                console.log('Artist found:', artist);
-                if (artist) {
-                   nextSong = await Song.findOne({
-                        hashtags: { $in: artist.hashtags },
-                        _id: { $gt: req.session.recentlyplayed }
+
+                if (artist && Array.isArray(artist.hashtags)) {
+                    // Remove #hindi from hashtags
+                    const artistHashtags = artist.hashtags.filter(tag => tag !== '#hindi');
+
+                    // Find the next song that has at least one matching hashtag and is not the current song
+                    nextSong = await Song.findOne({
+                        hashtags: { $in: artistHashtags },
+                        _id: { $ne: currentSongId } // Exclude current song
                     }).sort({ _id: 1 });
 
+                    // Optional: wrap around to first match if needed
                     if (!nextSong) {
-                        // If none found after current, get first matching
                         nextSong = await Song.findOne({
-                            hashtags: { $in: artist.hashtags }
+                            hashtags: { $in: artistHashtags }
                         }).sort({ _id: 1 });
                     }
                 }
-            } else {
-             console.log('No playlist context or artist page, using default logic');
+            }
+            else {
              // Check for preferredLanguages cookie
               let preferredLanguages = [];
                 if (req.headers.cookie) {
@@ -762,26 +791,65 @@ module.exports.apiNextSong = async (req, res) => {
     let nextSong = null;
 
     // First check for playlist context
+
     if (req.session.playlistContext) {
       const { songs } = req.session.playlistContext;
       const currentIndex = songs.findIndex(id => id.toString() === currentSongId);
       const nextIndex = (currentIndex + 1) % songs.length;
       nextSong = await Song.findById(songs[nextIndex]);
-    } else {
-      // No playlist, fallback to normal song flow
-      const allSongs = await Song.find().sort({ createdAt: -1 });
-      const currentIndex = allSongs.findIndex(song => song._id.toString() === currentSongId);
+    } else if (req.session.inArtistPage) {
 
-      if (currentIndex !== -1 && currentIndex < allSongs.length - 1) {
-        nextSong = allSongs[currentIndex + 1];
-      } else {
-        nextSong = allSongs[0]; // fallback to first song if at the end
-      }
-    }
+                const artistName = req.session.artistName;
+                const currentSongId = req.session.recentlyplayed;
+                const artist = await Artist.findOne({ name: artistName });
 
-    if (!nextSong) {
-      return res.json({ success: false, message: "No more songs." });
-    }
+                if (artist && Array.isArray(artist.hashtags)) {
+                    // Remove #hindi from hashtags
+                    const artistHashtags = artist.hashtags.filter(tag => tag !== '#hindi');
+
+                    // Find the next song that has at least one matching hashtag and is not the current song
+                    nextSong = await Song.findOne({
+                        hashtags: { $in: artistHashtags },
+                        _id: { $ne: currentSongId } // Exclude current song
+                    }).sort({ _id: 1 });
+
+                    // Optional: wrap around to first match if needed
+                    if (!nextSong) {
+                        nextSong = await Song.findOne({
+                            hashtags: { $in: artistHashtags }
+                        }).sort({ _id: 1 });
+                    }
+                }
+            }
+            else {
+             // Check for preferredLanguages cookie
+              let preferredLanguages = [];
+                if (req.headers.cookie) {
+                const cookies = cookie.parse(req.headers.cookie);
+                if (cookies.preferredLanguages) {
+                    try {
+                        preferredLanguages = JSON.parse(cookies.preferredLanguages);
+                    } catch (e) {
+                        preferredLanguages = [];
+                    }
+                }
+            }
+
+                  if (preferredLanguages.length > 0) {
+                // Find next song with hashtag in preferredLanguages
+                nextSong = await Song.findOne({
+                    hashtags: { $in: preferredLanguages.map(l => `#${l}`) },
+                    _id: { $gt: req.session.recentlyplayed }
+                }).sort({ _id: 1 });
+
+                if (!nextSong) {
+                    // If none found after current, get first matching
+                    nextSong = await Song.findOne({
+                        hashtags: { $in: preferredLanguages.map(l => `#${l}`) }
+                    }).sort({ _id: 1 });
+                }
+            }
+        }
 
     // Update the session playback state
     req.session.recentlyplayed = nextSong._id;
