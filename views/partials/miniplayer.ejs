@@ -58,29 +58,43 @@
                         playPauseBtn.innerHTML = '<i class="fas fa-play text-lg pl-1"></i>';
                     }
 
-                       audio.addEventListener('ended', async () => {
+ audio.addEventListener('ended', async () => {
                         try {
-                            const response = await fetch(`/api/next-song/${currentSongId}`);
-                            if (!response.ok) throw new Error('Network response was not ok');
-
+                            const response = await fetch('/api/next-song/' + currentSongId);
                             const data = await response.json();
 
-
-                            if (data.success && data.song) {
-                                audioPlayer.src = data.song.link;
-                                document.getElementById('songName').textContent = data.song.name;
-
-                                currentSongId = data.song.id;
-
-                                await audioPlayer.play();
-                            } else {
-                                console.log('No more songs to play.');
+                            if (!data.success || !data.song) {
+                            console.warn("No next song found.");
+                            return;
                             }
 
-                        } catch (error) {
-                            console.error('Error playing next song:', error);
+                            // Update song
+                            currentSongId = data.song.id;
+                            audio.src = data.song.link;
+                            document.getElementById('songName').textContent = data.song.name;
+
+                            // Wait for audio to load and play
+                            await audio.load();
+                            await audio.play();
+
+                            // Update UI
+                            playPauseBtn.innerHTML = '<i class="fas fa-pause text-xl"></i>';
+                            progress.style.width = '0%';
+
+                            // Update backend session state
+                            await fetch('/update-playback-time', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                isPlaying: true,
+                                songId: currentSongId,
+                                currentTime: 0
+                            })
+                            });
+                        } catch (err) {
+                            console.error('Error auto-playing next song:', err);
                         }
-                    });
+                        });
 
                     audio.addEventListener('timeupdate', () => {
                         try {
