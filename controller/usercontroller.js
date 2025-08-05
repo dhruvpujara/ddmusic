@@ -225,7 +225,7 @@ module.exports.gethome = async (req, res) => {
             req.session.playlistContext = null; // Reset playlist context
         }
         const playerContext = await getPlayerContext(req);
-        // const mixedmodel = await mixedModel.find().lean(); // Mixed content (sliders)
+         const mixedmodel = await mixedModel.find().lean(); // Mixed content (sliders)
         let preferredArtists = []; // To store filtered artists
 
        // Read preferredLanguages from cookies
@@ -261,7 +261,7 @@ module.exports.gethome = async (req, res) => {
             isLoggedIn: req.session.isLoggedIn || false,
             ...playerContext,
             artists: preferredArtists, // filtered or all
-           // mixedmodel: mixedmodel
+            mixedmodel: mixedmodel
         });
     } catch (err) {
         console.error('Home error:', err);
@@ -969,7 +969,8 @@ module.exports.getPreviousSong = async (req, res) => {
             hashtags: prevSong.hashtags || [],
             autoplay: true,
             isLoop: false,
-            inPlaylist: !!req.session.playlistContext
+            inPlaylist: !!req.session.playlistContext,
+            backbutton: req.session.lastVisitedPage || '/explore'
         });
     } catch (err) {
         console.error('Error getting previous song:', err);
