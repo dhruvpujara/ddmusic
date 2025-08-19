@@ -104,67 +104,91 @@
     <main class="flex-1 mt-24 mb-8 px-4 relative z-10">
         <div class="max-w-md mx-auto flex flex-col items-center">
             <!-- Album Art Container -->
-            <div class="relative group">
-                <div
-                    class="absolute inset-0 bg-gradient-to-br from-violet-900 to-indigo-950 rounded-3xl blur-2xl opacity-20 group-hover:opacity-30 transition-opacity">
-                </div>
-                <div class="relative w-72 h-72 md:w-80 md:h-80 rounded-3xl bg-gradient-to-br from-violet-950 to-slate-950 overflow-hidden
-                            shadow-[0_8px_32px_12px_rgba(34,211,238,0.25)] hover:shadow-[0_16px_48px_16px_rgba(34,211,238,0.3)]
-                            transition-shadow duration-500">
-                    <!-- Like Button -->
-                    <form action="/like" method="POST" class="absolute top-4 right-4 z-20">
-                        <input type="hidden" name="objectId" value="<%= songId %>">
-                        <button type="submit"
-                            class="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-pink-500/30 transition-all duration-300 group">
-                            <i class="fas fa-heart text-white/60 group-hover:text-pink-500"></i>
-                        </button>
-                    </form>
+<!-- Album Art Container -->
+<div class="relative group">
+    <div
+        class="absolute inset-0 bg-gradient-to-br from-violet-900 to-indigo-950 rounded-3xl blur-2xl opacity-20 group-hover:opacity-30 transition-opacity">
+    </div>
+    <div class="relative w-72 h-72 md:w-80 md:h-80 rounded-3xl bg-gradient-to-br from-violet-950 to-slate-950 overflow-hidden
+                shadow-[0_8px_32px_12px_rgba(34,211,238,0.25)] hover:shadow-[0_16px_48px_16px_rgba(34,211,238,0.3)]
+                transition-shadow duration-500">
 
+        <!-- Cover Art Elements -->
+        <div class="absolute inset-0 flex items-center justify-center">
+            <i class="fas fa-music text-6xl text-white/20 animate-pulse"></i>
+        </div>
 
-                    <!-- Cover Art Elements -->
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <i class="fas fa-music text-6xl text-white/20 animate-pulse"></i>
-                    </div>
-
-                    <!-- Animated Squares -->
-                    <div class="absolute inset-0 overflow-hidden opacity-30">
-                        <div
-                            class="absolute -left-4 -top-4 w-20 h-20 bg-gradient-to-br from-pink-500/40 to-rose-500/30 rounded-lg rotate-12 animate-float 
-                                  shadow-[0_0_30px_4px_rgba(236,72,153,0.3)] hover:shadow-[0_0_40px_8px_rgba(236,72,153,0.4)] transition-shadow">
-                        </div>
-
-                        <div
-                            class="absolute right-10 top-10 w-16 h-16 bg-gradient-to-br from-rose-400/40 to-pink-600/30 rounded-lg -rotate-12 animate-float animation-delay-500
-                                  shadow-[0_0_30px_4px_rgba(244,63,94,0.3)] hover:shadow-[0_0_40px_8px_rgba(244,63,94,0.4)] transition-shadow">
-                        </div>
-
-                        <div
-                            class="absolute bottom-10 left-10 w-14 h-14 bg-gradient-to-br from-fuchsia-500/40 to-pink-500/30 rounded-lg rotate-45 animate-float animation-delay-1000
-                                  shadow-[0_0_30px_4px_rgba(217,70,239,0.3)] hover:shadow-[0_0_40px_8px_rgba(217,70,239,0.4)] transition-shadow">
-                        </div>
-
-                        <!-- Last square -->
-                        <div
-                            class="absolute -right-4 -bottom-4 w-24 h-24 bg-gradient-to-br from-pink-600/40 to-rose-400/30 rounded-lg -rotate-12 animate-float animation-delay-1500
-                                  shadow-[0_0_30px_4px_rgba(236,72,153,0.3)] hover:shadow-[0_0_40px_8px_rgba(236,72,153,0.4)] transition-shadow">
-                        </div>
-                    </div>
-
-                    <!-- Loop Control - Repositioned -->
-                    <form action="/playerr" method="POST" class="absolute bottom-4 left-4 z-20">
-                        <input type="hidden" name="songId" value="<%= songId %>">
-                        <input type="hidden" name="songLink" value="<%= songLink %>">
-                        <input type="hidden" name="songName" value="<%= songName %>">
-                        <input type="hidden" name="loop" value="<%= typeof isLoop !== 'undefined' ? !isLoop : true %>">
-                        <button type="submit"
-                            class="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center
-                                   hover:bg-violet-500/20 transition-all duration-300 group shadow-lg shadow-violet-500/20">
-                            <i class="fas fa-repeat text-lg <%= typeof isLoop !== 'undefined' && isLoop ? 'text-violet-400' : 'text-white/60' %> 
-                                  group-hover:text-violet-400"></i>
-                        </button>
-                    </form>
-                </div>
+        <!-- Animated Squares -->
+        <div class="absolute inset-0 overflow-hidden opacity-30">
+            <div
+                class="absolute -left-4 -top-4 w-20 h-20 bg-gradient-to-br from-pink-500/40 to-rose-500/30 rounded-lg rotate-12 animate-float 
+                      shadow-[0_0_30px_4px_rgba(236,72,153,0.3)] hover:shadow-[0_0_40px_8px_rgba(236,72,153,0.4)] transition-shadow">
             </div>
+
+            <div
+                class="absolute right-10 top-10 w-16 h-16 bg-gradient-to-br from-rose-400/40 to-pink-600/30 rounded-lg -rotate-12 animate-float animation-delay-500
+                      shadow-[0_0_30px_4px_rgba(244,63,94,0.3)] hover:shadow-[0_0_40px_8px_rgba(244,63,94,0.4)] transition-shadow">
+            </div>
+
+            <div
+                class="absolute bottom-10 left-10 w-14 h-14 bg-gradient-to-br from-fuchsia-500/40 to-pink-500/30 rounded-lg rotate-45 animate-float animation-delay-1000
+                      shadow-[0_0_30px_4px_rgba(217,70,239,0.3)] hover:shadow-[0_0_40px_8px_rgba(217,70,239,0.4)] transition-shadow">
+            </div>
+
+            <!-- Last square -->
+            <div
+                class="absolute -right-4 -bottom-4 w-24 h-24 bg-gradient-to-br from-pink-600/40 to-rose-400/30 rounded-lg -rotate-12 animate-float animation-delay-1500
+                      shadow-[0_0_30px_4px_rgba(236,72,153,0.3)] hover:shadow-[0_0_40px_8px_rgba(236,72,153,0.4)] transition-shadow">
+            </div>
+        </div>
+
+        <!-- Button Row -->
+        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4 z-20">
+            <!-- Thumbs Up -->
+            <!-- <form action="/like" method="POST">
+                <input type="hidden" name="objectId" value="<%= songId %>">
+                <button type="submit"
+                    class="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-green-500/30 transition-all duration-300 group">
+                    <i class="fas fa-thumbs-up text-white/60 group-hover:text-green-500"></i>
+                </button>
+            </form> -->
+
+            <form action="/like" method="POST" id="likeForm">
+            <input type="hidden" name="objectId" value="<%= songId %>">
+            <button type="submit"
+                class="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-green-500/30 transition-all duration-300 group">
+                <i class="fas fa-thumbs-up <%= isSongLiked ? 'text-black' : 'text-gray-400' %>"></i>
+            </button>
+        </form>
+
+
+            <!-- Loop -->
+            <form action="/playerr" method="POST">
+                <input type="hidden" name="songId" value="<%= songId %>">
+                <input type="hidden" name="songLink" value="<%= songLink %>">
+                <input type="hidden" name="songName" value="<%= songName %>">
+                <input type="hidden" name="loop" value="<%= typeof isLoop !== 'undefined' ? !isLoop : true %>">
+                <button type="submit"
+                    class="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-violet-500/20 transition-all duration-300 group shadow-lg shadow-violet-500/20">
+                    <i class="fas fa-repeat text-lg <%= typeof isLoop !== 'undefined' && isLoop ? 'text-violet-400' : 'text-white/60' %> 
+                          group-hover:text-violet-400"></i>
+                </button>
+            </form>
+
+            <!-- Thumbs Down -->
+            <form action="/dislike" method="POST">
+                <input type="hidden" name="objectId" value="<%= songId %>">
+                <button type="submit"
+                    class="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-red-500/30 transition-all duration-300 group">
+                    <i class="fas fa-thumbs-down  <%= isSongDisliked ? 'text-black' : 'text-gray-400' %>"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+                
 
             <!-- Song Info -->
             <div class="text-center mt-8 mb-6 w-full">

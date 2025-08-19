@@ -16,6 +16,15 @@ exports.createPlaylist = async (req, res) => {
             songs: songId ? [songId] : []
         });
 
+        if(req.session.isLoggedIn && req.session.loggeduser) {
+                const user = await User.findOne({ username: req.session.loggeduser });
+                isSongLiked = user.likedSongs.includes(req.body.objectId);
+                isSongDisliked = user.dislikedSongs.includes(req.body.objectId);
+        } else {
+            isSongLiked = false; // Default to false if user is not logged in
+            isSongDisliked = false; // Default to false if user is not logged in
+        }
+
         if (songId) {
             const song = await Song.findById(songId);
             const playlists = await Playlist.find({ userId: user._id }); // Get all playlists
@@ -31,7 +40,10 @@ exports.createPlaylist = async (req, res) => {
                     playlistCreated : true,
                     popupMessage :"Playlist created successfully",
                     message: 'Playlist created successfully',
-                    playlists: playlists // Pass playlists to view
+                    playlists: playlists, // Pass playlists to view
+                    backbutton: req.session.lastVisitedPage || '/explore',
+                    isSongLiked: isSongLiked,
+                    isSongDisliked: isSongDisliked
                 });
             }
         }
@@ -45,11 +57,21 @@ exports.createPlaylist = async (req, res) => {
 
 exports.addToPlaylist = async (req, res) => {
     try {
+        let isSongLiked
         const { playlistId, songId } = req.body;
         
         const playlist = await Playlist.findById(playlistId);
         if (!playlist) {
             return res.redirect('back');
+        }
+
+        if(req.session.isLoggedIn && req.session.loggeduser) {
+             const user = await User.findOne({ username: req.session.loggeduser });
+              isSongLiked = user.likedSongs.includes(req.body.objectId);
+             isSongDisliked = user.dislikedSongs.includes(req.body.objectId);
+        } else {
+            isSongLiked = false; // Default to false if user is not logged in
+            isSongDisliked = false; // Default to false if user is not logged in
         }
 
         if (!playlist.songs.includes(songId)) {
@@ -69,7 +91,10 @@ exports.addToPlaylist = async (req, res) => {
                 isLoop: false,
                 playlistCreated : true,
                 popupMessage :"Song added to playlist",
-                message: 'Song added to playlist'
+                message: 'Song added to playlist',
+                backbutton: req.session.lastVisitedPage || '/explore',
+                isSongLiked: isSongLiked,
+                isSongDisliked: isSongDisliked
             });
         }
         

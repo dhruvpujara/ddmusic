@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         ref: 'Song'
     }],
+    dislikedSongs: [{
+    type: String,
+    ref: 'Song'
+    }],
     playlists: {
         type: Map,
         of: [{

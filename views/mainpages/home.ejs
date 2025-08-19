@@ -35,6 +35,9 @@
             text-shadow: 0 2px 8px rgba(167, 139, 250, 0.2);
             padding: 0.25rem 0;
         }
+
+        [x-cloak] { display: none !important; }
+
     </style>
 </head>
 
@@ -48,16 +51,24 @@
   gtag('config', 'G-9DMMG2K7DR');
 </script>
 
-<body class="bg-black min-h-screen flex flex-col">
+<body x-data="{ showUpdates: false }" class="bg-black min-h-screen flex flex-col">
+
 
   
     <!-- Top Bar -->
-    <header class="fixed top-0 w-full bg-black/90 backdrop-blur-lg z-50 px-4 py-3 border-b border-gray-800">
-        <div class="flex justify-center items-center">
-            <span class="dialogue-header">Feel the Music</span>
-        </div>
-    </header>
+<header class="fixed top-0 w-full bg-black/90 backdrop-blur-lg z-50 px-4 py-3 border-b border-gray-800">
+  <div class="flex items-center justify-center relative">
+    <!-- Centered Title -->
+    <span class="dialogue-header">Feel the Music</span>
 
+    <!-- Updates Button (right corner, does not affect centering) -->
+    <button @click="showUpdates = true"
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-white/90 hover:text-white p-2"
+            aria-label="Show updates and tips">
+      <i class="fas fa-info-circle text-xl"></i>
+    </button>
+  </div>
+</header>
 
             <!-- Main Content Area -->
             <main class="flex-1 mt-16 mb-32 px-4">
@@ -227,7 +238,7 @@
 
                 <!-- Tribute Heading -->
                 <section class="pt-4">
-                <h2 class="text-white text-sm text-center text-xl font-bold mb-2">  Dear users, you might encounter some bugs as we're currently in our development phase. Thank you for being consistent and supporting us!
+                <h2 class="text-white text-sm text-center text-xl font-bold mb-2"> Upcoming updates would appear in the info icon on the top . Thank You</h2>
                 </div></h2>
                 </section>
 
@@ -256,5 +267,34 @@
             </a>
         </div>
     </nav>
+
+<!-- Updates / Tips Popup -->
+<div x-show="showUpdates" x-cloak
+     class="fixed inset-0 flex items-center justify-center bg-black/70 z-[60] px-6"
+     x-transition.opacity>
+  <div class="bg-gray-900 rounded-2xl shadow-lg p-6 w-full max-w-md text-white relative"
+       x-transition.scale.origin.bottom>
+<!-- Close button -->
+<button @click="showUpdates = false"
+        class="absolute top-2 right-4 bg-gray-800/90 hover:bg-gray-700 text-white rounded-full p-2 shadow-lg transition"
+        aria-label="Close">
+  <i class="fas fa-times text-xl"></i>
+</button>
+    <h2 class="text-lg font-bold mb-3"> Tips</h2>
+     <ul class="space-y-2 text-sm">
+      <li>make sure you have logged in through a account to acces more Features</li>
+    </ul>
+    <h2 class="text-lg font-bold mb-3 mt-2">Latest Updates</h2>
+    <ul class="space-y-2 text-sm">
+      <li> Bug fixes and performance improvements 🐞.</li>
+      <li>   locking your screen will stop autoplay.</li>
+      <li> Tip: disliked songs won't appear in your feed again 💡 .</li>
+    </ul>
+
+    <!-- Tap outside to close -->
+    <div @click="showUpdates = false" class="absolute inset-0 -z-10"></div>
+  </div>
+</div>
+
 </body>
 </html>

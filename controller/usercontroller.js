@@ -5,12 +5,201 @@ const mongoose = require('mongoose');
 const cookie = require('cookie');
 const Artist = require('../models/artist');
 const mixedModel = require('../models/mixedModelSchema');
+const { head } = require('../routes/userroutes');
 let backbutton;
 
 //    get methods
 //    post methods
 //    playlist methods
 
+
+// in ordered functions 
+
+// mainpages 
+
+module.exports.gethome = async (req, res) => {
+    try {
+
+        // atrist context
+        if (req.session.inArtistPage) {
+            req.session.inArtistPage = false; // Reset after use
+            req.session.artistName = ''; // Clear artist name
+        }
+        if (req.session.playlistContext) {
+            req.session.playlistContext = null; // Reset playlist context
+        }
+        const playerContext = await getPlayerContext(req);
+         const mixedmodel = await mixedModel.find().lean(); // Mixed content (sliders)
+        let preferredArtists = []; // To store filtered artists
+
+       // Read preferredLanguages from cookies
+        let preferredLanguages = [];
+        let preferredLanguagesHashtags = [];
+        if (req.headers.cookie) {
+            const cookies = cookie.parse(req.headers.cookie);
+            if (cookies.preferredLanguages) {
+                try {
+                    preferredLanguages = JSON.parse(cookies.preferredLanguages);
+                    preferredLanguagesHashtags = preferredLanguages.map(l => `#${l}`);
+                } catch (e) {
+                    preferredLanguages = [];
+                }
+            }
+        }
+
+        // Filter artists using language hashtags if any
+         if (preferredLanguages.length > 0) {
+            preferredArtists = await Artist.find({
+                hashtags: { $in: preferredLanguagesHashtags.map(l => `${l}`) }
+            }).lean();
+
+        } else {
+            preferredArtists = await Artist.find().lean(); // fallback: all artists
+
+        }
+
+       // Optional: shuffle preferred artists
+        preferredArtists = preferredArtists.sort(() => Math.random() - 0.5);
+
+        res.render('mainpages/home', {
+            isLoggedIn: req.session.isLoggedIn || false,
+            ...playerContext,
+            artists: preferredArtists, // filtered or all
+            mixedmodel: mixedmodel
+        });
+    } catch (err) {
+        console.error('Home error:', err);
+        res.redirect('/');
+    }
+};
+
+
+module.exports.getExplore = async (req, res) => {
+    try {
+        if (req.session.inArtistPage) {
+            req.session.inArtistPage = false; // Reset after use
+            req.session.artistName = ''; // Clear artist name
+        }
+        if (req.session.playlistContext) {
+            req.session.playlistContext = null; // Reset playlist context
+        }
+        // Get recent song data
+        let recentSong = null;
+        let lastPlaybackTime = 0;
+
+        if (req.session && req.session.recentlyplayed) {
+            recentSong = await Song.findById(req.session.recentlyplayed);
+            if (req.session.lastPlaybackSong === req.session.recentlyplayed) {
+                lastPlaybackTime = req.session.lastPlaybackTime || 0;
+                if (req.session.isPlaying ) {
+                    req.session.isPlaying = true; // Ensure isPlaying is set
+                } else {
+                    req.session.isPlaying = false; // Ensure isPlaying is set
+                }
+                
+            }
+        }
+
+        // Read preferredLanguages from cookies
+        let preferredLanguages = [];
+        if (req.headers.cookie) {
+            const cookies = cookie.parse(req.headers.cookie);
+            if (cookies.preferredLanguages) {
+                preferredLanguages = JSON.parse(cookies.preferredLanguages);
+            }
+        }
+
+
+        //  Filter songs using hashtags
+        let songFilter = {};
+        if (preferredLanguages.length > 0) {
+            songFilter = {
+                hashtags: { $in: preferredLanguages.map(l => `#${l}`) }
+            };
+        }
+
+        let allSongs = await Song.find(songFilter, 'name link hashtags _id');
+        allSongs = allSongs.sort(() => Math.random() - 0.5);
+
+        res.render('explore', {
+            songs: allSongs,
+            artists: ["ArijitSingh", "KK", "Badshah", "HoneySingh", "NehaKakkar"],
+            error: null,
+            recentSong,
+            lastPlaybackTime,
+            isPlaying: req.session.isPlaying || false,
+            preferredLanguages
+        });
+    } catch (err) {
+        console.error('Error fetching data:', err);
+        res.render('explore', {
+            songs: [],
+            artists: [],
+            error: 'Unable to load songs. Please try again.',
+            recentSong: null,
+            lastPlaybackTime: 0,
+            preferredLanguages: []
+        });
+    }
+};
+
+module.exports.library = async (req, res) => {
+    try {
+        if (req.session.inArtistPage) {
+            req.session.inArtistPage = false; // Reset after use
+            req.session.artistName = ''; // Clear artist name
+        }
+        if (req.session.playlistContext) {
+            req.session.playlistContext = null; // Reset playlist context
+        }
+        const playerContext = await getPlayerContext(req);
+
+        if (!req.session.isLoggedIn || !req.session.loggeduser) {
+            return res.render('mainpages/library', {
+                isLoggedIn: false,
+                likedSongsCount: 0,
+                dislikedSongsCount: 0,
+                playlists: [],
+                recentSong: playerContext.recentSong,
+                lastPlaybackTime: playerContext.lastPlaybackTime,
+                isPlaying: playerContext.isPlaying
+            });
+        }
+
+        const user = await User.findOne({ username: req.session.loggeduser });
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        // Find playlists and populate songs
+        const playlists = await Playlist.find({ userId: user._id })
+            .populate('songs')
+            .lean();
+        const likedSongsCount = user.likedSongs ? user.likedSongs.length : 0;
+        const dislikedSongsCount = user.dislikedSongs ? user.dislikedSongs.length : 0;
+
+        res.render('mainpages/library', {
+            isLoggedIn: true,
+            likedSongsCount,
+            dislikedSongsCount,
+            playlists,
+            username: user.username,
+            ...playerContext
+        });
+    } catch (err) {
+        console.error('Library error:', err);
+        res.redirect('/');
+    }
+};
+
+// regular routes
+
+module.exports.getmusicplayer = (req, res) => {
+    res.render('musicplayer');
+}
+
+
+// remaining ones
 
 // get methods
 module.exports.getLanguageMusic = async (req, res) => {
@@ -186,7 +375,52 @@ module.exports.getlikedsongs = async (req, res) => {
         }
 
         res.render('likedsongs', {
+            header: 'Liked Songs',
             likedSongs: likedSongs,
+            icon : 'fas fa-thumbs-up', 
+            //  playerContext,
+        });
+    } catch (err) {
+        console.error('Error fetching liked songs:', err);
+        res.redirect('/profile');
+    }
+};
+
+module.exports.getdislikedsongs = async (req, res) => {
+      try {
+        const currentuser = req.session.loggeduser;
+        if (!currentuser) {
+            return res.redirect('/login');
+        }
+
+        // Find user and populate their likedSongs
+        const user = await User.findOne({ username: currentuser });
+        if (!user) {
+            return res.redirect('/login');
+        }
+
+        // Fetch liked songs and filter out non-existent ones
+        const dislikedSongs = await Song.find({
+            '_id': { $in: user.dislikedSongs }
+        });
+
+        // Get IDs of songs that still exist
+        const validSongIds = dislikedSongs.map(song => song._id.toString());
+
+        // Check if any songs were removed
+        const invalidSongIds = user.dislikedSongs.filter(id => !validSongIds.includes(id.toString()));
+
+        // If there are invalid songs, update user's likedSongs
+        if (invalidSongIds.length > 0) {
+            user.dislikedSongs = validSongIds;
+            await user.save();
+            console.log(`Removed ${invalidSongIds.length} invalid song IDs from user's dislikedSongs songs`);
+        }
+
+        res.render('likedsongs', {
+            header: 'Disliked Songs',
+            likedSongs: dislikedSongs,
+            icon : 'fas fa-thumbs-down',
             //  playerContext,
         });
     } catch (err) {
@@ -213,114 +447,14 @@ module.exports.getlikedsongs = async (req, res) => {
 // };
 
 
-module.exports.gethome = async (req, res) => {
-    try {
-
-        // atrist context
-        if (req.session.inArtistPage) {
-            req.session.inArtistPage = false; // Reset after use
-            req.session.artistName = ''; // Clear artist name
-        }
-        if (req.session.playlistContext) {
-            req.session.playlistContext = null; // Reset playlist context
-        }
-        const playerContext = await getPlayerContext(req);
-         const mixedmodel = await mixedModel.find().lean(); // Mixed content (sliders)
-        let preferredArtists = []; // To store filtered artists
-
-       // Read preferredLanguages from cookies
-        let preferredLanguages = [];
-        let preferredLanguagesHashtags = [];
-        if (req.headers.cookie) {
-            const cookies = cookie.parse(req.headers.cookie);
-            if (cookies.preferredLanguages) {
-                try {
-                    preferredLanguages = JSON.parse(cookies.preferredLanguages);
-                    preferredLanguagesHashtags = preferredLanguages.map(l => `#${l}`);
-                } catch (e) {
-                    preferredLanguages = [];
-                }
-            }
-        }
-
-        // Filter artists using language hashtags if any
-         if (preferredLanguages.length > 0) {
-            preferredArtists = await Artist.find({
-                hashtags: { $in: preferredLanguagesHashtags.map(l => `${l}`) }
-            }).lean();
-
-        } else {
-            preferredArtists = await Artist.find().lean(); // fallback: all artists
-
-        }
-
-       // Optional: shuffle preferred artists
-        preferredArtists = preferredArtists.sort(() => Math.random() - 0.5);
-
-        res.render('mainpages/home', {
-            isLoggedIn: req.session.isLoggedIn || false,
-            ...playerContext,
-            artists: preferredArtists, // filtered or all
-            mixedmodel: mixedmodel
-        });
-    } catch (err) {
-        console.error('Home error:', err);
-        res.redirect('/');
-    }
-};
 
 
 
 
-module.exports.library = async (req, res) => {
-    try {
-        if (req.session.inArtistPage) {
-            req.session.inArtistPage = false; // Reset after use
-            req.session.artistName = ''; // Clear artist name
-        }
-        if (req.session.playlistContext) {
-            req.session.playlistContext = null; // Reset playlist context
-        }
-        const playerContext = await getPlayerContext(req);
 
-        if (!req.session.isLoggedIn || !req.session.loggeduser) {
-            return res.render('mainpages/library', {
-                isLoggedIn: false,
-                likedSongsCount: 0,
-                playlists: [],
-                recentSong: playerContext.recentSong,
-                lastPlaybackTime: playerContext.lastPlaybackTime,
-                isPlaying: playerContext.isPlaying
-            });
-        }
 
-        const user = await User.findOne({ username: req.session.loggeduser });
-        if (!user) {
-            throw new Error('User not found');
-        }
 
-        // Find playlists and populate songs
-        const playlists = await Playlist.find({ userId: user._id })
-            .populate('songs')
-            .lean();
-        const likedSongsCount = user.likedSongs ? user.likedSongs.length : 0;
 
-        res.render('mainpages/library', {
-            isLoggedIn: true,
-            likedSongsCount,
-            playlists,
-            username: user.username,
-            ...playerContext
-        });
-    } catch (err) {
-        console.error('Library error:', err);
-        res.redirect('/');
-    }
-};
-
-module.exports.getmusicplayer = (req, res) => {
-    res.render('musicplayer');
-}
 
 module.exports.getFeaturedPlaylist = async (req, res) => {
     try {
@@ -437,74 +571,7 @@ module.exports.getPersonMusic = async (req, res) => {
 };
 
 
-module.exports.getExplore = async (req, res) => {
-    try {
-        if (req.session.inArtistPage) {
-            req.session.inArtistPage = false; // Reset after use
-            req.session.artistName = ''; // Clear artist name
-        }
-        if (req.session.playlistContext) {
-            req.session.playlistContext = null; // Reset playlist context
-        }
-        // Get recent song data
-        let recentSong = null;
-        let lastPlaybackTime = 0;
 
-        if (req.session && req.session.recentlyplayed) {
-            recentSong = await Song.findById(req.session.recentlyplayed);
-            if (req.session.lastPlaybackSong === req.session.recentlyplayed) {
-                lastPlaybackTime = req.session.lastPlaybackTime || 0;
-                if (req.session.isPlaying ) {
-                    req.session.isPlaying = true; // Ensure isPlaying is set
-                } else {
-                    req.session.isPlaying = false; // Ensure isPlaying is set
-                }
-                
-            }
-        }
-
-        // Read preferredLanguages from cookies
-        let preferredLanguages = [];
-        if (req.headers.cookie) {
-            const cookies = cookie.parse(req.headers.cookie);
-            if (cookies.preferredLanguages) {
-                preferredLanguages = JSON.parse(cookies.preferredLanguages);
-            }
-        }
-
-
-        //  Filter songs using hashtags
-        let songFilter = {};
-        if (preferredLanguages.length > 0) {
-            songFilter = {
-                hashtags: { $in: preferredLanguages.map(l => `#${l}`) }
-            };
-        }
-
-        let allSongs = await Song.find(songFilter, 'name link hashtags _id');
-        allSongs = allSongs.sort(() => Math.random() - 0.5);
-
-        res.render('explore', {
-            songs: allSongs,
-            artists: ["ArijitSingh", "KK", "Badshah", "HoneySingh", "NehaKakkar"],
-            error: null,
-            recentSong,
-            lastPlaybackTime,
-            isPlaying: req.session.isPlaying || false,
-            preferredLanguages
-        });
-    } catch (err) {
-        console.error('Error fetching data:', err);
-        res.render('explore', {
-            songs: [],
-            artists: [],
-            error: 'Unable to load songs. Please try again.',
-            recentSong: null,
-            lastPlaybackTime: 0,
-            preferredLanguages: []
-        });
-    }
-};
 
 
 
@@ -574,6 +641,7 @@ module.exports.logout = (req, res) => {
 
 module.exports.songliked = async (req, res) => {
     try {
+        let isSongLiked;  
         const currentuser = req.session.loggeduser;
         if (!currentuser) {
             res.redirect('/login');
@@ -584,26 +652,91 @@ module.exports.songliked = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
+        if (user) {
+            isSongLiked = user.likedSongs.includes(req.body.objectId);
+            isSongDisliked = user.dislikedSongs.includes(req.body.objectId);
+        } else {
+            isSongLiked = false; // Default to false if user is not logged in
+            isSongDisliked = false; // Default to false if user is not logged in
+        }
+
         // Get clean ID string
-        const songId = req.body.objectId.toString().replace(/^ObjectId\("(.*)"\)$/, '$1');
+        const cleanSongId = req.body.objectId.toString().replace(/^ObjectId\("(.*)"\)$/, '$1');
 
         // Verify song exists using the ID
-        const song = await Song.findById(songId);
+        const song = await Song.findById(cleanSongId);
         if (!song) {
             return res.status(404).json({ error: 'Song not found' });
         }
 
         // Store only the ID string
-        if (!user.likedSongs.includes(songId)) {
-            user.likedSongs.push(songId);
+        if (!user.likedSongs.includes(cleanSongId)) {
+            user.likedSongs.push(cleanSongId);
             await user.save();
         }
         res.render('musicplayer', {
             songName: song.name,
             songLink: song.link,
-            songId: songId, // Pass clean ID
+            songId: cleanSongId, // Pass clean ID
             hashtags: song.hashtags,
-            isLoop: false  // Add this line
+            isLoop: false ,
+            backbutton: req.session.lastVisitedPage || '/explore',
+            isSongLiked: true, 
+            isSongDisliked: isSongDisliked 
+        });
+    } catch (err) {
+        console.error('Error in songliked:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+module.exports.songDisliked = async (req, res) => {
+    try {
+         let isSongLiked , isSongDisliked;
+        const currentuser = req.session.loggeduser;
+
+        if (!currentuser) {
+            res.redirect('/login');
+            return;
+        }
+        
+        const user = await User.findOne({ username: currentuser });
+
+        if (user) {
+            isSongLiked = user.likedSongs.includes(req.body.objectId);
+            isSongDisliked = user.dislikedSongs.includes(req.body.objectId);
+        } else {
+            isSongLiked = false; // Default to false if user is not logged in
+            isSongDisliked = false; // Default to false if user is not logged in
+        }
+        
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Get clean ID string
+        const cleanSongId = req.body.objectId.toString().replace(/^ObjectId\("(.*)"\)$/, '$1');
+
+        // Verify song exists using the ID
+        const song = await Song.findById(cleanSongId);
+        if (!song) {
+            return res.status(404).json({ error: 'Song not found' });
+        }
+
+        // Store only the ID string
+        if (!user.dislikedSongs.includes(cleanSongId)) {
+            user.dislikedSongs.push(cleanSongId);
+            await user.save();
+        }
+        res.render('musicplayer', {
+            songName: song.name,
+            songLink: song.link,
+            songId: cleanSongId, // Pass clean ID
+            hashtags: song.hashtags,
+            isLoop: false ,
+            backbutton: req.session.lastVisitedPage || '/explore',
+            isSongLiked: isSongLiked, // Check if song is liked
+            isSongDisliked: true // Set isSongDisliked to true
         });
     } catch (err) {
         console.error('Error in songliked:', err);
@@ -653,6 +786,7 @@ module.exports.postPlayer = async (req, res) => {
     try {
         const songId = req.body.objectId;
         const cleanSongId = songId.replace(/^ObjectId\("(.*)"\)$/, '$1');
+        let isSongLiked;
 
         const song = await Song.findById(cleanSongId);
         if (!song || !song.link) {
@@ -673,15 +807,25 @@ module.exports.postPlayer = async (req, res) => {
             }
         }
 
+        if(req.session.isLoggedIn && req.session.loggeduser) {
+             const user = await User.findOne({ username: req.session.loggeduser });
+              isSongLiked = user.likedSongs.includes(req.body.objectId);
+             isSongDisliked = user.dislikedSongs.includes(req.body.objectId);
+        } else {
+            isSongLiked = false; // Default to false if user is not logged in
+            isSongDisliked = false; // Default to false if user is not logged in
+        }
+
         res.render('player/musicplayer', {
             songName: song.name,
             songLink: song.link,
-            songId: cleanSongId,
+            songId: songId,
             hashtags: song.hashtags || [],
             autoplay: true,
             isLoop: false,
             playlists: playlists,
             backbutton: req.session.lastVisitedPage,
+            isSongLiked:  isSongLiked || false // Check if song is liked
         });
     } catch (err) {
         console.error('Error:', err);
@@ -695,7 +839,14 @@ module.exports.postPlayer = async (req, res) => {
 module.exports.getNextSong = async (req, res) => {
     try {
         let nextSong;
-    
+        let isSongLiked;
+        let user;
+
+        if (req.session.isLoggedIn && req.session.loggeduser) {
+          user = await User.findOne({ username: req.session.loggeduser });
+        }
+
+
         // Check if we're in playlist context
         if (req.session.playlistContext) {
             const { songs } = req.session.playlistContext;
@@ -718,6 +869,14 @@ module.exports.getNextSong = async (req, res) => {
                         hashtags: { $in: artistHashtags },
                         _id: { $ne: currentSongId } // Exclude current song
                     }).sort({ _id: 1 });
+
+                    if (user && user.dislikedSongs.includes(nextSong._id.toString())) {
+                        // If the next song is disliked, skip to the next one
+                        nextSong = await Song.findOne({
+                            hashtags: { $in: artistHashtags },
+                            _id: { $gt: req.session.recentlyplayed, $nin: user.dislikedSongs }
+                        }).sort({ _id: 1 });
+                    }
 
                     // Optional: wrap around to first match if needed
                     if (!nextSong) {
@@ -748,6 +907,14 @@ module.exports.getNextSong = async (req, res) => {
                     _id: { $gt: req.session.recentlyplayed }
                 }).sort({ _id: 1 });
 
+                if (req.session.isLoggedIn && user.dislikedSongs.includes(nextSong._id.toString())) {
+                    // If the next song is disliked, skip to the next one
+                    nextSong = await Song.findOne({
+                        hashtags: { $in: preferredLanguages.map(l => `#${l}`) },
+                        _id: { $gt: req.session.recentlyplayed, $nin: user.dislikedSongs }
+                    }).sort({ _id: 1 });
+                }
+
                 if (!nextSong) {
                     // If none found after current, get first matching
                     nextSong = await Song.findOne({
@@ -755,6 +922,15 @@ module.exports.getNextSong = async (req, res) => {
                     }).sort({ _id: 1 });
                 }
             }
+        }
+
+         if(req.session.isLoggedIn && req.session.loggeduser) {
+             const user = await User.findOne({ username: req.session.loggeduser });
+              isSongLiked = user.likedSongs.includes(nextSong._id.toString());
+              isSongDisliked = user.dislikedSongs.includes(nextSong._id.toString());
+        } else {
+            isSongLiked = false; // Default to false if user is not logged in
+            isSongDisliked = false; // Default to false if user is not logged in
         }
      
         // Update session
@@ -776,7 +952,9 @@ module.exports.getNextSong = async (req, res) => {
                 autoplay: true,
                 isLoop: false,
                 inPlaylist: !!req.session.playlistContext,
-                backbutton: req.session.lastVisitedPage || '/explore'
+                backbutton: req.session.lastVisitedPage || '/explore',
+                isSongLiked: isSongLiked || false ,
+                isSongDisliked: isSongDisliked || false,
             });
         }
     } catch (err) {
@@ -937,6 +1115,9 @@ module.exports.apiNextSongs = async (req, res) => {
 module.exports.getPreviousSong = async (req, res) => {
     try {
         let prevSong;
+        let isSongLiked, isSongDisliked;
+
+
 
         // Check if we're in playlist context
         if (req.session.playlistContext) {
@@ -959,6 +1140,15 @@ module.exports.getPreviousSong = async (req, res) => {
             return res.redirect('/explore');
         }
 
+        if(req.session.isLoggedIn && req.session.loggeduser) {
+             const user = await User.findOne({ username: req.session.loggeduser });
+              isSongLiked = user.likedSongs.includes(prevSong._id.toString());
+              isSongDisliked = user.dislikedSongs.includes(prevSong._id.toString());
+        } else {
+            isSongLiked = false; // Default to false if user is not logged in
+            isSongDisliked = false; // Default to false if user is not logged in
+        }
+
         req.session.recentlyplayed = prevSong._id;
         await req.session.save();
 
@@ -970,7 +1160,9 @@ module.exports.getPreviousSong = async (req, res) => {
             autoplay: true,
             isLoop: false,
             inPlaylist: !!req.session.playlistContext,
-            backbutton: req.session.lastVisitedPage || '/explore'
+            backbutton: req.session.lastVisitedPage || '/explore',
+            isSongLiked: isSongLiked || false,
+            isSongDisliked: isSongDisliked || false
         });
     } catch (err) {
         console.error('Error getting previous song:', err);
@@ -1087,44 +1279,44 @@ module.exports.removeSongFromPlaylist = async (req, res) => {
 };
 
 // Update library function to properly fetch playlists
-module.exports.library = async (req, res) => {
-    try {
-        const playerContext = await getPlayerContext(req);
+// module.exports.library = async (req, res) => {
+//     try {
+//         const playerContext = await getPlayerContext(req);
 
-        if (!req.session.isLoggedIn || !req.session.loggeduser) {
-            return res.render('mainpages/library', {
-                isLoggedIn: false,
-                likedSongsCount: 0,
-                playlists: [],
-                recentSong: playerContext.recentSong,
-                lastPlaybackTime: playerContext.lastPlaybackTime,
-                isPlaying: playerContext.isPlaying
-            });
-        }
+//         if (!req.session.isLoggedIn || !req.session.loggeduser) {
+//             return res.render('mainpages/library', {
+//                 isLoggedIn: false,
+//                 likedSongsCount: 0,
+//                 playlists: [],
+//                 recentSong: playerContext.recentSong,
+//                 lastPlaybackTime: playerContext.lastPlaybackTime,
+//                 isPlaying: playerContext.isPlaying
+//             });
+//         }
 
-        const user = await User.findOne({ username: req.session.loggeduser });
-        if (!user) {
-            throw new Error('User not found');
-        }
+//         const user = await User.findOne({ username: req.session.loggeduser });
+//         if (!user) {
+//             throw new Error('User not found');
+//         }
 
-        // Find playlists and populate songs
-        const playlists = await Playlist.find({ userId: user._id })
-            .populate('songs')
-            .lean();
-        const likedSongsCount = user.likedSongs ? user.likedSongs.length : 0;
+//         // Find playlists and populate songs
+//         const playlists = await Playlist.find({ userId: user._id })
+//             .populate('songs')
+//             .lean();
+//         const likedSongsCount = user.likedSongs ? user.likedSongs.length : 0;
 
-        res.render('mainpages/library', {
-            isLoggedIn: true,
-            likedSongsCount,
-            playlists,
-            username: user.username,
-            ...playerContext
-        });
-    } catch (err) {
-        console.error('Error in library:', err);
-        res.redirect('/');
-    }
-};
+//         res.render('mainpages/library', {
+//             isLoggedIn: true,
+//             likedSongsCount,
+//             playlists,
+//             username: user.username,
+//             ...playerContext
+//         });
+//     } catch (err) {
+//         console.error('Error in library:', err);
+//         res.redirect('/');
+//     }
+// };
 
 // Toggle loop functionality
 module.exports.toggleLoop = async (req, res) => {

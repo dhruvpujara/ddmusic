@@ -5,6 +5,8 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session');
 const mongoose = require('mongoose');
+const MongoStore = require('connect-mongo');
+
 
 
 // local variables
@@ -34,10 +36,26 @@ app.set('views', [
 ]);
 
 // Session configuration
+// app.use(session({
+//     secret: process.env.SESSION_SECRET || 'your-secret-key',
+//     resave: true, // Changed to true
+//     saveUninitialized: true, // Changed to true
+//     cookie: {
+//         maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+//         secure: process.env.NODE_ENV === 'production',
+//         httpOnly: true
+//     }
+// }));
+
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: true, // Changed to true
     saveUninitialized: true, // Changed to true
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI,
+        collectionName: 'sessions',
+        ttl: 60 * 60 * 24 * 7 // 1 week in seconds
+    }),
     cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
         secure: process.env.NODE_ENV === 'production',

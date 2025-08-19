@@ -4,13 +4,27 @@ const usercontroller = require('../controller/usercontroller');
 const adminController = require('../controller/admincontroller');
 const playlistController = require('../controllers/playlistController');
 
-// Regular routes
+// started to order 
+
+// mainpages routes
 router.get('/', usercontroller.gethome);
-router.get('/player', usercontroller.getmusicplayer);
-router.get('/library', usercontroller.library);
 router.get('/explore', usercontroller.getExplore);
+router.get('/library', usercontroller.library);
+
+
+// Regular routes
+router.get('/player', usercontroller.getmusicplayer);
+
+// remaining routes to setup in order
+
+
+
+
+
+
 router.post('/player', usercontroller.postPlayer);
 router.get('/likedsongs', usercontroller.getlikedsongs);
+router.get('/dislikedsongs', usercontroller.getdislikedsongs);
 router.get('/recent', usercontroller.getrecentlyplayed);
 router.get('/player/next', usercontroller.getNextSong);
 router.get('/api/next-song/:songId', usercontroller.apiNextSong); 
@@ -22,7 +36,6 @@ router.post('/update-playback', usercontroller.postUpdateSongInfo); // New route
 // Playlist routes
 router.get('/playlists', playlistController.getUserPlaylists);
 router.get('/playlist/:id', usercontroller.getPlaylist);
-
 router.post('/delete-playlist/:id', usercontroller.deletePlaylist); // New route for deleting a playlist
 router.post('/playlist/remove-song', usercontroller.removeSongFromPlaylist); // Route for removing songs
 router.post('/playlist/create', playlistController.createPlaylist);
@@ -58,5 +71,6 @@ router.get('/artist/:artist', usercontroller.getArtistMusic);
 
 // Like song route
 router.post('/like', usercontroller.songliked);
+router.post('/dislike', usercontroller.songDisliked);
 
 module.exports = router;
