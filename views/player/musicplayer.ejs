@@ -191,17 +191,28 @@
                 
 
             <!-- Song Info -->
-            <div class="text-center mt-8 mb-6 w-full">
-                <h2
-                    id="songName"
-                    class=" text-2xl font-bold mb-2 bg-gradient-to-r from-violet-200 to-violet-400 bg-clip-text text-transparent">
-                    <%=songName%>
-                </h2>
-                <p class="text-violet-300/30">DDMusic Player</p>
-            </div>
+<div class="text-center mt-8 mb-6 w-full">
+  <h2
+    id="songName"
+    class="text-2xl font-bold mb-2 bg-gradient-to-r from-violet-200 to-violet-400 bg-clip-text text-transparent">
+    <%= songName %>
+  </h2>
 
+  <!-- Replace "DDMusic Player" with styled toggle -->
+  <label class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 cursor-pointer">
+    <input type="checkbox" id="wakelock-toggle"
+      class="form-checkbox h-5 w-5 text-violet-500 rounded focus:ring-violet-500">
+    <span class="text-sm font-medium text-white/80 tracking-wide">AutoPlay</span>
+  </label>
+</div>
+
+
+
+            
             <!-- Audio Controls -->
             <div class="w-full bg-black/40 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-2xl">
+
+
                 <audio id="audioPlayer" class="hidden" preload="auto" autoplay>
                     <source src="<%= songLink %>" type="audio/mp3" onerror="handleAudioError()" <%=isLoop ? 'loop' : ''
                         %>">
@@ -253,36 +264,6 @@
                     let currentSongId = '<%= songId %>';
                     let songQueue = []; // Cache for upcoming songs
                     const backBtn = document.getElementById('backBtn');
-                    let wakeLock = null;
-
-
-async function requestWakeLock() {
-  try {
-    if ('wakeLock' in navigator) {
-      wakeLock = await navigator.wakeLock.request('screen');
-      console.log('Wake Lock is active');
-
-      // Optional: handle tab switching
-      wakeLock.addEventListener('release', () => {
-        console.log('Wake Lock was released');
-      });
-
-      // Reacquire on visibility change
-      document.addEventListener('visibilitychange', async () => {
-        if (wakeLock !== null && document.visibilityState === 'visible') {
-          wakeLock = await navigator.wakeLock.request('screen');
-          console.log('Wake Lock reacquired');
-        }
-      });
-    } else {
-      console.warn('Wake Lock API not supported in this browser');
-    }
-  } catch (err) {
-    console.error(`Wake Lock error: ${err.name}, ${err.message}`);
-  }
-}
-
-
 
 if (backBtn) {
     backBtn.addEventListener('click', function (e) {
@@ -355,7 +336,6 @@ if (backBtn) {
                             if (audio.paused) {
                                 console.log('Attempting to play audio...');
                                 await audio.play();
-                                requestWakeLock();
                                 playPauseBtn.innerHTML = '<i class="fas fa-pause text-xl"></i>';
                                 fetch('/update-playback-time', {
                                     method: 'POST',
@@ -369,7 +349,6 @@ if (backBtn) {
 
                             } else {
                                 audio.pause();
-                                requestWakeLock();
                                 playPauseBtn.innerHTML = '<i class="fas fa-play text-xl pl-1"></i>';
                                 fetch('/update-playback-time', {
                                     method: 'POST',
@@ -736,6 +715,70 @@ if (backBtn) {
             modal.classList.toggle('hidden');
         }
     </script>
+
+   <script>
+let wakeLock = null;
+
+async function enableWakeLock() {
+  try {
+    if ("wakeLock" in navigator) {
+      wakeLock = await navigator.wakeLock.request("screen");
+      sessionStorage.setItem("wakelock", "true");
+      console.log("Wake Lock is active");
+
+      wakeLock.addEventListener("release", () => {
+        console.log("Wake Lock released by system");
+      });
+    } else {
+      console.warn("Wake Lock API not supported in this browser");
+    }
+  } catch (err) {
+    console.error(`Wake Lock error: ${err.name}, ${err.message}`);
+  }
+}
+
+function disableWakeLock() {
+  if (wakeLock) {
+    wakeLock.release();
+    wakeLock = null;
+  }
+  sessionStorage.removeItem("wakelock");
+  console.log("Wake Lock manually released");
+}
+
+// Init toggle state on load
+document.addEventListener("DOMContentLoaded", () => {
+  const toggle = document.getElementById("wakelock-toggle");
+
+  if (!toggle) return;
+
+  // Restore state if previously enabled
+  if (sessionStorage.getItem("wakelock") === "true") {
+    toggle.checked = true;
+    enableWakeLock();
+  }
+
+  // Toggle listener
+  toggle.addEventListener("change", () => {
+    if (toggle.checked) {
+      enableWakeLock();
+    } else {
+      disableWakeLock();
+    }
+  });
+});
+
+// Reacquire if tab is hidden and comes back
+document.addEventListener("visibilitychange", async () => {
+  if (wakeLock !== null && document.visibilityState === "visible") {
+    wakeLock = await navigator.wakeLock.request("screen");
+    console.log("Wake Lock re-acquired after visibility change");
+  }
+});
+</script>
+
+
+
 </body>
 
 </html>
