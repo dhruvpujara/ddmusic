@@ -13,7 +13,13 @@ const songSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    public_id: {
+        type: String,
+    },
+    slugName: {
+        type: String,
+    },
 });
 
 module.exports = mongoose.model('Song', songSchema);

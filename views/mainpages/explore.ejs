@@ -1,172 +1,444 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Explore - DDMusic</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/output.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explore - DDMusic</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/output.css">
+  <style>
+    .search-container {
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      width: 100%;
+      position: relative;
+    }
+
+    .search-form {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .search-input {
+      width: 0;
+      opacity: 0;
+      transition: all 0.3s ease;
+      padding: 0;
+      border: none;
+      flex-shrink: 0;
+    }
+
+    .search-container.expanded .search-input {
+      width: 80%;
+      /* 80% of available space */
+      opacity: 1;
+      padding: 0.5rem 1rem;
+      flex-shrink: 1;
+      margin-right: 1%;
+      /* 1% spacing between input and button */
+    }
+
+    .search-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: #9CA3AF;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      min-width: 40px;
+      flex-shrink: 0;
+    }
+
+    .search-toggle:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .search-toggle i {
+      font-size: 1.125rem;
+      transition: all 0.3s ease;
+    }
+
+    .search-container.expanded .search-toggle {
+      width: 15%;
+      /* 15% of available space */
+      background: linear-gradient(to right, #EC4899, #8B5CF6);
+      color: white;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      min-width: 60px;
+      flex-shrink: 0;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .search-container.expanded .search-toggle i {
+      margin-right: 0;
+    }
+
+    .search-toggle-text {
+      display: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .search-container.expanded .search-toggle-text {
+      display: none;
+      /* Hide text on mobile, show only icon */
+    }
+
+    .explore-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: white;
+      transition: all 0.3s ease;
+      opacity: 1;
+      transform: translateX(0);
+      white-space: nowrap;
+      overflow: hidden;
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .search-container.expanded .explore-title {
+      opacity: 0;
+      transform: translateY(-50%) translateX(-100%);
+      width: 0;
+      height: 0;
+      overflow: hidden;
+      visibility: hidden;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    /* Mobile-specific styles */
+    @media (max-width: 768px) {
+      .search-container.expanded .search-input {
+        width: 75%;
+        /* 75% for mobile */
+        margin-right: 1%;
+      }
+
+      .search-container.expanded .search-toggle {
+        width: 20%;
+        /* 20% for mobile */
+        min-width: 50px;
+      }
+
+      .search-toggle-text {
+        font-size: 0.75rem;
+      }
+
+      .search-container.expanded .search-toggle-text {
+        display: none;
+        /* Always hide text on mobile */
+      }
+
+      /* Ensure explore title is completely hidden */
+      .search-container.expanded .explore-title {
+        display: none;
+      }
+    }
+
+    /* Tablet and desktop */
+    @media (min-width: 769px) {
+      .search-container.expanded .search-toggle-text {
+        display: inline-block;
+        /* Show text on desktop */
+      }
+
+      .search-container.expanded .search-toggle i {
+        margin-right: 0.5rem;
+      }
+    }
+
+    /* Very small mobile devices */
+    @media (max-width: 375px) {
+      .search-container.expanded .search-input {
+        width: 70%;
+        /* 70% for very small screens */
+        margin-right: 2%;
+      }
+
+      .search-container.expanded .search-toggle {
+        width: 25%;
+        /* 25% for very small screens */
+        min-width: 45px;
+      }
+
+      .search-input {
+        font-size: 0.875rem;
+        padding: 0.4rem 0.75rem;
+      }
+    }
+  </style>
 </head>
+
 <body class="bg-black min-h-screen flex flex-col">
-    <!-- Header -->
-    <header class="fixed top-0 w-full bg-black/90 backdrop-blur-lg z-50 px-4 py-3 border-b border-gray-800">
-        <div class="flex justify-between items-center">
-            <h1 class="text-xl font-bold text-white">Explore</h1>
-            <button class="text-gray-400"><i class="fas fa-search"></i></button>
+  <!-- Header -->
+  <header class="fixed top-0 w-full bg-black/90 backdrop-blur-lg z-50 px-4 py-3 border-b border-gray-800">
+    <div class="header-content">
+      <!-- Explore Title -->
+      <h1 class="explore-title">Explore</h1>
+
+      <!-- Search Container -->
+      <div class="search-container" id="searchContainer">
+        <form action="/search" method="POST" class="search-form" id="searchForm">
+          <input type="text" name="songName" id="searchInput" placeholder="Search songs..."
+            class="search-input bg-gray-800 text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            autocomplete="off">
+          <!-- Changed type from "button" to "submit" -->
+          <button type="submit" id="searchToggle" class="search-toggle">
+            <i class="fas fa-search"></i>
+            <span class="search-toggle-text">Search</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+
+  <div class="container mx-auto px-4 py-8 max-w-5xl pt-24">
+    <form action="/preferred-languages" method="POST">
+      <div class="bg-gray-900/50 rounded-lg p-6 mt-4 h-44 overflow-hidden">
+        <h3 class="text-white text-base font-semibold mb-4 text-center">Preferred Languages</h3>
+
+        <!-- Scrollable tags with checkboxes -->
+
+        <div class="flex space-x-4 overflow-x-auto pb-3 scrollbar-hide mb-4">
+          <% const languages=['hindi', 'gujarati' , 'english' , 'punjabi' ]; %>
+            <% languages.forEach((lang, index)=> { %>
+              <label for="lang-<%= index %>"
+                class="flex items-center gap-2 min-w-[130px] px-4 py-2 bg-gray-800 text-gray-200 rounded-full text-sm font-medium cursor-pointer transition-all hover:bg-gray-700">
+                <input type="checkbox" name="languages" value="<%= lang %>" id="lang-<%= index %>"
+                  class="accent-violet-500 w-4 h-4" <%=preferredLanguages && preferredLanguages.includes(lang)
+                  ? 'checked' : '' %>>
+                <span>
+                  <%= lang.charAt(0).toUpperCase() + lang.slice(1) %>
+                </span>
+              </label>
+              <% }); %>
         </div>
-    </header>
 
-
-<div class="container mx-auto px-4 py-8 max-w-5xl pt-24">
-<form action="/preferred-languages" method="POST">
-  <div class="bg-gray-900/50 rounded-lg p-6 mt-4 h-44 overflow-hidden">
-    <h3 class="text-white text-base font-semibold mb-4 text-center">Preferred Languages</h3> -->
-
-     <!-- Scrollable tags with checkboxes -->
-
- <div class="flex space-x-4 overflow-x-auto pb-3 scrollbar-hide mb-4">
-      <% const languages = ['hindi', 'gujarati', 'english', 'punjabi']; %>
-      <% languages.forEach((lang, index) => { %>
-      <label for="lang-<%= index %>" class="flex items-center gap-2 min-w-[130px] px-4 py-2 bg-gray-800 text-gray-200 rounded-full text-sm font-medium cursor-pointer transition-all hover:bg-gray-700"
-">
-      <input 
-      type="checkbox" 
-      name="languages" 
-      value="<%= lang %>" 
-      id="lang-<%= index %>" 
-      class="accent-violet-500 w-4 h-4"
-      <%= preferredLanguages && preferredLanguages.includes(lang) ? 'checked' : '' %>>
-      <span><%= lang.charAt(0).toUpperCase() + lang.slice(1) %></span>
-      </label>
-<% }); %>
-    </div>  
-
-    <!-- Submit -->
-    <button type="submit" class="w-full py-2 text-sm font-semibold bg-gradient-to-r from-pink-500 to-violet-500 text-white rounded-lg hover:opacity-90 transition">
-      Submit Preferences
-    </button>
+        <!-- Submit -->
+        <button type="submit"
+          class="w-full py-2 text-sm font-semibold bg-gradient-to-r from-pink-500 to-violet-500 text-white rounded-lg hover:opacity-90 transition">
+          Submit Preferences
+        </button>
+      </div>
+    </form>
   </div>
-</form>
-</div>
 
-<!-- regional section -->
-
-<!-- <form action="/preferred-languages" method="POST">
-  <div class="bg-gray-900/50 rounded-lg p-6 mt-4 h-44 overflow-hidden">
-    <h3 class="text-white text-base font-semibold mb-4 text-center">Preferred songs from</h3> -->
-
-     <!-- Scrollable tags with checkboxes -->
-
- <!-- <div class="flex space-x-4 overflow-x-auto pb-3 scrollbar-hide mb-4">
-      <% const nations = ['india', 'sweeden', 'korea', 'china']; %>
-      <% nations.forEach((nation, index) => { %>
-      <label for="nation-<%= index %>" class="flex items-center gap-2 min-w-[130px] px-4 py-2 bg-gray-800 text-gray-200 rounded-full text-sm font-medium cursor-pointer transition-all hover:bg-gray-700"
-">
-      <input 
-      type="checkbox" 
-      name="nations" 
-      value="<%= nation %>" 
-      id="nation-<%= index %>" 
-      class="accent-violet-500 w-4 h-4"
-      <%= nations && nations.includes(nation) ? 'checked' : '' %>>
-      <span><%= nation.charAt(0).toUpperCase() + nation.slice(1) %></span>
-      </label>
-<% }); %>
-    </div>   -->
-
-    <!-- Submit -->
-    <!-- <button type="submit" class="w-full py-2 text-sm font-semibold bg-gradient-to-r from-pink-500 to-violet-500 text-white rounded-lg hover:opacity-90 transition">
-      Submit nation
-    </button>
-  </div>
-</form>
-</div> -->
-
-        <!-- Songs List -->
-      <div class="w-full max-w-4xl mx-auto px-4 mt-28 space-y-3">
-  <% songs.forEach(song => { %>
-    <form action="/player" method="POST" class="w-full " >
-      <input type="hidden" name="objectId" value="<%= song._id %>">
-      <button type="submit" 
-      id="wakeLockButton"
-        class="w-full bg-gradient-to-r from-gray-800/30 via-gray-800/40 to-gray-800/30 
+  <!-- Songs List -->
+  <div class="w-full max-w-4xl mx-auto px-4 mt-28 space-y-3">
+    <% songs.forEach(song=> { %>
+      <form action="/player" method="POST" class="w-full">
+        <input type="hidden" name="objectId" value="<%= song._id %>">
+        <button type="submit"
+          class="w-full bg-gradient-to-r from-gray-800/30 via-gray-800/40 to-gray-800/30 
                backdrop-blur-sm rounded-lg p-4 flex items-center justify-between 
                hover:bg-gradient-to-r hover:from-indigo-900/40 hover:via-purple-900/40 hover:to-pink-900/40 
-               transition-all duration-500 transform hover:scale-[1.01] hover:shadow-lg hover:shadow-purple-500/10 music_bar wakeLock">
-        <div class="flex items-center gap-3 flex-1 min-w-0">
-          <div class="w-9 h-9 bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 
+               transition-all duration-500 transform hover:scale-[1.01] hover:shadow-lg hover:shadow-purple-500/10 music-bar">
+          <div class="flex items-center gap-3 flex-1 min-w-0">
+            <div class="w-9 h-9 bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 
                       rounded-lg flex-shrink-0 flex items-center justify-center">
-            <i class="fas fa-music text-base text-white/90"></i>
+              <i class="fas fa-music text-base text-white/90"></i>
+            </div>
+            <h3 class="text-sm font-medium text-white/90 truncate">
+              <%= song.name %>
+            </h3>
           </div>
-          <h3 class="text-sm font-medium text-white/90 truncate"><%= song.name %></h3>
-        </div>
-        <div class="w-7 h-7 bg-white/5 hover:bg-white/10 rounded-full 
+          <div class="w-7 h-7 bg-white/5 hover:bg-white/10 rounded-full 
                     flex items-center justify-center transition-all duration-300 hover:scale-110 flex-shrink-0">
-          <i class="fas fa-play text-xs text-purple-400 hover:text-purple-300"></i>
-        </div>
-      </button>
-    </form>
-  <% }); %>
-</div>
+            <i class="fas fa-play text-xs text-purple-400 hover:text-purple-300"></i>
+          </div>
+        </button>
+      </form>
+      <% }); %>
+  </div>
 
-    </div>
-
-    <%- include('../partials/miniplayer') %>
+  <%- include('../partials/miniplayer') %>
 
     <!-- Bottom Navigation -->
     <nav class="fixed bottom-0 left-0 right-0 w-full bg-black/90 backdrop-blur-lg border-t border-gray-800 z-50">
-        <div class="flex justify-around py-3">
-            <a href="/" class="text-gray-400 flex flex-col items-center">
-                <i class="fas fa-home"></i>
-                <span class="text-xs mt-1">Home</span>
-            </a>
-            <a href="/explore" class="text-white flex flex-col items-center">
-                <i class="fas fa-compass"></i>
-                <span class="text-xs mt-1">Explore</span>
-            </a>
-            <a href="/library" class="text-gray-400 flex flex-col items-center">
-                <i class="fas fa-heart"></i>
-                <span class="text-xs mt-1">Library</span>
-            </a>
-            <a href="/profile" class="text-gray-400 flex flex-col items-center">
-                <i class="fas fa-user"></i>
-                <span class="text-xs mt-1">Profile</span>
-            </a>
-        </div>
+      <div class="flex justify-around py-3">
+        <a href="/" class="text-gray-400 flex flex-col items-center">
+          <i class="fas fa-home"></i>
+          <span class="text-xs mt-1">Home</span>
+        </a>
+        <a href="/explore" class="text-white flex flex-col items-center">
+          <i class="fas fa-compass"></i>
+          <span class="text-xs mt-1">Explore</span>
+        </a>
+        <a href="/library" class="text-gray-400 flex flex-col items-center">
+          <i class="fas fa-heart"></i>
+          <span class="text-xs mt-1">Library</span>
+        </a>
+        <a href="/profile" class="text-gray-400 flex flex-col items-center">
+          <i class="fas fa-user"></i>
+          <span class="text-xs mt-1">Profile</span>
+        </a>
+      </div>
     </nav>
 
     <script>
-     const music_bar = document.getElementById('wakeLockButton');
-    music_bar.addEventListener('click', () => {
-      console.log('Music bar clicked');
-      requestWakeLock();
-    });
+      // Search functionality
+      const searchContainer = document.getElementById('searchContainer');
+      const searchToggle = document.getElementById('searchToggle');
+      const searchInput = document.getElementById('searchInput');
+      const searchForm = document.getElementById('searchForm');
+      const exploreTitle = document.querySelector('.explore-title');
 
-      async function requestWakeLock() {
-  try {
-    if ('wakeLock' in navigator) {
-      wakeLock = await navigator.wakeLock.request('screen');
-      console.log('Wake Lock is active');
-
-      // Optional: handle tab switching
-      wakeLock.addEventListener('release', () => {
-        console.log('Wake Lock was released');
+      // Toggle search bar expansion
+      searchToggle.addEventListener('click', function (e) {
+        // If search is not expanded, prevent form submission and expand
+        if (!searchContainer.classList.contains('expanded')) {
+          e.preventDefault();
+          expandSearchBar();
+        }
+        // If search is expanded, let the form submit normally
+        // The form will submit with POST method and songName in req.body
       });
 
-      // Reacquire on visibility change
-      document.addEventListener('visibilitychange', async () => {
-        if (wakeLock !== null && document.visibilityState === 'visible') {
-          wakeLock = await navigator.wakeLock.request('screen');
-          console.log('Wake Lock reacquired');
+      // Handle Enter key press
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          if (!searchContainer.classList.contains('expanded')) {
+            e.preventDefault();
+            expandSearchBar();
+          }
+          // If expanded, let the form submit normally
+        } else if (e.key === 'Escape') {
+          if (searchContainer.classList.contains('expanded') && searchInput.value.trim() === '') {
+            e.preventDefault();
+            collapseSearchBar();
+          }
         }
       });
-    } else {
-      console.warn('Wake Lock API not supported in this browser');
-    }
-  } catch (err) {
-    console.error(`Wake Lock error: ${err.name}, ${err.message}`);
-  }
-}
+
+      function expandSearchBar() {
+        searchContainer.classList.add('expanded');
+        // Completely hide explore title
+        exploreTitle.style.display = 'none';
+        exploreTitle.style.visibility = 'hidden';
+        exploreTitle.style.opacity = '0';
+        exploreTitle.style.width = '0';
+        exploreTitle.style.height = '0';
+        exploreTitle.style.overflow = 'hidden';
+
+        setTimeout(() => {
+          searchInput.focus();
+        }, 100);
+      }
+
+      function collapseSearchBar() {
+        searchContainer.classList.remove('expanded');
+        searchInput.value = '';
+        searchInput.blur();
+
+        // Show explore title again
+        exploreTitle.style.display = 'block';
+        exploreTitle.style.visibility = 'visible';
+        exploreTitle.style.opacity = '1';
+        exploreTitle.style.width = 'auto';
+        exploreTitle.style.height = 'auto';
+        exploreTitle.style.overflow = 'visible';
+      }
+
+      // Close search bar when clicking outside (only if empty)
+      document.addEventListener('click', (e) => {
+        const isClickInsideSearch = searchContainer.contains(e.target) ||
+          searchToggle.contains(e.target);
+
+        if (!isClickInsideSearch &&
+          searchContainer.classList.contains('expanded') &&
+          searchInput.value.trim() === '') {
+          collapseSearchBar();
+        }
+      });
+
+      // Keep search expanded if there's text
+      searchInput.addEventListener('input', () => {
+        if (searchInput.value.trim() !== '' && !searchContainer.classList.contains('expanded')) {
+          expandSearchBar();
+        }
+      });
+
+      // Auto-expand search if there's existing text on page load
+      document.addEventListener('DOMContentLoaded', () => {
+        // Check if we're coming from a search (you might need to pass this from server)
+        // For now, just check URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchQuery = urlParams.get('q'); // Adjust this based on your implementation
+
+        if (searchQuery) {
+          searchInput.value = searchQuery;
+          expandSearchBar();
+        }
+
+        // Force hide explore title if search is expanded
+        if (searchContainer.classList.contains('expanded')) {
+          exploreTitle.style.display = 'none';
+          exploreTitle.style.visibility = 'hidden';
+        }
+      });
+
+      // Wake Lock functionality for all music bars
+      const musicBars = document.querySelectorAll('.music-bar');
+      let wakeLock = null;
+
+      musicBars.forEach(bar => {
+        bar.addEventListener('click', () => {
+          console.log('Music bar clicked');
+          requestWakeLock();
+        });
+      });
+
+      async function requestWakeLock() {
+        try {
+          if ('wakeLock' in navigator) {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log('Wake Lock is active');
+
+            // Optional: handle tab switching
+            wakeLock.addEventListener('release', () => {
+              console.log('Wake Lock was released');
+            });
+
+            // Reacquire on visibility change
+            document.addEventListener('visibilitychange', async () => {
+              if (wakeLock !== null && document.visibilityState === 'visible') {
+                wakeLock = await navigator.wakeLock.request('screen');
+                console.log('Wake Lock reacquired');
+              }
+            });
+          } else {
+            console.warn('Wake Lock API not supported in this browser');
+          }
+        } catch (err) {
+          console.error(`Wake Lock error: ${err.name}, ${err.message}`);
+        }
+      }
     </script>
 </body>
+
 </html>

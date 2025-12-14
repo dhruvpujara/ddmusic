@@ -1,51 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DDMusic Mobile</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/output.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DDMusic Mobile</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/output.css">
 
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
 
-    <style>
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-        /* Add custom style for the dialogue header */
-        .dialogue-header {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #f472b6; /* pink-400 */
-            font-family: 'Georgia', 'Times New Roman', Times, serif;
-            letter-spacing: 0.02em;
-            background: linear-gradient(90deg, #f472b6 0%, #a78bfa 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-fill-color: transparent;
-            text-shadow: 0 2px 8px rgba(167, 139, 250, 0.2);
-            padding: 0.25rem 0;
-        }
+  <style>
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
 
-        [x-cloak] { display: none !important; }
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
 
-    </style>
+    /* Add custom style for the dialogue header */
+    .dialogue-header {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #f472b6;
+      /* pink-400 */
+      font-family: 'Georgia', 'Times New Roman', Times, serif;
+      letter-spacing: 0.02em;
+      background: linear-gradient(90deg, #f472b6 0%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-fill-color: transparent;
+      text-shadow: 0 2px 8px rgba(167, 139, 250, 0.2);
+      padding: 0.25rem 0;
+    }
+
+    [x-cloak] {
+      display: none !important;
+    }
+  </style>
 </head>
 
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-9DMMG2K7DR"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
+  function gtag() { dataLayer.push(arguments); }
   gtag('js', new Date());
 
   gtag('config', 'G-9DMMG2K7DR');
@@ -54,248 +59,500 @@
 <body x-data="{ showUpdates: false }" class="bg-black min-h-screen flex flex-col">
 
 
-  
-    <!-- Top Bar -->
-<header class="fixed top-0 w-full bg-black/90 backdrop-blur-lg z-50 px-4 py-3 border-b border-gray-800">
-  <div class="flex items-center justify-center relative">
-    <!-- Centered Title -->
-    <span class="dialogue-header">Feel the Music</span>
 
-    <!-- Updates Button (right corner, does not affect centering) -->
-    <button @click="showUpdates = true"
-            class="absolute right-4 top-1/2 -translate-y-1/2 text-white/90 hover:text-white p-2"
-            aria-label="Show updates and tips">
-      <i class="fas fa-info-circle text-xl"></i>
-    </button>
-  </div>
-</header>
+  <!-- Top Bar -->
+  <header class="fixed top-0 w-full bg-black/90 backdrop-blur-lg z-50 px-4 py-3 border-b border-gray-800">
+    <div class="flex items-center justify-center relative">
+      <!-- Centered Title -->
+      <span class="dialogue-header">Feel the Music</span>
 
-            <!-- Main Content Area -->
-            <main class="flex-1 mt-16 mb-32 px-4">
-
-            <!-- Image Slider -->
-<!-- Tribute to the Legend Slider (Auto + Swipe + Clickable) -->
-<!-- <section class="w-full px-4 py-4">
-  <div x-data="slider()" class="relative w-full aspect-[3/1] sm:aspect-[16/5] overflow-hidden rounded-lg shadow-md">
-     -->
-    <!-- Slides Wrapper -->
-    <!-- <div
-      class="flex w-full h-full transition-transform duration-500 ease-in-out"
-      :style="`transform: translateX(-${(current - 1) * 100}%);`"
-      @touchstart="start($event)"
-      @touchmove="move($event)"
-      @touchend="end()"
-    >
-      <template x-for="(img, index) in images" :key="index">
-        <a :href="`/Tribute/${encodeURIComponent(img.name)}`" class="block w-full h-full relative flex-shrink-0">
-          <img :src="img.src" :alt="img.name"
-               class="w-full h-full object-cover rounded-lg" />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent rounded-lg"></div>
-        </a>
-      </template>
-    </div> -->
-
-    <!-- Dots -->
-    <!-- <div class="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-20 flex space-x-1">
-      <template x-for="(img, index) in images" :key="'dot-' + index">
-        <div
-          :class="{
-            'bg-white': index + 1 === current,
-            'bg-white/30': index + 1 !== current
-          }"
-          class="w-2.5 h-2.5 rounded-full"
-        ></div>
-      </template>
+      <!-- Updates Button (right corner, does not affect centering) -->
+      <button @click="showUpdates = true"
+        class="absolute right-4 top-1/2 -translate-y-1/2 text-white/90 hover:text-white p-2"
+        aria-label="Show updates and tips">
+        <i class="fas fa-info-circle text-xl"></i>
+      </button>
     </div>
-  </div>
-</section> -->
+  </header>
 
+  <!-- Main Content Area -->
+  <main class="flex-1 mt-16 mb-32 px-4">
 
-        <script>
-  document.addEventListener("alpine:init", () => {
-    Alpine.data("slider", () => ({
-      current: 1,
-      startX: 0,
-      endX: 0,
-      interval: null,
-      images: <%- JSON.stringify(mixedmodel.map(model => ({ name: model.name, src: model.thumbnail }))) %>,
+    <!-- Hero Slider - EJS Loop Version -->
+    <section class="w-full px-4 py-4">
+      <div x-data="imageSlider()" x-init="init()" class="relative overflow-hidden rounded-xl shadow-lg"
+        style="height: 300px;">
 
-      start(e) {
-        this.startX = e.touches[0].clientX;
-        clearInterval(this.interval);
-      },
-      move(e) {
-        this.endX = e.touches[0].clientX;
-      },
-      end() {
-        if (this.startX - this.endX > 50) this.next();
-        else if (this.endX - this.startX > 50) this.prev();
-        this.startAutoSlide();
-      },
-      next() {
-        this.current = this.current < this.images.length ? this.current + 1 : 1;
-      },
-      prev() {
-        this.current = this.current > 1 ? this.current - 1 : this.images.length;
-      },
-      startAutoSlide() {
-        this.interval = setInterval(() => this.next(), 4000);
-      },
-      init() {
-        this.startAutoSlide();
-      }
-    }));
-  });
-</script>
+        <!-- Slides Container -->
+        <div class="flex w-full h-full transition-transform duration-500 ease-in-out"
+          :style="`transform: translateX(-${(activeSlide - 1) * 100}%);`">
 
-        <!-- Featured Section -->
-        <section class="py-4">
-            <h2 class="text-white text-lg font-semibold mb-3">Featured Playlists</h2>
-            <div class="flex overflow-x-auto space-x-4 pb-4">
-                <a href="/featured/bollywood" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
-                    <div class="bg-gradient-to-br from-rose-400 via-pink-400 to-violet-400 aspect-square rounded-lg mb-2 relative overflow-hidden group">
-                        <i class="fas fa-film absolute text-3xl text-white/30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform"></i>
-                    </div>
-                    <p class="text-white text-sm">Bollywood</p>
-                </a>
-                <a href="/featured/oldies" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
-                    <div class="bg-gradient-to-br from-cyan-400 via-teal-400 to-emerald-400 aspect-square rounded-lg mb-2 relative overflow-hidden group">
-                        <i class="fas fa-record-vinyl absolute text-3xl text-white/30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:rotate-45 transition-transform"></i>
-                    </div>
-                    <p class="text-white text-sm">Retro</p>
-                </a>
-                <div class="flex-shrink-0 w-32">
-                    <div class="bg-gradient-to-br from-indigo-400 via-blue-400 to-sky-400 aspect-square rounded-lg mb-2 relative overflow-hidden group">
-                        <i class="fas fa-moon absolute text-3xl text-white/30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform"></i>
-                    </div>
-                    <p class="text-white text-sm">Chill Mix</p>
+          <% if (mixedmodel && mixedmodel.length> 0) { %>
+            <% mixedmodel.forEach((item, index)=> { %>
+              <!-- Slide -->
+              <a href="/listento/<%= item.name %>" class="block w-full h-full flex-shrink-0">
+                <div class="w-full h-full flex items-end justify-center p-6 relative overflow-hidden">
+                  <!-- Background Image/Thumbnail -->
+                  <% if (item.thumbnail) { %>
+                    <img src="<%= item.thumbnail %>" alt="<%= item.name %>"
+                      class="absolute inset-0 w-full h-full object-cover" loading="lazy" style="object-fit: cover;" />
+                    <!-- Dark gradient overlay for better text visibility -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                    <% } else { %>
+                      <!-- Fallback gradient background if no thumbnail -->
+                      <% const gradients=[ 'bg-gradient-to-br from-rose-600 to-purple-700'
+                        , 'bg-gradient-to-br from-blue-600 to-cyan-700' , 'bg-gradient-to-br from-orange-600 to-red-700'
+                        , 'bg-gradient-to-br from-emerald-600 to-teal-700'
+                        , 'bg-gradient-to-br from-violet-600 to-fuchsia-700' ]; const gradientClass=gradients[index %
+                        gradients.length]; %>
+                        <div class="absolute inset-0 <%= gradientClass %>"></div>
+                        <!-- Overlay for gradient backgrounds too -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent">
+                        </div>
+                        <% } %>
+
+                          <!-- Content - Name positioned lower at bottom -->
+                          <div class="relative z-10 text-center px-4">
+                            <!-- Name -->
+                            <h2 class="font-bold drop-shadow-lg slider-stitle"
+                              style="color: white; font-size: 1.8rem; line-height: 1.2; margin: 0;">
+                              <%= item.name %>
+                            </h2>
+                          </div>
                 </div>
-            </div>
-        </section>
+              </a>
+              <% }); %>
+                <% } else { %>
+                  <!-- Fallback slides if no data -->
+                  <div
+                    class="w-full h-full flex-shrink-0 bg-gradient-to-br from-rose-600 to-purple-700 flex items-end justify-center">
+                    <div class="relative z-10 text-center px-4" style="margin-bottom: 40px;">
+                      <h2 class="font-bold drop-shadow-lg"
+                        style="color: white; font-size: 1.8rem; line-height: 1.2; margin: 0;">
+                        Featured Artists</h2>
+                    </div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                  </div>
 
-        <!-- Regional Music Section -->
-        <section class="py-4">
-            <h2 class="text-white text-lg font-semibold mb-3">Regional Music</h2>
-            <div class="flex overflow-x-auto space-x-4 pb-4">
-                <a href="/language/gujarati" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
-                    <div class="bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 aspect-square rounded-lg relative overflow-hidden group">
-                        <img src="/images/gujrat-logo.png" 
-                             alt="Gujarat Logo" 
-                             class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
-                             loading="lazy">
+                  <div
+                    class="w-full h-full flex-shrink-0 bg-gradient-to-br from-blue-600 to-cyan-700 flex items-end justify-center">
+                    <div class="relative z-10 text-center px-4" style="margin-bottom: 40px;">
+                      <h2 class="font-bold drop-shadow-lg"
+                        style="color: white; font-size: 1.8rem; line-height: 1.2; margin: 0;">
+                        Classic Hits</h2>
                     </div>
-                </a>
-                <a href="/language/hindi" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
-                    <div class="bg-gradient-to-br from-rose-500 via-red-500 to-orange-500 aspect-square rounded-lg relative overflow-hidden group">
-                        <img src="/images/hindi-logo.png" 
-                             alt="Hindi Music" 
-                             class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
-                             loading="lazy">
-                    </div>
-                </a>
-                <a href="/language/punjabi" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
-                    <div class="bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-500 aspect-square rounded-lg relative overflow-hidden group">
-                        <img src="/images/punjabi-logo.png" 
-                             alt="Punjabi Music" 
-                             class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
-                             loading="lazy">
-                    </div>
-                </a>
-                 <a href="/language/english" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
-                    <div class="bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-500 aspect-square rounded-lg relative overflow-hidden group">
-                        <img src="/images/english-logo.png" 
-                             alt="Punjabi Music" 
-                             class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
-                             loading="lazy">
-                    </div>
-                </a>
-            </div>
-        </section>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                  </div>
 
- <!-- Artist Section -->
-<section class="py-4">
-  <h2 class="text-white text-lg font-semibold mb-3">Artists</h2>
-  <div class="flex overflow-x-auto space-x-4 pb-4">
-    <% if (artists && artists.length > 0) { %>
-      <% artists.forEach(artist => { %>
-        <a href="/artist/<%= artist.name %>" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
-          <div class="bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 aspect-square rounded-lg relative overflow-hidden group">
-            <img src="<%= artist.thumbnail %>" 
-                 alt="<%= artist.name %>" 
-                 class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
-                 loading="lazy">
+                  <div
+                    class="w-full h-full flex-shrink-0 bg-gradient-to-br from-orange-600 to-red-700 flex items-end justify-center">
+                    <div class="relative z-10 text-center px-4" style="margin-bottom: 40px;">
+                      <h2 class="font-bold drop-shadow-lg"
+                        style="color: white; font-size: 1.8rem; line-height: 1.2; margin: 0;">
+                        Trending Now</h2>
+                    </div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                  </div>
+                  <% } %>
+
+        </div>
+
+        <!-- Navigation Arrows -->
+        <% if (mixedmodel && mixedmodel.length> 1) { %>
+          <button @click="prevSlide()"
+            class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full transition-all z-20 flex items-center justify-center shadow-lg"
+            style="width: 40px; height: 40px;">
+            <i class="fas fa-chevron-left" style="font-size: 1.2rem;"></i>
+          </button>
+
+          <button @click="nextSlide()"
+            class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full transition-all z-20 flex items-center justify-center shadow-lg"
+            style="width: 40px; height: 40px;">
+            <i class="fas fa-chevron-right" style="font-size: 1.2rem;"></i>
+          </button>
+          <% } %>
+
+            <!-- Pagination Dots -->
+            <% if (mixedmodel && mixedmodel.length> 0) { %>
+              <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2 z-20 flex space-x-2">
+                <% mixedmodel.forEach((item, index)=> { %>
+                  <button @click="goToSlide(<%= index + 1 %>)" x-bind:class="{
+                  'bg-white': activeSlide === <%= index + 1 %>,
+                  'bg-white/40': activeSlide !== <%= index + 1 %>
+                }" class="rounded-full transition-all duration-300 hover:bg-white/80" style="height: 6px;"
+                    x-bind:style="activeSlide === <%= index + 1 %> ? 'width: 20px;' : 'width: 6px;'">
+                  </button>
+                  <% }); %>
+              </div>
+              <% } %>
+
+      </div>
+    </section>
+
+    <script>
+      document.addEventListener('alpine:init', () => {
+        Alpine.data('imageSlider', () => {
+          return {
+            // Initial active slide
+            activeSlide: 1,
+
+            // Total slides count from EJS
+            totalSlides: <%= (mixedmodel && mixedmodel.length > 0) ? mixedmodel.length : 1 %>,
+
+            // Auto slide interval
+            slideInterval: null,
+
+              // Initialize slider
+              init() {
+            // Only start auto slide if there are multiple slides
+            if (this.totalSlides > 1) {
+              this.startAutoSlide();
+            }
+
+            // Pause on hover (desktop)
+            if (this.totalSlides > 1) {
+              this.$el.addEventListener('mouseenter', () => {
+                clearInterval(this.slideInterval);
+              });
+
+              this.$el.addEventListener('mouseleave', () => {
+                this.startAutoSlide();
+              });
+            }
+          },
+
+          // Go to next slide
+          nextSlide() {
+            if (this.totalSlides > 1) {
+              this.activeSlide = this.activeSlide < this.totalSlides ? this.activeSlide + 1 : 1;
+            }
+          },
+
+          // Go to previous slide
+          prevSlide() {
+            if (this.totalSlides > 1) {
+              this.activeSlide = this.activeSlide > 1 ? this.activeSlide - 1 : this.totalSlides;
+            }
+          },
+
+          // Go to specific slide
+          goToSlide(slideNumber) {
+            if (this.totalSlides > 1 && slideNumber >= 1 && slideNumber <= this.totalSlides) {
+              this.activeSlide = slideNumber;
+            }
+          },
+
+          // Start auto sliding
+          startAutoSlide() {
+            // Clear any existing interval
+            clearInterval(this.slideInterval);
+
+            // Only start if there are multiple slides
+            if (this.totalSlides > 1) {
+              // Start new interval (change slide every 5 seconds)
+              this.slideInterval = setInterval(() => {
+                this.nextSlide();
+              }, 5000);
+            }
+          },
+
+          // Clean up when component is destroyed
+          destroy() {
+            clearInterval(this.slideInterval);
+          }
+        };
+      });
+  });
+    </script>
+
+    <style>
+      /* Custom slider styles for mobile */
+      .slider-container {
+        height: 300px !important;
+        position: relative;
+        overflow: hidden;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      }
+
+      .slider-slide {
+        width: 100%;
+        height: 100%;
+        flex-shrink: 0;
+        position: relative;
+      }
+
+      .slider-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .slider-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4), transparent);
+      }
+
+      .slider-stitle {
+        color: white;
+        font-weight: bold;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        font-size: 1.5rem;
+        line-height: 1.2;
+        margin: 0;
+        position: absolute;
+        bottom: 5px;
+        left: 50%;
+        transform: translateX(-500%);
+        /* Change from -80% to -50% */
+        width: auto;
+        max-width: 90%;
+        white-space: nowrap;
+        text-align: center;
+        z-index: 10;
+        padding: 0 1rem;
+        box-sizing: border-box;
+      }
+
+      .slider-nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 20;
+      }
+
+      .slider-nav-btn:hover {
+        background: rgba(0, 0, 0, 0.8);
+      }
+
+      .slider-nav-btn.prev {
+        left: 1rem;
+      }
+
+      .slider-nav-btn.next {
+        right: 1rem;
+      }
+
+      .slider-nav-icon {
+        font-size: 1.2rem;
+      }
+
+      .slider-dots {
+        position: absolute;
+        bottom: 0.75rem;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 0.5rem;
+        z-index: 20;
+      }
+
+      .slider-dot {
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.4);
+        height: 6px;
+      }
+
+      .slider-dot:hover {
+        background: rgba(255, 255, 255, 0.8);
+      }
+
+      .slider-dot.active {
+        background: white;
+        width: 20px;
+      }
+
+      .slider-dot.inactive {
+        width: 6px;
+      }
+
+      /* Smooth transitions */
+      .slider-transition {
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+    </style>
+    <!-- Featured Section -->
+    <section class="py-4">
+      <h2 class="text-white text-lg font-semibold mb-3">Featured Playlists</h2>
+      <div class="flex overflow-x-auto space-x-4 pb-4">
+        <a href="/featured/bollywood" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
+          <div
+            class="bg-gradient-to-br from-rose-400 via-pink-400 to-violet-400 aspect-square rounded-lg mb-2 relative overflow-hidden group">
+            <i
+              class="fas fa-film absolute text-3xl text-white/30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform"></i>
           </div>
-          <div class="text-white text-base mt-2 text-center"><%= artist.name %></div>
+          <p class="text-white text-sm">Bollywood</p>
         </a>
-      <% }); %>
-    <% } else { %>
-      <p class="text-gray-400 text-sm">No artists available.</p>
-    <% } %>
-  </div>
-</section>
+        <a href="/featured/oldies" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
+          <div
+            class="bg-gradient-to-br from-cyan-400 via-teal-400 to-emerald-400 aspect-square rounded-lg mb-2 relative overflow-hidden group">
+            <i
+              class="fas fa-record-vinyl absolute text-3xl text-white/30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:rotate-45 transition-transform"></i>
+          </div>
+          <p class="text-white text-sm">Retro</p>
+        </a>
+        <div class="flex-shrink-0 w-32">
+          <div
+            class="bg-gradient-to-br from-indigo-400 via-blue-400 to-sky-400 aspect-square rounded-lg mb-2 relative overflow-hidden group">
+            <i
+              class="fas fa-moon absolute text-3xl text-white/30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform"></i>
+          </div>
+          <p class="text-white text-sm">Chill Mix</p>
+        </div>
+      </div>
+    </section>
 
-                <!-- Tribute Heading -->
-                <section class="pt-4">
-                <h2 class="text-white text-sm text-center text-xl font-bold mb-2"> Upcoming updates would appear in the info icon on the top . Thank You</h2>
-                </div></h2>
-                </section>
 
-    </main>
 
-    <%- include('../partials/miniplayer') %>
+    <!-- Regional Music Section -->
+    <section class="py-4">
+      <h2 class="text-white text-lg font-semibold mb-3">Regional Music</h2>
+      <div class="flex overflow-x-auto space-x-4 pb-4">
+        <a href="/language/gujarati" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
+          <div
+            class="bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 aspect-square rounded-lg relative overflow-hidden group">
+            <img src="/images/gujrat-logo.png" alt="Gujarat Logo"
+              class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
+              loading="lazy">
+          </div>
+        </a>
+        <a href="/language/hindi" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
+          <div
+            class="bg-gradient-to-br from-rose-500 via-red-500 to-orange-500 aspect-square rounded-lg relative overflow-hidden group">
+            <img src="/images/hindi-logo.png" alt="Hindi Music"
+              class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
+              loading="lazy">
+          </div>
+        </a>
+        <a href="/language/punjabi" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
+          <div
+            class="bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-500 aspect-square rounded-lg relative overflow-hidden group">
+            <img src="/images/punjabi-logo.png" alt="Punjabi Music"
+              class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
+              loading="lazy">
+          </div>
+        </a>
+        <a href="/language/english" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
+          <div
+            class="bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-500 aspect-square rounded-lg relative overflow-hidden group">
+            <img src="/images/english-logo.png" alt="Punjabi Music"
+              class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
+              loading="lazy">
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- Artist Section -->
+    <section class="py-4">
+      <h2 class="text-white text-lg font-semibold mb-3">Artists</h2>
+      <div class="flex overflow-x-auto space-x-4 pb-4">
+        <% if (artists && artists.length> 0) { %>
+          <% artists.forEach(artist=> { %>
+            <a href="/artist/<%= artist.name %>" class="flex-shrink-0 w-32 hover:opacity-80 transition-opacity">
+              <div
+                class="bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 aspect-square rounded-lg relative overflow-hidden group">
+                <img src="<%= artist.thumbnail %>" alt="<%= artist.name %>"
+                  class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform"
+                  loading="lazy">
+              </div>
+              <div class="text-white text-base mt-2 text-center">
+                <%= artist.name %>
+              </div>
+            </a>
+            <% }); %>
+              <% } else { %>
+                <p class="text-gray-400 text-sm">No artists available.</p>
+                <% } %>
+      </div>
+    </section>
+
+    <!-- Tribute Heading -->
+    <section class="pt-4">
+      <h2 class="text-white text-sm text-center text-xl font-bold mb-2"> Upcoming updates would appear in the info icon
+        on the top . Thank You</h2>
+      </div>
+      </h2>
+    </section>
+
+  </main>
+
+  <%- include('../partials/miniplayer') %>
 
 
 
 
     <!-- Bottom Navigation -->
     <nav class="fixed bottom-0 left-0 right-0 w-full bg-black/90 backdrop-blur-lg border-t border-gray-800 z-50">
-        <div class="flex justify-around py-3">
-            <a href="/" class="text-white flex flex-col items-center">
-                <i class="fas fa-home"></i>
-                <span class="text-xs mt-1">Home</span>
-            </a>
-            <a href="/explore" class="text-gray-400 flex flex-col items-center">
-                <i class="fas fa-compass"></i>
-                <span class="text-xs mt-1">Explore</span>
-            </a>
-            <a href="/library" class="text-gray-400 flex flex-col items-center">
-                <i class="fas fa-heart"></i>
-                <span class="text-xs mt-1">Library</span>
-            </a>
-            <a href="/profile" class="text-gray-400 flex flex-col items-center">
-                <i class="fas fa-user"></i>
-                <span class="text-xs mt-1">Profile</span>
-            </a>
-        </div>
+      <div class="flex justify-around py-3">
+        <a href="/" class="text-white flex flex-col items-center">
+          <i class="fas fa-home"></i>
+          <span class="text-xs mt-1">Home</span>
+        </a>
+        <a href="/explore" class="text-gray-400 flex flex-col items-center">
+          <i class="fas fa-compass"></i>
+          <span class="text-xs mt-1">Explore</span>
+        </a>
+        <a href="/library" class="text-gray-400 flex flex-col items-center">
+          <i class="fas fa-heart"></i>
+          <span class="text-xs mt-1">Library</span>
+        </a>
+        <a href="/profile" class="text-gray-400 flex flex-col items-center">
+          <i class="fas fa-user"></i>
+          <span class="text-xs mt-1">Profile</span>
+        </a>
+      </div>
     </nav>
 
-<!-- Updates / Tips Popup -->
-<div x-show="showUpdates" x-cloak
-     class="fixed inset-0 flex items-center justify-center bg-black/70 z-[60] px-6"
-     x-transition.opacity>
-  <div class="bg-gray-900 rounded-2xl shadow-lg p-6 w-full max-w-md text-white relative"
-       x-transition.scale.origin.bottom>
-<!-- Close button -->
-<button @click="showUpdates = false"
-        class="absolute top-2 right-4 bg-gray-800/90 hover:bg-gray-700 text-white rounded-full p-2 shadow-lg transition"
-        aria-label="Close">
-  <i class="fas fa-times text-xl"></i>
-</button>
-    <h2 class="text-lg font-bold mb-3"> Tips</h2>
-     <ul class="space-y-2 text-sm">
-      <li>make sure you have logged in through a account to acces more Features</li>
-    </ul>
-    <h2 class="text-lg font-bold mb-3 mt-2">Latest Updates</h2>
-    <ul class="space-y-2 text-sm">
-      <li> Bug fixes and performance improvements 🐞.</li>
-      <li>   locking your screen will stop autoplay.</li>
-      <li> Tip: disliked songs won't appear in your feed again 💡 .</li>
-    </ul>
+    <!-- Updates / Tips Popup -->
+    <div x-show="showUpdates" x-cloak class="fixed inset-0 flex items-center justify-center bg-black/70 z-[60] px-6"
+      x-transition.opacity>
+      <div class="bg-gray-900 rounded-2xl shadow-lg p-6 w-full max-w-md text-white relative"
+        x-transition.scale.origin.bottom>
+        <!-- Close button -->
+        <button @click="showUpdates = false"
+          class="absolute top-2 right-4 bg-gray-800/90 hover:bg-gray-700 text-white rounded-full p-2 shadow-lg transition"
+          aria-label="Close">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+        <h2 class="text-lg font-bold mb-3"> Tips</h2>
+        <ul class="space-y-2 text-sm">
+          <li>make sure you have logged in through a account to acces more Features</li>
+        </ul>
+        <h2 class="text-lg font-bold mb-3 mt-2">Latest Updates</h2>
+        <ul class="space-y-2 text-sm">
+          <li> Bug fixes and performance improvements 🐞.</li>
+          <li> locking your screen will stop autoplay.</li>
+          <li> Tip: disliked songs won't appear in your feed again 💡 .</li>
+        </ul>
 
-    <!-- Tap outside to close -->
-    <div @click="showUpdates = false" class="absolute inset-0 -z-10"></div>
-  </div>
-</div>
+        <!-- Tap outside to close -->
+        <div @click="showUpdates = false" class="absolute inset-0 -z-10"></div>
+      </div>
+    </div>
 
 </body>
+
 </html>

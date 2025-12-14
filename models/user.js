@@ -32,8 +32,8 @@ const userSchema = new mongoose.Schema({
         ref: 'Song'
     }],
     dislikedSongs: [{
-    type: String,
-    ref: 'Song'
+        type: String,
+        ref: 'Song'
     }],
     playlists: {
         type: Map,
@@ -42,17 +42,22 @@ const userSchema = new mongoose.Schema({
             ref: 'Song'
         }]
     },
+    role: {
+        type: String,
+        enum: ['user', 'admin'],
+        default: 'user'
+    },
 });
 
 
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
     try {
         // Only hash if password is modified or new
         if (!this.isModified('password')) return next();
-        
+
         // Log for debugging
         console.log('Hashing password for user:', this.username);
-        
+
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);
         next();
@@ -62,24 +67,24 @@ userSchema.pre('save', async function(next) {
     }
 });
 
-userSchema.methods.comparePassword = async function(enteredPassword) {
+userSchema.methods.comparePassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 }
 
 userSchema.methods.generateVerificationCode = function () {
-  function generateRandomFiveDigitNumber() {
-    const firstDigit = Math.floor(Math.random() * 9) + 1;
-    const remainingDigits = Math.floor(Math.random() * 10000)
-      .toString()
-      .padStart(4, 0);
+    function generateRandomFiveDigitNumber() {
+        const firstDigit = Math.floor(Math.random() * 9) + 1;
+        const remainingDigits = Math.floor(Math.random() * 10000)
+            .toString()
+            .padStart(4, 0);
 
-    return parseInt(firstDigit + remainingDigits);
-  }
-  const verificationCode = generateRandomFiveDigitNumber();
-  this.verificationCode = verificationCode;
-  this.verificationCodeExpire = Date.now() + 10 * 60 * 1000;
+        return parseInt(firstDigit + remainingDigits);
+    }
+    const verificationCode = generateRandomFiveDigitNumber();
+    this.verificationCode = verificationCode;
+    this.verificationCodeExpire = Date.now() + 10 * 60 * 1000;
 
-  return verificationCode;
+    return verificationCode;
 };
 
 module.exports = mongoose.model('User', userSchema);

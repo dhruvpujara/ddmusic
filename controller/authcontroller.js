@@ -2,9 +2,10 @@ const User = require('../models/user');
 const session = require('express-session');
 const emailService = require('../utils/nodemailer');
 const errorMiddleware = require('../errorhandler/errorhandler');
-const  catchAsyncError = require('../middleware/catchAsyncerror')
+const catchAsyncError = require('../middleware/catchAsyncerror')
 const Playlist = require('../models/playlist');
 const Song = require('../models/song');
+const jwt = require('jsonwebtoken');
 
 
 // Add middleware at the top
@@ -19,7 +20,7 @@ const getPlaybackState = async (req) => {
     let recentSong = null;
     let lastPlaybackTime = 0;
     let isPlaying = false;
-    
+
     if (req.session && req.session.recentlyplayed) {
         recentSong = await Song.findById(req.session.recentlyplayed);
         if (req.session.lastPlaybackSong === req.session.recentlyplayed) {
@@ -41,10 +42,21 @@ module.exports.postlogin = async (req, res) => {
         if (user && await user.comparePassword(req.body.password)) {
             if (user.verified) {
                 req.session.isLoggedIn = true;
-                req.session.loggeduser = user.username;
-                req.session.userId = user._id;
-                await req.session.save();
-                res.redirect('/profile');
+                const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '15d' });
+                res.cookie('token', token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
+                });
+
+                if (user.role === 'admin') {
+                    return res.render('dashboard', { username: user.username });
+                }
+
+                console.log('User logged in:', user.email);
+                return res.redirect('/profile');
+
+
             } else {
                 req.session.emailForVerification = user.email;
                 res.render('account/otpverify', { error: null });
@@ -90,8 +102,14 @@ module.exports.getverified = async (req, res) => {
             });
 
             req.session.isLoggedIn = true;
-            req.session.loggeduser = user.username;
-            req.session.userId = user._id;
+
+            const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '15d' });
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
+            });
+
             await req.session.save();
 
             return res.redirect('/profile');
@@ -100,13 +118,13 @@ module.exports.getverified = async (req, res) => {
                 received: verificationCode,
                 stored: user.verificationCode
             });
-            return res.render('account/otpverify', { 
+            return res.render('account/otpverify', {
                 error: 'Invalid verification code'
             });
         }
     } catch (err) {
         console.error('Verification error:', err);
-        res.render('account/otpverify', { 
+        res.render('account/otpverify', {
             error: 'An error occurred during verification'
         });
     }
@@ -117,32 +135,32 @@ module.exports.getforgotPassword = (req, res) => {
 };
 
 module.exports.postregister = async (req, res) => {
-        const { username, email, password } = req.body;
-        if (!username || !email || !password) {
-         error.name = insufficientfields;
-            return res.redirect('/register');
-        }
-        const existingUser = await User.findOne({ $or: [ { email }] });
-        if (existingUser) {
-            return res.render('register', { error: 'Email already used' });
-        }
+    const { username, email, password } = req.body;
+    if (!username || !email || !password) {
+        error.name = insufficientfields;
+        return res.redirect('/register');
+    }
+    const existingUser = await User.findOne({ $or: [{ email }] });
+    if (existingUser) {
+        return res.render('register', { error: 'Email already used' });
+    }
 
-        const user = new User({ username, email, password });
-        const verificationCode = user.generateVerificationCode();
+    const user = new User({ username, email, password });
+    const verificationCode = user.generateVerificationCode();
 
-        const userData = {
-            username,
-            email,
-            password,
-            verificationCode,
-            createdAt: new Date()
-        };
+    const userData = {
+        username,
+        email,
+        password,
+        verificationCode,
+        createdAt: new Date()
+    };
 
-        // Update user with complete data
-        Object.assign(user, userData);
+    // Update user with complete data
+    Object.assign(user, userData);
 
-        function generateEmailTemplate(verificationCode) {
-            return `
+    function generateEmailTemplate(verificationCode) {
+        return `
                 <div style="background-color: #09090b; color: white; font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border-radius: 16px;">
                     <div style="text-align: center; margin-bottom: 30px;">
                         <h1 style="background: linear-gradient(to right, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px;">DDMusic</h1>
@@ -166,27 +184,27 @@ module.exports.postregister = async (req, res) => {
                     </footer>
                 </div>
             `;
+    }
+
+
+    const sendVerificationEmail = async (email, verificationCode) => {
+        const message = generateEmailTemplate(verificationCode);
+        try {
+            await emailService.sendEmail(email, 'Verify your email', message);
+        } catch (error) {
+            console.error('Error sending verification email:', error);
         }
+    };
 
 
-        const sendVerificationEmail = async (email, verificationCode) => {
-            const message = generateEmailTemplate(verificationCode);
-            try {
-                await emailService.sendEmail(email, 'Verify your email', message);
-            } catch (error) {
-                console.error('Error sending verification email:', error);
-            }
-        };
+    await user.save().then((user) => {
+        sendVerificationEmail(email, verificationCode);
+        res.render('acccreated');
 
-
-        await user.save().then((user) => {
-            sendVerificationEmail(email, verificationCode);
-            res.render('acccreated');
-
-        }).catch((err) => {
-            console.error('Registration error:', err);
-            res.redirect('/register');
-        });
+    }).catch((err) => {
+        console.error('Registration error:', err);
+        res.redirect('/register');
+    });
 }
 
 module.exports.getregister = (req, res) => {
@@ -198,25 +216,33 @@ module.exports.getregister = (req, res) => {
 
 module.exports.getresetpassword = async (req, res) => {
     console.log(req.body);
-      if (req.session && req.session.recentlyplayed) {
-            recentSong = await Song.findById(req.session.recentlyplayed);
-            if (req.session.lastPlaybackSong === req.session.recentlyplayed) {
-                lastPlaybackTime = req.session.lastPlaybackTime || 0;
-            }
+    if (req.session && req.session.recentlyplayed) {
+        recentSong = await Song.findById(req.session.recentlyplayed);
+        if (req.session.lastPlaybackSong === req.session.recentlyplayed) {
+            lastPlaybackTime = req.session.lastPlaybackTime || 0;
         }
+    }
 
-        if (!req.session.isLoggedIn) {
-            return res.render('mainpages/profile', { 
-                isLoggedIn: false,
-                likedSongsCount: 0,
-                playlistCount: 0,
-                recentSong,
-                lastPlaybackTime
-            });
-        }
+    if (!req.session.isLoggedIn) {
+        return res.render('mainpages/profile', {
+            isLoggedIn: false,
+            likedSongsCount: 0,
+            playlistCount: 0,
+            recentSong,
+            lastPlaybackTime
+        });
+    }
 };
 
 module.exports.logout = (req, res) => {
+    // Get all cookie names from the request
+    const cookieNames = Object.keys(req.cookies);
+
+    // Clear each cookie
+    cookieNames.forEach(cookieName => {
+        res.clearCookie(cookieName);
+    });
+
     // Clear session data
     req.session.destroy((err) => {
         if (err) {
@@ -236,7 +262,7 @@ module.exports.getprofile = async (req, res) => {
         // Get recent song data
         let recentSong = null;
         let lastPlaybackTime = 0;
-        
+
         if (req.session && req.session.recentlyplayed) {
             recentSong = await Song.findById(req.session.recentlyplayed);
             if (req.session.lastPlaybackSong === req.session.recentlyplayed) {
@@ -245,17 +271,17 @@ module.exports.getprofile = async (req, res) => {
         }
 
         if (!req.session.isLoggedIn) {
-            return res.render('mainpages/profile', { 
+            return res.render('mainpages/profile', {
                 isLoggedIn: false,
                 likedSongsCount: 0,
                 playlistCount: 0,
                 recentSong,
                 lastPlaybackTime,
-                 isPlaying: req.session.isPlaying || false,
+                isPlaying: req.session.isPlaying || false,
             });
         }
 
-        const user = await User.findOne({ username: req.session.loggeduser });
+        const user = await User.findById(req.user.userId);
         if (!user) {
             throw new Error('User not found');
         }

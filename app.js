@@ -6,6 +6,7 @@ const path = require('path');
 const session = require('express-session');
 const mongoose = require('mongoose');
 const MongoStore = require('connect-mongo');
+const cookieParser = require('cookie-parser');
 
 
 
@@ -13,6 +14,7 @@ const MongoStore = require('connect-mongo');
 const authRoutes = require('./routes/authroutes');
 const userRoutes = require('./routes/userroutes'); // Fixed casing
 const errorController = require('./controller/errorController');
+const adminRoutes = require('./routes/adminroutes');
 
 
 
@@ -24,7 +26,7 @@ const port = process.env.PORT;
 
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
-
+app.use(cookieParser());
 
 app.set('views', [
     path.join(rootdir, 'views'),
@@ -77,6 +79,7 @@ app.use(express.json()); // Add this line
 
 app.use('/', authRoutes);
 app.use('/', userRoutes);
+app.use(adminRoutes);
 
 app.use((req, res) => {
     errorController.get404(req, res);
@@ -92,7 +95,7 @@ app.get('/health', async (req, res) => {
     try {
         // Check MongoDB connection
         const dbStatus = mongoose.connection.readyState === 1;
-        
+
         if (!dbStatus) {
             throw new Error('Database not connected');
         }
@@ -108,7 +111,7 @@ app.get('/health', async (req, res) => {
             timestamp: new Date(),
             database: 'disconnected'
         });
-    } 
+    }
 });
 
 // MongoDB connection
