@@ -466,6 +466,21 @@ module.exports.postSearch = async (req, res) => {
     try {
         const { songName } = req.body;
 
+        // Sanitize the search query
+        let searchQuery = '';
+        let dbSearchTerm = '';
+
+        if (songName) {
+            // 1. Trim whitespace from both ends
+            searchQuery = songName.trim();
+
+            // 2. Replace multiple spaces with single space
+            searchQuery = searchQuery.replace(/\s+/g, ' ');
+
+            // 3. For database search, replace spaces with "-" to match slugName format
+            dbSearchTerm = searchQuery.replace(/\s+/g, '-');
+        }
+
         if (req.session.inArtistPage) {
             req.session.inArtistPage = false; // Reset after use
             req.session.artistName = ''; // Clear artist name
@@ -500,7 +515,35 @@ module.exports.postSearch = async (req, res) => {
         }
 
         // Search for songs based on the search term
-        const songs = await Song.find({ slugName: { $regex: songName, $options: 'i' } });
+        let songs = [];
+        if (dbSearchTerm) {
+            // Method 1: Simple approach - partial matching with case-insensitive
+            songs = await Song.find({
+                slugName: { $regex: dbSearchTerm, $options: 'i' }
+            });
+
+            // Method 2: More flexible approach - also search original name field
+            /*
+            songs = await Song.find({
+                $or: [
+                    { slugName: { $regex: dbSearchTerm, $options: 'i' } },
+                    { name: { $regex: searchQuery, $options: 'i' } }
+                ]
+            });
+            */
+
+            // Method 3: Even more flexible - handle both spaces and hyphens
+            /*
+            const searchPattern = searchQuery
+                .split(/\s+/) // Split by spaces
+                .map(term => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) // Escape regex special chars
+                .join('[-\\s]*'); // Match with either hyphens or spaces
+            
+            songs = await Song.find({ 
+                slugName: { $regex: searchPattern, $options: 'i' } 
+            });
+            */
+        }
 
         // IMPORTANT: Pass ALL the same flags that getExplore passes
         res.render('explore', {
@@ -511,7 +554,7 @@ module.exports.postSearch = async (req, res) => {
             lastPlaybackTime, // Playback time
             isPlaying: req.session.isPlaying || false, // Playing state
             preferredLanguages, // Preferred languages from cookies
-            searchQuery: songName // Optional: Pass the search term back to template
+            searchQuery: searchQuery // Return the sanitized search query
         });
     } catch (err) {
         console.error('Error searching songs:', err);
@@ -525,7 +568,7 @@ module.exports.postSearch = async (req, res) => {
             lastPlaybackTime: 0,
             isPlaying: false,
             preferredLanguages: [],
-            searchQuery: req.body.songName || '' // Keep the search query even on error
+            searchQuery: req.body.songName ? req.body.songName.trim() : '' // Keep and trim the search query even on error
         });
     }
 };
