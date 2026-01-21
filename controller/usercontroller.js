@@ -5,13 +5,11 @@ const mongoose = require('mongoose');
 const cookie = require('cookie');
 const Artist = require('../models/artist');
 const mixedModel = require('../models/mixedModelSchema');
-const { head } = require('../routes/userroutes');
+const sharedplaylist = require('../models/sharedplaylist');
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+dotenv.config();
 let backbutton;
-
-//    get methods
-//    post methods
-//    playlist methods
-
 
 // in ordered functions 
 
@@ -586,9 +584,80 @@ exports.getUserPlaylists = async (req, res) => {
     }
 };
 
+module.exports.getSharedPlaylists = async (req, res) => {
+    if (!req.user) {
+        res.redirect('/login');
+        return;
+    }
+    const userId = req.user.userId;
+    const sharedPlaylists = await sharedplaylist.find({ userId: userId }).populate('songs');
+    const token = req.cookies.token;
+
+    if (!token) {
+        res.end('Unauthorized: No token provided');
+    }
+
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    const ownerId = decodedToken.userId;
+    // Only these 4 variables are required for the template
+    res.render('sharedplaylist', {
+        ownerId: ownerId,
+        isLoggedIn: true,  // Set to true to see the page, false to see login required
+        sharedPlaylists: sharedPlaylists,  // Can be empty array
+        sharedPlaylistsCount: sharedPlaylists.length,
+        activePlaylists: []  // Can be empty array
+    });
+};
+
+module.exports.joinSharedPlaylist = async (req, res) => {
+    try {
+        const playlistId = req.params.id;
+        const sharedPlaylist = await sharedplaylist.findOne({ shareCode: playlistId });
+        sharedPlaylist.userId.push(req.user.userId);
+        await sharedPlaylist.save();
+        res.redirect('/shared/playlist');
+    } catch (error) {
+        console.error('Error joining shared playlist:', error);
+        res.redirect('/shared/playlist');
+    }
+};
+
+module.exports.createSharedPlaylist = async (req, res) => {
+    try {
+        const { name } = req.body;
+
+        const token = req.cookies.token;
+
+        if (!token) {
+            res.end('Unauthorized: No token provided');
+        }
+
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+        const ownerId = decodedToken.userId;
+
+        const shareCode = Math.floor(100000000 + Math.random() * 900000000); // Generate a random 9-digit code
+
+        const newSharedPlaylist = new sharedplaylist({
+            ownerId: ownerId,
+            name,
+            shareCode,
+            userId: req.user.userId
+        });
+
+        await newSharedPlaylist.save();
+        res.redirect('/shared/playlist');
+
+    } catch (error) {
+        console.error('Error creating shared playlist:', error);
+        res.redirect('/shared/playlist');
+    }
+};
+
 module.exports.getPlaylist = async (req, res) => {
     try {
-        const playlist = await Playlist.findById(req.params.id).populate('songs');
+        let playlist = [];
+        playlist = await Playlist.findById(req.params.id).populate('songs');
+        playlist = await sharedplaylist.findById(req.params.id).populate('songs');
         if (!playlist) {
             return res.redirect('/library');
         }
@@ -604,6 +673,50 @@ module.exports.getPlaylist = async (req, res) => {
     } catch (err) {
         console.error('Error fetching playlist:', err);
         res.redirect('/library');
+    }
+};
+
+module.exports.leaveSharedPlaylist = async (req, res) => {
+    try {
+        const playlistId = req.params.id;
+        const userId = req.user.userId;
+
+        const sharedPlaylist = await sharedplaylist.findById(playlistId);
+        if (!sharedPlaylist) {
+            return res.redirect('/shared/playlist');
+        }
+
+        // Remove user from the playlist's userId array
+        sharedPlaylist.userId = sharedPlaylist.userId.filter(id => id.toString() !== userId);
+        await sharedPlaylist.save();
+
+        res.redirect('/shared/playlist');
+    } catch (error) {
+        console.error('Error leaving shared playlist:', error);
+        res.redirect('/shared/playlist');
+    }
+};
+
+module.exports.deleteSharedPlaylist = async (req, res) => {
+    try {
+        const playlistId = req.params.id;
+        const userId = req.user.userId;
+
+        const sharedPlaylist = await sharedplaylist.findById(playlistId);
+        if (!sharedPlaylist) {
+            return res.redirect('/shared/playlist');
+        }
+
+        // Only the owner can delete the shared playlist
+        if (sharedPlaylist.ownerId.toString() !== userId) {
+            return res.redirect('/shared/playlist');
+        }
+
+        await sharedplaylist.findByIdAndDelete(playlistId);
+        res.redirect('/shared/playlist');
+    } catch (error) {
+        console.error('Error deleting shared playlist:', error);
+        res.redirect('/shared/playlist');
     }
 };
 
@@ -650,6 +763,7 @@ module.exports.removeSongFromPlaylist = async (req, res) => {
 
         playlist.songs = playlist.songs.filter(song => song.toString() !== songId);
         await playlist.save();
+        console.log(playlist);
 
         res.json({ success: true });
     } catch (error) {
@@ -997,11 +1111,13 @@ module.exports.postPlayer = async (req, res) => {
         await req.session.save();
 
         let playlists = [];
+        let sharedplaylists = [];
         // Only fetch playlists if user is logged in
         if (req.session.isLoggedIn) {
             const user = await User.findById(req.user.userId);
             if (user) {
                 playlists = await Playlist.find({ userId: user._id });
+                sharedplaylists = await sharedplaylist.find({ userId: user._id });
             }
         }
 
@@ -1022,6 +1138,7 @@ module.exports.postPlayer = async (req, res) => {
             autoplay: true,
             isLoop: false,
             playlists: playlists,
+            sharedplaylists: sharedplaylists,
             backbutton: req.session.lastVisitedPage,
             isSongLiked: isSongLiked || false // Check if song is liked
         });
@@ -1046,6 +1163,7 @@ module.exports.getNextSong = async (req, res) => {
         if (req.session.isLoggedIn) {
             user = await User.findById(req.user.userId);
             playlists = await Playlist.find({ userId: user._id });
+            sharedplaylists = await sharedplaylist.find({ userId: user._id });
         }
 
         // Get current song ID from query parameter or session
@@ -1111,7 +1229,7 @@ module.exports.getNextSong = async (req, res) => {
         }
         else {
             // Check for preferredLanguages cookie
-            let preferredLanguages = [];
+            let preferredLanguages = ['Hindi'];
             if (req.headers.cookie) {
                 const cookies = cookie.parse(req.headers.cookie);
                 if (cookies.preferredLanguages) {
@@ -1157,19 +1275,17 @@ module.exports.getNextSong = async (req, res) => {
                     nextSong = await Song.findOne(query).sort({ _id: 1 });
                 }
             } else {
-                // No language preference, get any random song
-                const excludedIds = [];
-                if (currentSongId) excludedIds.push(currentSongId);
-                if (user && user.dislikedSongs) {
-                    excludedIds.push(...user.dislikedSongs);
-                }
+                // Fallback to any song excluding current
+                nextSong = await Song.findOne({
+                    _id: { $ne: currentSongId }
+                }).sort({ _id: 1 });
 
-                const query = {};
-                if (excludedIds.length > 0) {
-                    query._id = { $nin: excludedIds };
+                if (nextSong._id.toString() === currentSongId) {
+                    nextSong = await Song.findOne({
+                        hashtags: { $in: preferredLanguages.map(l => `#${l}`) },
+                        _id: { $gt: nextSong._id }
+                    }).sort({ _id: 1 });
                 }
-
-                nextSong = await Song.findOne(query).sort({ _id: 1 });
             }
         }
 
@@ -1205,6 +1321,7 @@ module.exports.getNextSong = async (req, res) => {
                 songId: nextSong._id,
                 autoplay: true,
                 playlists: playlists,
+                sharedplaylists: sharedplaylists,
                 isLoop: false,
                 inPlaylist: !!req.session.playlistContext,
                 backbutton: req.session.lastVisitedPage || '/explore',
@@ -1276,12 +1393,24 @@ module.exports.apiNextSong = async (req, res) => {
                     _id: { $gt: req.session.recentlyplayed }
                 }).sort({ _id: 1 });
 
+                if (nextSong._id.toString() === currentSongId) {
+                    nextSong = await Song.findOne({
+                        hashtags: { $in: preferredLanguages.map(l => `#${l}`) },
+                        _id: { $gt: nextSong._id }
+                    }).sort({ _id: 1 });
+                }
+
                 if (!nextSong) {
                     // If none found after current, get first matching
                     nextSong = await Song.findOne({
                         hashtags: { $in: preferredLanguages.map(l => `#${l}`) }
                     }).sort({ _id: 1 });
                 }
+            } else {
+                // Fallback to any song excluding current
+                nextSong = await Song.findOne({
+                    _id: { $ne: currentSongId }
+                }).sort({ _id: 1 });
             }
         }
 
@@ -1372,7 +1501,14 @@ module.exports.getPreviousSong = async (req, res) => {
     try {
         let prevSong;
         let isSongLiked, isSongDisliked;
+        let playlists = [];
+        let sharedplaylists = [];
 
+        if (req.session.isLoggedIn) {
+            const user = await User.findById(req.user.userId);
+            playlists = await Playlist.find({ userId: user._id });
+            sharedplaylists = await sharedplaylist.find({ userId: user._id });
+        }
 
 
         // Check if we're in playlist context
@@ -1412,6 +1548,8 @@ module.exports.getPreviousSong = async (req, res) => {
             songName: prevSong.name,
             songLink: prevSong.link,
             songId: prevSong._id,
+            playlists: playlists,
+            sharedplaylist ,
             hashtags: prevSong.hashtags || [],
             autoplay: true,
             isLoop: false,

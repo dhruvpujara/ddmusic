@@ -32,10 +32,15 @@
                     <i class="fas fa-ellipsis-vertical text-xl"></i>
                 </button>
                 <div id="dropdownMenu"
-                    class="hidden absolute right-0 mt-2 w-64 rounded-lg bg-black/90 backdrop-blur-xl border border-white/10 divide-y divide-gray-800">
-                    <!-- Existing Playlists -->
-                    <div class="py-1">
-                        <% if (typeof playlists !=='undefined' && playlists.length> 0) { %>
+                    class="hidden absolute right-0 mt-2 w-72 rounded-lg bg-black/90 backdrop-blur-xl border border-white/10 divide-y divide-gray-800 z-50">
+                    
+                    <!-- Normal Playlists Section -->
+                    <% if (playlists && playlists.length> 0) { %>
+                        <div class="py-1">
+                            <div class="px-4 py-2 text-xs text-gray-400 font-medium flex items-center gap-2">
+                                <i class="fas fa-user text-violet-400"></i>
+                                Your Playlists
+                            </div>
                             <% playlists.forEach(playlist=> { %>
                                 <form action="/add-to-playlist" method="POST">
                                     <input type="hidden" name="songId" value="<%= songId %>">
@@ -43,32 +48,73 @@
                                     <button type="submit"
                                         class="w-full px-4 py-3 text-left text-sm flex items-center justify-between text-white/70 hover:text-white hover:bg-white/5">
                                         <div class="flex items-center gap-2">
-                                            <i class="fas fa-list text-violet-400"></i>
-                                            <span>Add to <%= playlist.name %></span>
+                                            <i class="fas fa-user text-violet-400"></i>
+                                            <span class="truncate"><%= playlist.name %></span>
                                         </div>
                                         <i class="fas fa-plus text-xs opacity-60"></i>
                                     </button>
                                 </form>
                                 <% }); %>
-                                    <% } else { %>
-                                        <p class="px-4 py-3 text-sm text-gray-500">No playlists yet</p>
-                                        <% } %>
-                    </div>
-
-                    <!-- Create New Playlist Button -->
-                    <div class="py-1">
-                        <button onclick="showPlaylistDialog()"
-                            class="w-full px-4 py-3 text-left text-sm flex items-center gap-2 text-white/70 hover:text-white hover:bg-white/5">
-                            <i class="fas fa-plus text-violet-400"></i>
-                            <span>Create New Playlist</span>
-                        </button>
+                        </div>
+                        <% } %>
+                    
+                    <!-- Shared Playlists Section -->
+                    <% if (sharedplaylists && sharedplaylists.length> 0) { %>
+                        <div class="py-1">
+                            <div class="px-4 py-2 text-xs text-gray-400 font-medium flex items-center gap-2">
+                                <i class="fas fa-users text-blue-400"></i>
+                                Shared Playlists
+                            </div>
+                            <% sharedplaylists.forEach(playlist=> { %>
+                                <form action="/add-to-shared-playlist" method="POST">
+                                    <input type="hidden" name="songId" value="<%= songId %>">
+                                    <input type="hidden" name="sharedPlaylistId" value="<%= playlist._id %>">
+                                    <button type="submit"
+                                        class="w-full px-4 py-3 text-left text-sm flex items-center justify-between text-white/70 hover:text-white hover:bg-white/5">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-users text-blue-400"></i>
+                                            <span class="truncate"><%= playlist.name %></span>
+                                        </div>
+                                        <i class="fas fa-plus text-xs opacity-60"></i>
+                                    </button>
+                                </form>
+                                <% }); %>
+                        </div>
+                        <% } %>
+                    
+                    <!-- No Playlists Message -->
+                    <% if ((!playlists || playlists.length===0) && (!sharedplaylists || sharedplaylists.length===0)) { %>
+                        <div class="py-1">
+                            <p class="px-4 py-3 text-sm text-gray-500">No playlists yet</p>
+                        </div>
+                        <% } %>
+                    
+                    <!-- Create New Playlist Buttons -->
+                    <div class="py-1 divide-y divide-gray-800">
+                        <!-- Create Normal Playlist -->
+                        <div>
+                            <button onclick="showPlaylistDialog()"
+                                class="w-full px-4 py-3 text-left text-sm flex items-center gap-2 text-white/70 hover:text-white hover:bg-white/5">
+                                <i class="fas fa-user-plus text-violet-400"></i>
+                                <span>Create New Playlist</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Create Shared Playlist -->
+                        <div>
+                            <button onclick="showSharedPlaylistDialog()"
+                                class="w-full px-4 py-3 text-left text-sm flex items-center gap-2 text-white/70 hover:text-white hover:bg-white/5">
+                                <i class="fas fa-users-plus text-blue-400"></i>
+                                <span>Create Shared Playlist</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Add this dialog before closing body tag -->
+    <!-- Create Normal Playlist Dialog -->
     <div id="playlistDialog"
         class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
         <div class="bg-black/90 border border-white/10 rounded-lg p-6 max-w-sm w-full mx-4">
@@ -100,118 +146,138 @@
         </div>
     </div>
 
+    <!-- Create Shared Playlist Dialog -->
+    <div id="sharedPlaylistDialog"
+        class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-black/90 border border-white/10 rounded-lg p-6 max-w-sm w-full mx-4">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold">Create Shared Playlist</h3>
+                <button type="button" onclick="hideSharedPlaylistDialog()" class="text-white/40 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form action="/shared/playlist/create" method="POST">
+                <input type="hidden" name="songId" value="<%= typeof songId === 'string' ? songId.replace(/^ObjectId\(" (.*)"\)$/, '$1' ) : songId %>">
+                <div class="relative mb-4">
+                    <label class="block text-sm text-gray-400 mb-2">Playlist Name</label>
+                    <input type="text" name="name" placeholder="Enter playlist name" maxlength="30" class="w-full bg-white/5 border border-white/10 rounded h-12 pl-4 text-white 
+                                  placeholder:text-white/30 focus:outline-none focus:border-blue-500 text-base"
+                        required>
+                </div>
+                <div class="relative mb-6">
+                    <label class="block text-sm text-gray-400 mb-2">Description (Optional)</label>
+                    <textarea name="description" placeholder="Add a description" rows="2" class="w-full bg-white/5 border border-white/10 rounded p-3 text-white 
+                                  placeholder:text-white/30 focus:outline-none focus:border-blue-500 text-sm resize-none"></textarea>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="hideSharedPlaylistDialog()"
+                        class="px-5 py-2.5 text-sm text-white/70 hover:text-white">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-8 py-2.5 text-lg py-1 bg-blue-600 hover:bg-blue-500 rounded-full transition-colors">
+                        Create Shared
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <main class="flex-1 mt-24 mb-8 px-4 relative z-10">
         <div class="max-w-md mx-auto flex flex-col items-center">
             <!-- Album Art Container -->
-<!-- Album Art Container -->
-<div class="relative group">
-    <div
-        class="absolute inset-0 bg-gradient-to-br from-violet-900 to-indigo-950 rounded-3xl blur-2xl opacity-20 group-hover:opacity-30 transition-opacity">
-    </div>
-    <div class="relative w-72 h-72 md:w-80 md:h-80 rounded-3xl bg-gradient-to-br from-violet-950 to-slate-950 overflow-hidden
+            <div class="relative group">
+                <div
+                    class="absolute inset-0 bg-gradient-to-br from-violet-900 to-indigo-950 rounded-3xl blur-2xl opacity-20 group-hover:opacity-30 transition-opacity">
+                </div>
+                <div class="relative w-72 h-72 md:w-80 md:h-80 rounded-3xl bg-gradient-to-br from-violet-950 to-slate-950 overflow-hidden
                 shadow-[0_8px_32px_12px_rgba(34,211,238,0.25)] hover:shadow-[0_16px_48px_16px_rgba(34,211,238,0.3)]
                 transition-shadow duration-500">
 
-        <!-- Cover Art Elements -->
-        <div class="absolute inset-0 flex items-center justify-center">
-            <i class="fas fa-music text-6xl text-white/20 animate-pulse"></i>
-        </div>
+                    <!-- Cover Art Elements -->
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <i class="fas fa-music text-6xl text-white/20 animate-pulse"></i>
+                    </div>
 
-        <!-- Animated Squares -->
-        <div class="absolute inset-0 overflow-hidden opacity-30">
-            <div
-                class="absolute -left-4 -top-4 w-20 h-20 bg-gradient-to-br from-pink-500/40 to-rose-500/30 rounded-lg rotate-12 animate-float 
+                    <!-- Animated Squares -->
+                    <div class="absolute inset-0 overflow-hidden opacity-30">
+                        <div
+                            class="absolute -left-4 -top-4 w-20 h-20 bg-gradient-to-br from-pink-500/40 to-rose-500/30 rounded-lg rotate-12 animate-float 
                       shadow-[0_0_30px_4px_rgba(236,72,153,0.3)] hover:shadow-[0_0_40px_8px_rgba(236,72,153,0.4)] transition-shadow">
-            </div>
+                        </div>
 
-            <div
-                class="absolute right-10 top-10 w-16 h-16 bg-gradient-to-br from-rose-400/40 to-pink-600/30 rounded-lg -rotate-12 animate-float animation-delay-500
+                        <div
+                            class="absolute right-10 top-10 w-16 h-16 bg-gradient-to-br from-rose-400/40 to-pink-600/30 rounded-lg -rotate-12 animate-float animation-delay-500
                       shadow-[0_0_30px_4px_rgba(244,63,94,0.3)] hover:shadow-[0_0_40px_8px_rgba(244,63,94,0.4)] transition-shadow">
-            </div>
+                        </div>
 
-            <div
-                class="absolute bottom-10 left-10 w-14 h-14 bg-gradient-to-br from-fuchsia-500/40 to-pink-500/30 rounded-lg rotate-45 animate-float animation-delay-1000
+                        <div
+                            class="absolute bottom-10 left-10 w-14 h-14 bg-gradient-to-br from-fuchsia-500/40 to-pink-500/30 rounded-lg rotate-45 animate-float animation-delay-1000
                       shadow-[0_0_30px_4px_rgba(217,70,239,0.3)] hover:shadow-[0_0_40px_8px_rgba(217,70,239,0.4)] transition-shadow">
-            </div>
+                        </div>
 
-            <!-- Last square -->
-            <div
-                class="absolute -right-4 -bottom-4 w-24 h-24 bg-gradient-to-br from-pink-600/40 to-rose-400/30 rounded-lg -rotate-12 animate-float animation-delay-1500
+                        <!-- Last square -->
+                        <div
+                            class="absolute -right-4 -bottom-4 w-24 h-24 bg-gradient-to-br from-pink-600/40 to-rose-400/30 rounded-lg -rotate-12 animate-float animation-delay-1500
                       shadow-[0_0_30px_4px_rgba(236,72,153,0.3)] hover:shadow-[0_0_40px_8px_rgba(236,72,153,0.4)] transition-shadow">
-            </div>
-        </div>
+                        </div>
+                    </div>
 
-        <!-- Button Row -->
-        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4 z-20">
-            <!-- Thumbs Up -->
-            <!-- <form action="/like" method="POST">
-                <input type="hidden" name="objectId" value="<%= songId %>">
-                <button type="submit"
-                    class="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-green-500/30 transition-all duration-300 group">
-                    <i class="fas fa-thumbs-up text-white/60 group-hover:text-green-500"></i>
-                </button>
-            </form> -->
+                    <!-- Button Row -->
+                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4 z-20">
+                        <!-- Thumbs Up -->
+                        <form action="/like" method="POST" id="likeForm">
+                            <input type="hidden" name="objectId" value="<%= songId %>">
+                            <button type="submit"
+                                class="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-green-500/30 transition-all duration-300 group">
+                                <i class="fas fa-thumbs-up <%= isSongLiked ? 'text-green-500' : 'text-gray-400' %>"></i>
+                            </button>
+                        </form>
 
-            <form action="/like" method="POST" id="likeForm">
-            <input type="hidden" name="objectId" value="<%= songId %>">
-            <button type="submit"
-                class="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-green-500/30 transition-all duration-300 group">
-                <i class="fas fa-thumbs-up <%= isSongLiked ? 'text-black' : 'text-gray-400' %>"></i>
-            </button>
-        </form>
-
-
-            <!-- Loop -->
-            <form action="/playerr" method="POST">
-                <input type="hidden" name="songId" value="<%= songId %>">
-                <input type="hidden" name="songLink" value="<%= songLink %>">
-                <input type="hidden" name="songName" value="<%= songName %>">
-                <input type="hidden" name="loop" value="<%= typeof isLoop !== 'undefined' ? !isLoop : true %>">
-                <button type="submit"
-                    class="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-violet-500/20 transition-all duration-300 group shadow-lg shadow-violet-500/20">
-                    <i class="fas fa-repeat text-lg <%= typeof isLoop !== 'undefined' && isLoop ? 'text-violet-400' : 'text-white/60' %> 
+                        <!-- Loop -->
+                        <form action="/playerr" method="POST">
+                            <input type="hidden" name="songId" value="<%= songId %>">
+                            <input type="hidden" name="songLink" value="<%= songLink %>">
+                            <input type="hidden" name="songName" value="<%= songName %>">
+                            <input type="hidden" name="loop" value="<%= typeof isLoop !== 'undefined' ? !isLoop : true %>">
+                            <button type="submit"
+                                class="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-violet-500/20 transition-all duration-300 group shadow-lg shadow-violet-500/20">
+                                <i class="fas fa-repeat text-lg <%= typeof isLoop !== 'undefined' && isLoop ? 'text-violet-400' : 'text-white/60' %> 
                           group-hover:text-violet-400"></i>
-                </button>
-            </form>
+                            </button>
+                        </form>
 
-            <!-- Thumbs Down -->
-            <form action="/dislike" method="POST">
-                <input type="hidden" name="objectId" value="<%= songId %>">
-                <button type="submit"
-                    class="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-red-500/30 transition-all duration-300 group">
-                    <i class="fas fa-thumbs-down  <%= isSongDisliked ? 'text-black' : 'text-gray-400' %>"></i>
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
-
-
-                
+                        <!-- Thumbs Down -->
+                        <form action="/dislike" method="POST">
+                            <input type="hidden" name="objectId" value="<%= songId %>">
+                            <button type="submit"
+                                class="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md flex items-center justify-center hover:bg-red-500/30 transition-all duration-300 group">
+                                <i class="fas fa-thumbs-down <%= isSongDisliked ? 'text-red-500' : 'text-gray-400' %>"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
             <!-- Song Info -->
-<div class="text-center mt-8 mb-6 w-full">
-  <h2
-    id="songName"
-    class="text-2xl font-bold mb-2 bg-gradient-to-r from-violet-200 to-violet-400 bg-clip-text text-transparent">
-    <%= songName %>
-  </h2>
+            <div class="text-center mt-8 mb-6 w-full">
+                <h2
+                    id="songName"
+                    class="text-2xl font-bold mb-2 bg-gradient-to-r from-violet-200 to-violet-400 bg-clip-text text-transparent">
+                    <%= songName %>
+                </h2>
 
-  <!-- Replace "DDMusic Player" with styled toggle -->
-  <label class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 cursor-pointer">
-    <input type="checkbox" id="wakelock-toggle"
-      class="form-checkbox h-5 w-5 text-violet-500 rounded focus:ring-violet-500">
-    <span class="text-sm font-medium text-white/80 tracking-wide">AutoPlay</span>
-  </label>
-</div>
+                <!-- Replace "DDMusic Player" with styled toggle -->
+                <label class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 cursor-pointer">
+                    <input type="checkbox" id="wakelock-toggle"
+                        class="form-checkbox h-5 w-5 text-violet-500 rounded focus:ring-violet-500">
+                    <span class="text-sm font-medium text-white/80 tracking-wide">AutoPlay</span>
+                </label>
+            </div>
 
-
-
-            
             <!-- Audio Controls -->
             <div class="w-full bg-black/40 backdrop-blur-xl p-6 rounded-2xl border border-white/5 shadow-2xl">
-
 
                 <audio id="audioPlayer" class="hidden" preload="auto" autoplay>
                     <source src="<%= songLink %>" type="audio/mp3" onerror="handleAudioError()" <%=isLoop ? 'loop' : ''
@@ -265,31 +331,30 @@
                     let songQueue = []; // Cache for upcoming songs
                     const backBtn = document.getElementById('backBtn');
 
-if (backBtn) {
-    backBtn.addEventListener('click', function (e) {
-        e.preventDefault(); // Stop default navigation
+                    if (backBtn) {
+                        backBtn.addEventListener('click', function (e) {
+                            e.preventDefault(); // Stop default navigation
 
-        try {
-        updatePlaybackState(!audio.paused,  '<%= songId %>', audio.currentTime);
-        window.location.href ="<%= backbutton %>";
-        } catch (error) {
-            console.error('Error updating playback state:', error);
-        } 
-    });
-}
-
+                            try {
+                                updatePlaybackState(!audio.paused, '<%= songId %>', audio.currentTime);
+                                window.location.href = "<%= backbutton %>";
+                            } catch (error) {
+                                console.error('Error updating playback state:', error);
+                            }
+                        });
+                    }
 
                     function updatePlaybackState(isPlaying, songId, currentTime) {
-                   fetch('/update-playback-time', {
-                   method: 'POST',
-                   headers: { 'Content-Type': 'application/json' },
-                       body: JSON.stringify({
-                      isPlaying : isPlaying,
-                      songId: '<%= songId %>',
-                      currentTime: audio.currentTime,
-                  })
-                   }).catch(err => console.error('Error updating playback state:', err));
-            }
+                        fetch('/update-playback-time', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                isPlaying: isPlaying,
+                                songId: '<%= songId %>',
+                                currentTime: audio.currentTime,
+                            })
+                        }).catch(err => console.error('Error updating playback state:', err));
+                    }
 
                     function handleAudioError() {
                         console.error('Audio failed to load:', audio.querySelector('source').src);
@@ -366,75 +431,15 @@ if (backBtn) {
                         }
                     });
 
-// async function preloadSongs(currentId) {
-//     try {
-//         const res = await fetch(`/api/next-songs/${currentId}`);
-//         const data = await res.json();
-
-//         if (data.success && Array.isArray(data.songs)) {
-//             const validSongs = data.songs.filter(song =>
-//                 song.link && typeof song.link === 'string' && song.link.startsWith('http')
-//             );
-
-//             if (validSongs.length === 0) {
-//                 console.warn("No valid songs to preload.");
-//             }
-
-//             songQueue.push(...validSongs);  // Push instead of replacing
-//             console.log("Preloaded valid songs:", validSongs);
-//         } else {
-//             console.warn("Unexpected song response:", data);
-//         }
-//     } catch (err) {
-//         console.error("Error preloading songs:", err);
-//     }
-// }
-
-
-// Add autoplay functionality
-//     audio.addEventListener('ended', async () => {
-//   if (songQueue.length === 0) {
-//     await preloadSongs(currentSongId);
-//   }
-
-//   if (songQueue.length > 0) {
-//     const nextSong = songQueue.shift();
-//     if (!nextSong || !nextSong.link) {
-//       console.error("Invalid song data:", nextSong);
-//       return;
-//     }
-
-//     audioPlayer.pause();
-//     audioPlayer.src = nextSong.link;
-//     audioPlayer.load();
-//     document.getElementById('songName').textContent = nextSong.name;
-//     currentSongId = nextSong.id;
-
-//     try {
-//       await audioPlayer.play();
-//     } catch (err) {
-//       console.error("Playback failed:", err);
-//     }
-
-//     // Make sure new songs are preloaded before we run out again
-//     if (songQueue.length < 3) {
-//       await preloadSongs(currentSongId); // ✅ use await here
-//     }
-
-//   } else {
-//     console.log("No more songs to play.");
-//   }
-// });
-
                     // Add autoplay functionality
-                   audio.addEventListener('ended', async () => {
+                    audio.addEventListener('ended', async () => {
                         try {
                             const response = await fetch('/api/next-song/' + currentSongId);
                             const data = await response.json();
 
                             if (!data.success || !data.song) {
-                            console.warn("No next song found.");
-                            return;
+                                console.warn("No next song found.");
+                                return;
                             }
 
                             // Update song
@@ -452,19 +457,18 @@ if (backBtn) {
 
                             // Update backend session state
                             await fetch('/update-playback-time', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                isPlaying: true,
-                                songId: currentSongId,
-                                currentTime: 0
-                            })
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    isPlaying: true,
+                                    songId: currentSongId,
+                                    currentTime: 0
+                                })
                             });
                         } catch (err) {
                             console.error('Error auto-playing next song:', err);
                         }
-                        });
-
+                    });
 
                     async function playSong(songId) {
                         try {
@@ -515,7 +519,6 @@ if (backBtn) {
                             playSong(button.dataset.songId);
                         });
                     });
-
 
                     audio.addEventListener('paused', () => {
                         playPauseBtn.innerHTML = '<i class="fas fa-play text-xl pl-1"></i>';
@@ -579,19 +582,17 @@ if (backBtn) {
             <div id="sharePopup"
                 class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-black/90 border border-white/10 backdrop-blur-lg
                         rounded-lg px-4 py-3 flex items-center gap-3 shadow-lg max-w-sm w-[90%] animate-share-in">
-            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-500/20">
-                <i class="fas fa-bullhorn text-yellow-400"></i>
-            </div>
-            <span class="text-white text-sm font-medium flex-1">Share with friends and support us</span>
-            <button onclick="closeSharePopup()" class="text-white/50 hover:text-white text-lg">
-                &times;
-            </button>
+                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-500/20">
+                    <i class="fas fa-bullhorn text-yellow-400"></i>
+                </div>
+                <span class="text-white text-sm font-medium flex-1">Share with friends and support us</span>
+                <button onclick="closeSharePopup()" class="text-white/50 hover:text-white text-lg">
+                    &times;
+                </button>
             </div>
 
-            
             <style>
-
-              @keyframes share-in {
+                @keyframes share-in {
                     0% {
                         transform: translate(-50%, -40px);
                         opacity: 0;
@@ -607,12 +608,11 @@ if (backBtn) {
                         transform: translate(-50%, 0);
                         opacity: 1;
                     }
-                    }
+                }
 
-                    .animate-share-in {
+                .animate-share-in {
                     animation: share-in 0.7s ease-out;
-                    }
-
+                }
 
                 #playlist-popup>div {
                     animation: popup-bounce 0.7s;
@@ -641,11 +641,11 @@ if (backBtn) {
             </style>
             <script>
                 function closeSharePopup() {
-                const popup = document.getElementById('sharePopup');
-                if (popup) {
-                    popup.style.display = 'none';
-                }
-                requestWakeLock(); // trigger wake lock on close
+                    const popup = document.getElementById('sharePopup');
+                    if (popup) {
+                        popup.style.display = 'none';
+                    }
+                    requestWakeLock(); // trigger wake lock on close
                 }
 
                 setTimeout(() => {
@@ -653,7 +653,7 @@ if (backBtn) {
                     if (popup) popup.style.display = 'none';
                 }, 2000);
             </script>
-            <% } %>
+        <% } %>
     </main>
 
     <style>
@@ -687,6 +687,7 @@ if (backBtn) {
     </style>
 
     <script>
+        // Dropdown functionality
         const dropdownButton = document.getElementById('dropdownButton');
         const dropdownMenu = document.getElementById('dropdownMenu');
 
@@ -701,6 +702,7 @@ if (backBtn) {
             }
         });
 
+        // Dialog functions
         function showPlaylistDialog() {
             document.getElementById('playlistDialog').classList.remove('hidden');
             document.getElementById('dropdownMenu').classList.add('hidden');
@@ -710,75 +712,88 @@ if (backBtn) {
             document.getElementById('playlistDialog').classList.add('hidden');
         }
 
+        function showSharedPlaylistDialog() {
+            document.getElementById('sharedPlaylistDialog').classList.remove('hidden');
+            document.getElementById('dropdownMenu').classList.add('hidden');
+        }
+
+        function hideSharedPlaylistDialog() {
+            document.getElementById('sharedPlaylistDialog').classList.add('hidden');
+        }
+
         function togglePlaylistModal() {
             const modal = document.getElementById('playlistModal');
             modal.classList.toggle('hidden');
         }
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', function(e) {
+            if (!dropdownButton.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.add('hidden');
+            }
+        });
     </script>
 
-   <script>
-let wakeLock = null;
+    <script>
+        let wakeLock = null;
 
-async function enableWakeLock() {
-  try {
-    if ("wakeLock" in navigator) {
-      wakeLock = await navigator.wakeLock.request("screen");
-      sessionStorage.setItem("wakelock", "true");
-      console.log("Wake Lock is active");
+        async function enableWakeLock() {
+            try {
+                if ("wakeLock" in navigator) {
+                    wakeLock = await navigator.wakeLock.request("screen");
+                    sessionStorage.setItem("wakelock", "true");
+                    console.log("Wake Lock is active");
 
-      wakeLock.addEventListener("release", () => {
-        console.log("Wake Lock released by system");
-      });
-    } else {
-      console.warn("Wake Lock API not supported in this browser");
-    }
-  } catch (err) {
-    console.error(`Wake Lock error: ${err.name}, ${err.message}`);
-  }
-}
+                    wakeLock.addEventListener("release", () => {
+                        console.log("Wake Lock released by system");
+                    });
+                } else {
+                    console.warn("Wake Lock API not supported in this browser");
+                }
+            } catch (err) {
+                console.error(`Wake Lock error: ${err.name}, ${err.message}`);
+            }
+        }
 
-function disableWakeLock() {
-  if (wakeLock) {
-    wakeLock.release();
-    wakeLock = null;
-  }
-  sessionStorage.removeItem("wakelock");
-  console.log("Wake Lock manually released");
-}
+        function disableWakeLock() {
+            if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
+            }
+            sessionStorage.removeItem("wakelock");
+            console.log("Wake Lock manually released");
+        }
 
-// Init toggle state on load
-document.addEventListener("DOMContentLoaded", () => {
-  const toggle = document.getElementById("wakelock-toggle");
+        // Init toggle state on load
+        document.addEventListener("DOMContentLoaded", () => {
+            const toggle = document.getElementById("wakelock-toggle");
 
-  if (!toggle) return;
+            if (!toggle) return;
 
-  // Restore state if previously enabled
-  if (sessionStorage.getItem("wakelock") === "true") {
-    toggle.checked = true;
-    enableWakeLock();
-  }
+            // Restore state if previously enabled
+            if (sessionStorage.getItem("wakelock") === "true") {
+                toggle.checked = true;
+                enableWakeLock();
+            }
 
-  // Toggle listener
-  toggle.addEventListener("change", () => {
-    if (toggle.checked) {
-      enableWakeLock();
-    } else {
-      disableWakeLock();
-    }
-  });
-});
+            // Toggle listener
+            toggle.addEventListener("change", () => {
+                if (toggle.checked) {
+                    enableWakeLock();
+                } else {
+                    disableWakeLock();
+                }
+            });
+        });
 
-// Reacquire if tab is hidden and comes back
-document.addEventListener("visibilitychange", async () => {
-  if (wakeLock !== null && document.visibilityState === "visible") {
-    wakeLock = await navigator.wakeLock.request("screen");
-    console.log("Wake Lock re-acquired after visibility change");
-  }
-});
-</script>
-
-
+        // Reacquire if tab is hidden and comes back
+        document.addEventListener("visibilitychange", async () => {
+            if (wakeLock !== null && document.visibilityState === "visible") {
+                wakeLock = await navigator.wakeLock.request("screen");
+                console.log("Wake Lock re-acquired after visibility change");
+            }
+        });
+    </script>
 
 </body>
-
 </html>

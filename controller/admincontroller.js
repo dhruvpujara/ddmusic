@@ -3,6 +3,8 @@ const User = require('../models/user');
 const Artist = require('../models/artist');
 const mixedModel = require('../models/mixedModelSchema');
 const hashtagGenerator = require('../utils/hash');
+const cloudinary = require('cloudinary').v2;
+const streamifier = require('streamifier');
 require('dotenv').config();
 
 
@@ -92,6 +94,142 @@ module.exports.getUploadForm = (req, res) => {
             });
         }
     };
+
+module.exports.getUploadMixedModelForm = (req, res) => {
+    res.render('admin/mixedmodel', {
+        isLoggedIn: req.session.isLoggedIn || false,
+        username: req.session.loggeduser || ''
+    });
+};
+
+
+
+module.exports.postUploadMixedModel = async (req, res) => {
+    try {
+        console.log('=== START UPLOAD ===');
+        console.log('1. Request body:', req.body);
+        console.log('2. Request file exists?', !!req.file);
+        console.log('3. Request file details:', req.file ? {
+            originalname: req.file.originalname,
+            mimetype: req.file.mimetype,
+            size: req.file.size,
+            buffer: req.file.buffer ? 'YES' : 'NO',
+            path: req.file.path
+        } : 'NO FILE');
+
+        const { name, hashtags, bio } = req.body;
+
+        if (!req.file) {
+            console.log('❌ ERROR: No file uploaded');
+            return res.status(400).render('admin/mixedmodel', {
+                error: 'Please upload an image file',
+                isLoggedIn: req.session.isLoggedIn || false,
+                username: req.session.loggeduser || ''
+            });
+        }
+
+        console.log('4. Uploading to Cloudinary...');
+
+        let cloudinaryUrl = '';
+        let publicId = '';
+
+        // Method 1: If you have a buffer (recommended for Cloudinary)
+        if (req.file.buffer) {
+            console.log('Using buffer upload method...');
+
+            const uploadResult = await new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: 'model-thumbnails',
+                        resource_type: 'image'
+                    },
+                    (error, result) => {
+                        if (error) {
+                            console.error('Cloudinary upload error:', error);
+                            reject(error);
+                        } else {
+                            resolve(result);
+                        }
+                    }
+                );
+
+                streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+            });
+
+            cloudinaryUrl = uploadResult.secure_url;
+            publicId = uploadResult.public_id;
+
+        }
+        // Method 2: If you have a file path (local file)
+        else if (req.file.path) {
+            console.log('Using path upload method...');
+
+            const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+                folder: 'model-thumbnails',
+                resource_type: 'image'
+            });
+
+            cloudinaryUrl = uploadResult.secure_url;
+            publicId = uploadResult.public_id;
+
+            // Optional: Delete local file after upload
+            const fs = require('fs');
+            fs.unlinkSync(req.file.path);
+        }
+        // Fallback
+        else {
+            console.log('❌ ERROR: No buffer or path available in req.file');
+            throw new Error('File upload failed - no valid file data');
+        }
+
+        console.log('5. Cloudinary upload successful!');
+        console.log('   URL:', cloudinaryUrl);
+        console.log('   Public ID:', publicId);
+
+        // Process hashtags
+        let processedHashtags = [];
+        if (hashtags && hashtags.trim() !== '') {
+            processedHashtags = hashtags.split(',')
+                .map(tag => tag.trim())
+                .filter(tag => tag.length > 0);
+        }
+
+        console.log('6. Creating mixedModel with:', {
+            name,
+            hashtags: processedHashtags,
+            thumbnail: cloudinaryUrl,
+            bio: bio || 'No biography available.'
+        });
+
+        // Create and save mixed model
+        const mixmodel = new mixedModel({
+            name: name || 'Untitled',
+            hashtags: processedHashtags,
+            thumbnail: cloudinaryUrl, // CLOUDINARY URL, not default!
+            public_id: publicId,
+            bio: bio || 'No biography available.'
+        });
+
+        await mixmodel.save();
+        console.log('✅ mixmodel saved successfully:', {
+            id: mixmodel._id,
+            name: mixmodel.name,
+            thumbnail: mixmodel.thumbnail
+        });
+
+        res.redirect('/admin/dashboard');
+
+    } catch (error) {
+        console.error('❌ Error in mixed model upload:', error);
+        console.error('Error stack:', error.stack);
+
+        res.status(500).render('admin/mixedmodel', {
+            error: 'Failed to upload mixed model: ' + error.message,
+            isLoggedIn: req.session.isLoggedIn || false,
+            username: req.session.loggeduser || ''
+        });
+    }
+}
 
 
 module.exports.getArtist = (req, res) => {
@@ -193,40 +331,3 @@ module.exports.findSong = async (req, res) => {
             res.status(500).json({ error: 'Error updating song' });
         }
     }
-
-module.exports.getUploadMixedModelForm = (req, res) => {
-    res.render('admin/mixedmodel', {
-        isLoggedIn: req.session.isLoggedIn || false,
-        username: req.session.loggeduser || ''
-    });
-};
-
-
-
-
-module.exports.postUploadMixedModel = async (req, res) => {
-    try {
-        const { name, hashtags, thumbnail, bio } = req.body;
-
-        // Create and save artist
-        const mixmodel = new mixedModel({
-            name,
-            hashtags: hashtags ? hashtags.split(',').map(tag => tag.trim()) : [],
-            thumbnail: thumbnail || 'default-thumbnail.jpg',
-            bio: bio || 'No biography available.'
-        });
-
-        await mixmodel.save();
-        console.log('mixmodel saved successfully:', artist);
-        res.redirect('/admin/mixedmodel');
-    } catch (error) {
-        console.error('Error in artist upload:', error);
-        res.status(500).render('artist', { error: 'Failed to upload artist' });
-    }
-}
-
-
-
-
-
-

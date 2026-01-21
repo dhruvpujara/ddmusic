@@ -1,11 +1,9 @@
 const User = require('../models/user');
-const session = require('express-session');
 const emailService = require('../utils/nodemailer');
-const errorMiddleware = require('../errorhandler/errorhandler');
-const catchAsyncError = require('../middleware/catchAsyncerror')
 const Playlist = require('../models/playlist');
 const Song = require('../models/song');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 
 // Add middleware at the top
@@ -130,77 +128,162 @@ module.exports.getverified = async (req, res) => {
     }
 };
 
+module.exports.postverifyEmail = async (req, res) => {
+    try {
+        const { username, email, password } = req.body;
+
+        // Validate required fields
+        if (!username || !email || !password) {
+            console.log('Missing fields:', { username, email, password });
+            return res.status(400).json({
+                success: false,
+                message: 'All fields are required'
+            });
+        }
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            console.log('User already exists with email:', email);
+            return res.status(400).json({
+                success: false,
+                message: 'Email already registered'
+            });
+        }
+
+        // Generate verification code
+        const verificationCode = Math.floor(10000 + Math.random() * 90000).toString();
+
+        // Generate email template
+        const emailTemplate = `
+            <div style="background-color: #09090b; color: white; font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border-radius: 16px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="background: linear-gradient(to right, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px;">DDMusic</h1>
+                </div>
+                
+                <div style="background: linear-gradient(to bottom right, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1)); padding: 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                    <h2 style="color: #e2e8f0; text-align: center; margin-bottom: 20px;">Verify Your Email</h2>
+                    <p style="color: #94a3b8; text-align: center; margin-bottom: 30px;">Your verification code is:</p>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <div style="display: inline-block; background: linear-gradient(to right, #8b5cf6, #ec4899); padding: 15px 30px; border-radius: 8px; font-size: 24px; font-weight: bold; letter-spacing: 3px;">
+                            ${verificationCode}
+                        </div>
+                    </div>
+                    
+                    <p style="color: #94a3b8; text-align: center; font-size: 14px;">This code will expire in 10 minutes</p>
+                </div>
+                
+                <footer style="text-align: center; margin-top: 30px; color: #64748b; font-size: 12px;">
+                    <p>© DDMusic. All rights reserved.</p>
+                </footer>
+            </div>
+        `;
+
+        // Store verification data in session (NOT in database yet)
+        req.session.verificationData = {
+            username,
+            email,
+            password, // In production, you should hash this
+            verificationCode,
+            expires: Date.now() + 10 * 60 * 1000 // 10 minutes
+        };
+
+        console.log('Session data set:', req.session.verificationData);
+
+        // Send verification email
+        console.log('Attempting to send email to:', email);
+        const emailSent = await emailService.sendEmail(
+            email,
+            'Verify your email for DDMusic',
+            emailTemplate
+        );
+
+        if (!emailSent) {
+            console.log('Email sending failed');
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to send verification email'
+            });
+        }
+
+        console.log('Email sent successfully to:', email);
+
+        // Return JSON response for AJAX
+        return res.json({
+            success: true,
+            message: 'Verification code sent successfully'
+        });
+
+    } catch (error) {
+        console.error('Error in postverifyEmail:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
+
 module.exports.getforgotPassword = (req, res) => {
     res.render('account/forgotPassword', { error: null });
 };
 
+module.exports.resetpassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const existingUser = User.findOne({ email });
+
+        if (!existingUser) {
+            return res.render('account/forgotPassword', { error: 'Email not found' });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        const sendEmail = await emailService.sendEmail(email, 'Password Reset OTP', `<p>Your OTP for password reset is: <strong>${otp}</strong></p>`);
+        req.session.passwordResetOtp = otp;
+        res.render('forgotPassword', { email });
+
+    } catch (error) {
+        console.error('Error in resetpassword:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    };
+};
+
 module.exports.postregister = async (req, res) => {
-    const { username, email, password } = req.body;
-    if (!username || !email || !password) {
-        error.name = insufficientfields;
+    const { verificationCode } = req.body;
+    const { username, email, password, } = req.session.verificationData || {};
+
+    if (verificationCode != req.session.verificationData.verificationCode) {
+        console.log('Invalid verification code during registration');
+        return res.render('account/otpverify', { error: 'Invalid verification code' });
+    }
+
+    if (!username || !email || !password || !verificationCode) {
+        console.log('Registration attempt with missing session data');
         return res.redirect('/register');
     }
-    const existingUser = await User.findOne({ $or: [{ email }] });
-    if (existingUser) {
-        return res.render('register', { error: 'Email already used' });
-    }
 
-    const user = new User({ username, email, password });
-    const verificationCode = user.generateVerificationCode();
-
-    const userData = {
+    const user = new User({
         username,
         email,
         password,
-        verificationCode,
-        createdAt: new Date()
-    };
-
-    // Update user with complete data
-    Object.assign(user, userData);
-
-    function generateEmailTemplate(verificationCode) {
-        return `
-                <div style="background-color: #09090b; color: white; font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border-radius: 16px;">
-                    <div style="text-align: center; margin-bottom: 30px;">
-                        <h1 style="background: linear-gradient(to right, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px;">DDMusic</h1>
-                    </div>
-                    
-                    <div style="background: linear-gradient(to bottom right, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1)); padding: 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                        <h2 style="color: #e2e8f0; text-align: center; margin-bottom: 20px;">Verify Your Email</h2>
-                        <p style="color: #94a3b8; text-align: center; margin-bottom: 30px;">Your verification code is:</p>
-                        
-                        <div style="text-align: center; margin: 30px 0;">
-                            <div style="display: inline-block; background: linear-gradient(to right, #8b5cf6, #ec4899); padding: 15px 30px; border-radius: 8px; font-size: 24px; font-weight: bold; letter-spacing: 3px;">
-                                ${verificationCode}
-                            </div>
-                        </div>
-                        
-                        <p style="color: #94a3b8; text-align: center; font-size: 14px;">This code will expire in 10 minutes</p>
-                    </div>
-                    
-                    <footer style="text-align: center; margin-top: 30px; color: #64748b; font-size: 12px;">
-                        <p>© DDMusic. All rights reserved.</p>
-                    </footer>
-                </div>
-            `;
-    }
-
-
-    const sendVerificationEmail = async (email, verificationCode) => {
-        const message = generateEmailTemplate(verificationCode);
-        try {
-            await emailService.sendEmail(email, 'Verify your email', message);
-        } catch (error) {
-            console.error('Error sending verification email:', error);
-        }
-    };
-
+        verified: true,
+        verificationCode: null
+    });
 
     await user.save().then((user) => {
-        sendVerificationEmail(email, verificationCode);
-        res.render('acccreated');
-
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '15d' });
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
+        });
+        req.session.isLoggedIn = true;
+        res.redirect('/profile');
     }).catch((err) => {
         console.error('Registration error:', err);
         res.redirect('/register');
@@ -214,22 +297,62 @@ module.exports.getregister = (req, res) => {
     });
 };
 
-module.exports.getresetpassword = async (req, res) => {
-    console.log(req.body);
-    if (req.session && req.session.recentlyplayed) {
-        recentSong = await Song.findById(req.session.recentlyplayed);
-        if (req.session.lastPlaybackSong === req.session.recentlyplayed) {
-            lastPlaybackTime = req.session.lastPlaybackTime || 0;
-        }
-    }
+module.exports.postresetpassword = async (req, res) => {
+    try {
 
-    if (!req.session.isLoggedIn) {
-        return res.render('mainpages/profile', {
-            isLoggedIn: false,
-            likedSongsCount: 0,
-            playlistCount: 0,
-            recentSong,
-            lastPlaybackTime
+        const { email, newPassword, otp } = req.body;
+        console.log('Reset password request for:', email);
+
+        // 1. Validate OTP
+        if (req.session.passwordResetOtp !== otp) {
+            return res.render('login', { error: 'Invalid OTP' });
+        }
+
+        // 2. Find user
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.render('account/forgotPassword', { error: 'Email not found' });
+        }
+        // 4. Update user password
+        user.password = newPassword;
+
+        // 5. Save user (this triggers Mongoose validations)
+        await user.save();
+        console.log('User saved successfully');
+
+        // 6. Clear the OTP from session after successful reset
+        delete req.session.passwordResetOtp;
+
+        // 7. Create JWT token (optional - you might want to redirect to login instead)
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '15d' });
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 15 * 24 * 60 * 60 * 1000 // 15 days
+        });
+
+        req.session.isLoggedIn = true;
+
+        // 8. Redirect to profile
+        res.redirect('/profile');
+
+    } catch (error) {
+        console.error('Reset password error:', error);
+
+        // If it's a Mongoose validation error
+        if (error.name === 'ValidationError') {
+            console.error('Validation errors:', error.errors);
+            return res.render('reset-password', {
+                email: req.body.email,
+                error: 'Password validation failed. Please ensure password is at least 8 characters.'
+            });
+        }
+
+        // Generic error
+        res.render('reset-password', {
+            email: req.body.email,
+            error: 'An error occurred. Please try again.'
         });
     }
 };
@@ -253,9 +376,7 @@ module.exports.logout = (req, res) => {
     });
 };
 
-module.exports.verifyEmail = (req, res) => {
-    res.render('account/otpverify', { error: null });  // Pass error as null by default
-};
+
 
 module.exports.getprofile = async (req, res) => {
     try {

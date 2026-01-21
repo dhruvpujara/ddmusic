@@ -29,14 +29,22 @@ router.post('/search', usercontroller.postSearch);
 
 // Playlist routes
 router.get('/playlists', usercontroller.getUserPlaylists);
-router.get('/playlist/:id', usercontroller.getPlaylist);
 router.post('/delete-playlist/:id', isAuthenticated, usercontroller.deletePlaylist); // New route for deleting a playlist
 router.post('/playlist/remove-song', usercontroller.removeSongFromPlaylist); // Route for removing songs
+
+
+// shared playlist routes
+router.get('/shared/playlist', isAuthenticated, usercontroller.getSharedPlaylists);
+router.get('/join/shared/playlist/:id',isAuthenticated, usercontroller.joinSharedPlaylist);
+router.post('/create/shared/playlist', isAuthenticated, usercontroller.createSharedPlaylist);
+router.get('/playlist/:id', usercontroller.getPlaylist);
+router.post('/leave/:id',isAuthenticated, usercontroller.leaveSharedPlaylist);
+router.post('/delete/:id/sharedPlaylist', isAuthenticated, usercontroller.deleteSharedPlaylist);
 
 // in the playlist controller 
 router.post('/playlist/create', isAuthenticated, playlistController.createPlaylist);
 router.post('/add-to-playlist', isAuthenticated, playlistController.addToPlaylist);
-
+router.post('/add-to-shared-playlist', isAuthenticated, playlistController.addToSharedPlaylist);
 
 // Regular routes
 router.get('/player', usercontroller.getmusicplayer);
@@ -46,8 +54,8 @@ router.post('/player', isAuthenticated, usercontroller.postPlayer);
 router.get('/recent', usercontroller.getrecentlyplayed);
 router.get('/player/next', isAuthenticated, usercontroller.getNextSong);
 router.get('/api/next-song/:songId', usercontroller.apiNextSong);
-router.get('/api/next-songs/:currentId', usercontroller.apiNextSongs); // not in use 
-router.get('/player/previous', usercontroller.getPreviousSong);
+// router.get('/api/next-songs/:currentId', usercontroller.apiNextSongs); // not in use 
+router.get('/player/previous', isAuthenticated, usercontroller.getPreviousSong);
 router.post('/update-playback-time', usercontroller.updatePlaybackTime); // New route for updating playback time
 router.post('/update-playback', usercontroller.postUpdateSongInfo); // New route for updating song info
 
