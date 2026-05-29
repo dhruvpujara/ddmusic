@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const cookie = require('cookie');
 const Artist = require('../models/artist');
 const mixedModel = require('../models/mixedModelSchema');
-const sharedplaylist = require('../models/sharedplaylist');
+const sharedplaylist = require('../models/sharedPlaylist');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 dotenv.config();
