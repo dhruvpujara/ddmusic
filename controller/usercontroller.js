@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const cookie = require('cookie');
 const Artist = require('../models/artist');
 const mixedModel = require('../models/mixedModelSchema');
-const sharedplaylist = require('../models/sharedPlaylist');
+const sharedplaylistModel = require('../models/sharedplaylist');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -590,7 +590,7 @@ module.exports.getSharedPlaylists = async (req, res) => {
         return;
     }
     const userId = req.user.userId;
-    const sharedPlaylists = await sharedplaylist.find({ userId: userId }).populate('songs');
+    const sharedPlaylists = await sharedplaylistModel.find({ userId: userId }).populate('songs');
     const token = req.cookies.token;
 
     if (!token) {
@@ -612,7 +612,7 @@ module.exports.getSharedPlaylists = async (req, res) => {
 module.exports.joinSharedPlaylist = async (req, res) => {
     try {
         const playlistId = req.params.id;
-        const sharedPlaylist = await sharedplaylist.findOne({ shareCode: playlistId });
+        const sharedPlaylist = await sharedplaylistModel.findOne({ shareCode: playlistId });
         sharedPlaylist.userId.push(req.user.userId);
         await sharedPlaylist.save();
         res.redirect('/shared/playlist');
@@ -637,7 +637,7 @@ module.exports.createSharedPlaylist = async (req, res) => {
 
         const shareCode = Math.floor(100000000 + Math.random() * 900000000); // Generate a random 9-digit code
 
-        const newSharedPlaylist = new sharedplaylist({
+        const newSharedPlaylist = new sharedplaylistModel({
             ownerId: ownerId,
             name,
             shareCode,
@@ -657,7 +657,7 @@ module.exports.getPlaylist = async (req, res) => {
     try {
         let playlist = [];
         playlist = await Playlist.findById(req.params.id).populate('songs');
-        playlist = await sharedplaylist.findById(req.params.id).populate('songs');
+        playlist = await sharedplaylistModel.findById(req.params.id).populate('songs');
         if (!playlist) {
             return res.redirect('/library');
         }
@@ -681,7 +681,7 @@ module.exports.leaveSharedPlaylist = async (req, res) => {
         const playlistId = req.params.id;
         const userId = req.user.userId;
 
-        const sharedPlaylist = await sharedplaylist.findById(playlistId);
+        const sharedPlaylist = await sharedplaylistModel.findById(playlistId);
         if (!sharedPlaylist) {
             return res.redirect('/shared/playlist');
         }
@@ -702,7 +702,7 @@ module.exports.deleteSharedPlaylist = async (req, res) => {
         const playlistId = req.params.id;
         const userId = req.user.userId;
 
-        const sharedPlaylist = await sharedplaylist.findById(playlistId);
+        const sharedPlaylist = await sharedplaylistModel.findById(playlistId);
         if (!sharedPlaylist) {
             return res.redirect('/shared/playlist');
         }
@@ -712,7 +712,7 @@ module.exports.deleteSharedPlaylist = async (req, res) => {
             return res.redirect('/shared/playlist');
         }
 
-        await sharedplaylist.findByIdAndDelete(playlistId);
+        await sharedplaylistModel.findByIdAndDelete(playlistId);
         res.redirect('/shared/playlist');
     } catch (error) {
         console.error('Error deleting shared playlist:', error);
@@ -1117,7 +1117,7 @@ module.exports.postPlayer = async (req, res) => {
             const user = await User.findById(req.user.userId);
             if (user) {
                 playlists = await Playlist.find({ userId: user._id });
-                sharedplaylists = await sharedplaylist.find({ userId: user._id });
+                sharedplaylists = await sharedplaylistModel.find({ userId: user._id });
             }
         }
 
@@ -1163,7 +1163,7 @@ module.exports.getNextSong = async (req, res) => {
         if (req.session.isLoggedIn) {
             user = await User.findById(req.user.userId);
             playlists = await Playlist.find({ userId: user._id });
-            sharedplaylists = await sharedplaylist.find({ userId: user._id });
+            sharedplaylists = await sharedplaylistModel.find({ userId: user._id });
         }
 
         // Get current song ID from query parameter or session
@@ -1507,7 +1507,7 @@ module.exports.getPreviousSong = async (req, res) => {
         if (req.session.isLoggedIn) {
             const user = await User.findById(req.user.userId);
             playlists = await Playlist.find({ userId: user._id });
-            sharedplaylists = await sharedplaylist.find({ userId: user._id });
+            sharedplaylists = await sharedplaylistModel.find({ userId: user._id });
         }
 
 
@@ -1549,7 +1549,7 @@ module.exports.getPreviousSong = async (req, res) => {
             songLink: prevSong.link,
             songId: prevSong._id,
             playlists: playlists,
-            sharedplaylist,
+            sharedplaylists: sharedplaylists,
             hashtags: prevSong.hashtags || [],
             autoplay: true,
             isLoop: false,
