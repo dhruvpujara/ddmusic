@@ -23,4 +23,8 @@ router.post('/reset/password', authcontroller.resetpassword);
 router.post('/registered', authcontroller.postregister);
 router.post('/verify/email', authcontroller.postverifyEmail);
 
+// app routes 
+
+router.post('/app/register', authcontroller.postAppRegister);
+
 module.exports = router;

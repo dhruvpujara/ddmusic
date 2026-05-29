@@ -425,4 +425,20 @@ module.exports.getprofile = async (req, res) => {
 }
 
 
+// app controller methods
+
+module.exports.postAppRegister = async (req, res) => {
+    try {
+
+        console.log(' data received from app:', req.body);
+
+        res.json({ success: true, message: 'Data received successfully' });
+    } catch (error) {
+        console.error('Error in postAppRegister:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+
+
 module.exports.isAuth = isAuth; // Export middleware
