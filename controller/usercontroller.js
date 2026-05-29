@@ -1549,7 +1549,7 @@ module.exports.getPreviousSong = async (req, res) => {
             songLink: prevSong.link,
             songId: prevSong._id,
             playlists: playlists,
-            sharedplaylist ,
+            sharedplaylist,
             hashtags: prevSong.hashtags || [],
             autoplay: true,
             isLoop: false,

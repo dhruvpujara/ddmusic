@@ -29,4 +29,4 @@ const SharedPlaylistSchema = new mongoose.Schema({
     }]
 }, { timestamps: true });
 
-module.exports = mongoose.model('SharedPlaylistSchema', SharedPlaylistSchema);
+module.exports = mongoose.model('sharedplaylist', SharedPlaylistSchema);
