@@ -1743,3 +1743,17 @@ module.exports.postUpddatePreferences = async (req, res) => {
     }
 };
 
+
+
+
+// app functions
+
+module.exports.getExplorePage = async (req, res) => {
+    try {
+        const songs = await Song.find();
+        res.json({ songs });
+    } catch (error) {
+        console.error('Error fetching explore page data:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};

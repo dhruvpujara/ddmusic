@@ -35,10 +35,10 @@ router.post('/playlist/remove-song', usercontroller.removeSongFromPlaylist); // 
 
 // shared playlist routes
 router.get('/shared/playlist', isAuthenticated, usercontroller.getSharedPlaylists);
-router.get('/join/shared/playlist/:id',isAuthenticated, usercontroller.joinSharedPlaylist);
+router.get('/join/shared/playlist/:id', isAuthenticated, usercontroller.joinSharedPlaylist);
 router.post('/create/shared/playlist', isAuthenticated, usercontroller.createSharedPlaylist);
 router.get('/playlist/:id', usercontroller.getPlaylist);
-router.post('/leave/:id',isAuthenticated, usercontroller.leaveSharedPlaylist);
+router.post('/leave/:id', isAuthenticated, usercontroller.leaveSharedPlaylist);
 router.post('/delete/:id/sharedPlaylist', isAuthenticated, usercontroller.deleteSharedPlaylist);
 
 // in the playlist controller 
@@ -66,5 +66,11 @@ router.post('/preferred-languages', usercontroller.postUpddatePreferences);
 // Add this route for featured playlists (bollywood/oldies)
 router.get('/featured/:type', usercontroller.getFeaturedPlaylist);
 // router.get('/play/:personname', usercontroller.getPersonMusic);
+
+
+
+// app routes
+
+router.get('/app/explore', usercontroller.getExplorePage);
 
 module.exports = router;
