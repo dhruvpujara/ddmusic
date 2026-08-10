@@ -180,19 +180,29 @@ module.exports.postverifyEmail = async (req, res) => {
             </div>
         `;
 
-        // Store verification data in session (NOT in database yet)
+        // Store verification data in session
         req.session.verificationData = {
             username,
             email,
-            password, // In production, you should hash this
+            password,
             verificationCode,
-            expires: Date.now() + 10 * 60 * 1000 // 10 minutes
+            expires: Date.now() + 10 * 60 * 1000
         };
 
-        console.log('Session data set:', req.session.verificationData);
+        // Save session explicitly
+        await new Promise((resolve, reject) => {
+            req.session.save((err) => {
+                if (err) reject(err);
+                else resolve();
+            });
+        });
+
+        console.log('Session saved for email:', email);
 
         // Send verification email
         console.log('Attempting to send email to:', email);
+        console.log('Environment:', process.env.NODE_ENV);
+
         const emailSent = await emailService.sendEmail(
             email,
             'Verify your email for DDMusic',
@@ -209,7 +219,6 @@ module.exports.postverifyEmail = async (req, res) => {
 
         console.log('Email sent successfully to:', email);
 
-        // Return JSON response for AJAX
         return res.json({
             success: true,
             message: 'Verification code sent successfully'
@@ -219,7 +228,8 @@ module.exports.postverifyEmail = async (req, res) => {
         console.error('Error in postverifyEmail:', error);
         return res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: 'Internal server error',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };

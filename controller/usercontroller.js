@@ -655,24 +655,35 @@ module.exports.createSharedPlaylist = async (req, res) => {
 
 module.exports.getPlaylist = async (req, res) => {
     try {
-        let playlist = [];
+        let playlist = null;
+
+        // Try to find in Playlist model
         playlist = await Playlist.findById(req.params.id).populate('songs');
-        playlist = await sharedplaylistModel.findById(req.params.id).populate('songs');
+
+        // If not found, try shared playlist model
+        if (!playlist) {
+            playlist = await sharedplaylistModel.findById(req.params.id).populate('songs');
+        }
+
         if (!playlist) {
             return res.redirect('/library');
         }
 
+        // Ensure songs is an array before mapping
+        const songIds = playlist.songs ? playlist.songs.map(song => song._id) : [];
+
         // Store playlist context in session
         req.session.playlistContext = {
             playlistId: playlist._id,
-            songs: playlist.songs.map(song => song._id)
+            songs: songIds
         };
         await req.session.save();
 
         res.render('player/playlist', { playlist, isLoggedIn: req.session.isLoggedIn });
     } catch (err) {
         console.error('Error fetching playlist:', err);
-        res.redirect('/library');
+        // Redirect to library or show error page
+        return res.status(500).redirect('/library');
     }
 };
 
