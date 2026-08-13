@@ -192,7 +192,7 @@ module.exports.postverifyEmail = async (req, res) => {
         };
 
         // Save session explicitly
-        await req.session.verificationData.save()
+        await req.session.save()
         console.log("saved req session")
 
         // Send verification email
