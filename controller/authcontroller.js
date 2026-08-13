@@ -154,6 +154,8 @@ module.exports.postverifyEmail = async (req, res) => {
         // Generate verification code
         const verificationCode = Math.floor(10000 + Math.random() * 90000).toString();
 
+        console.log("verfication code created")
+
         // Generate email template
         const emailTemplate = `
             <div style="background-color: #09090b; color: white; font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border-radius: 16px;">
@@ -190,18 +192,11 @@ module.exports.postverifyEmail = async (req, res) => {
         };
 
         // Save session explicitly
-        await new Promise((resolve, reject) => {
-            req.session.save((err) => {
-                if (err) reject(err);
-                else resolve();
-            });
-        });
-
-        console.log('Session saved for email:', email);
+        await req.session.verificationData.save()
+        console.log("saved req session")
 
         // Send verification email
         console.log('Attempting to send email to:', email);
-        console.log('Environment:', process.env.NODE_ENV);
 
         const emailSent = await emailService.sendEmail(
             email,
