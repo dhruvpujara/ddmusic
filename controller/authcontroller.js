@@ -1,6 +1,5 @@
 const User = require('../models/user');
-const emailService = require('../utils/nodemailer');
-const Playlist = require('../models/playlist');
+const { sendEmail } = require('../utils/nodemailer'); // RIGHTconst Playlist = require('../models/playlist');
 const Song = require('../models/song');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -198,7 +197,7 @@ module.exports.postverifyEmail = async (req, res) => {
         // Send verification email
         console.log('Attempting to send email to:', email);
 
-        const emailSent = await emailService.sendEmail(
+        const emailSent = await sendEmail(
             email,
             'Verify your email for DDMusic',
             emailTemplate
