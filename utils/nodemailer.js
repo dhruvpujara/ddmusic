@@ -8,7 +8,6 @@ let useSendGrid = false;
 if (process.env.SENDGRID_API_KEY) {
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
     useSendGrid = true;
-    console.log('✅ SendGrid initialized');
 } else {
     console.log('⚠️ SendGrid not configured, using nodemailer');
 }

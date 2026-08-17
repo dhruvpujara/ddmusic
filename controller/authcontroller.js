@@ -3,6 +3,11 @@ const { sendEmail } = require('../utils/nodemailer'); // RIGHTconst Playlist = r
 const Song = require('../models/song');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const Playlist = require('../models/playlist');
+const session = require('express-session');
+const errorMiddleware = require('../errorhandler/errorhandler');
+const catchAsyncError = require('../middleware/catchAsyncerror')
+
 
 
 // Add middleware at the top
@@ -153,8 +158,6 @@ module.exports.postverifyEmail = async (req, res) => {
         // Generate verification code
         const verificationCode = Math.floor(10000 + Math.random() * 90000).toString();
 
-        console.log("verfication code created")
-
         // Generate email template
         const emailTemplate = `
             <div style="background-color: #09090b; color: white; font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border-radius: 16px;">
@@ -192,7 +195,6 @@ module.exports.postverifyEmail = async (req, res) => {
 
         // Save session explicitly
         await req.session.save()
-        console.log("saved req session")
 
         // Send verification email
         console.log('Attempting to send email to:', email);
